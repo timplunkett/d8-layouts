@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\MapDataDefinition;
+use Drupal\layout_builder\LayoutSectionItemInterface;
 
 /**
  * Plugin implementation of the 'layout_section' field type.
@@ -19,7 +20,7 @@ use Drupal\Core\TypedData\MapDataDefinition;
  *   default_formatter = "layout_section"
  * )
  */
-class LayoutSection extends FieldItemBase {
+class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterface {
 
   /**
    * {@inheritdoc}
