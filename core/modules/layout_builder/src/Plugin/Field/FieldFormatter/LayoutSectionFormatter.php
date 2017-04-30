@@ -7,7 +7,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
-use Drupal\Core\Layout\LayoutPluginManager;
+use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -42,21 +42,21 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
   /**
    * The block plugin manager.
    *
-   * @var BlockManagerInterface
+   * @var \Drupal\Core\Block\BlockManagerInterface
    */
   protected $blockManager;
 
   /**
    * Constructs a LayoutSectionFormatter object.
    *
-   * @param AccountInterface $account
+   * @param \Drupal\Core\Session\AccountInterface $account
    *   The current user.
-   * @param LayoutPluginManager $layoutPluginManager
+   * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layoutPluginManager
    *   The layout plugin manager.
-   * @param BlockManagerInterface $blockManager
+   * @param \Drupal\Core\Block\BlockManagerInterface $blockManager
    *   THe block plugin manager.
    * @param string $plugin_id
-   *   The plugin_id for the formatter.
+   *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -70,7 +70,7 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
    * @param array $third_party_settings
    *   Any third party settings.
    */
-  public function __construct(AccountInterface $account, LayoutPluginManager $layoutPluginManager, BlockManagerInterface $blockManager, $plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings) {
+  public function __construct(AccountInterface $account, LayoutPluginManagerInterface $layoutPluginManager, BlockManagerInterface $blockManager, $plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings) {
     $this->account = $account;
     $this->layoutPluginManager = $layoutPluginManager;
     $this->blockManager = $blockManager;
@@ -81,7 +81,18 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($container->get('current_user'), $container->get('plugin.manager.core.layout'), $container->get('plugin.manager.block'), $plugin_id, $plugin_definition, $configuration['field_definition'], $configuration['settings'], $configuration['label'], $configuration['view_mode'], $configuration['third_party_settings']);
+    return new static(
+      $container->get('current_user'),
+      $container->get('plugin.manager.core.layout'),
+      $container->get('plugin.manager.block'),
+      $plugin_id,
+      $plugin_definition,
+      $configuration['field_definition'],
+      $configuration['settings'],
+      $configuration['label'],
+      $configuration['view_mode'],
+      $configuration['third_party_settings']
+    );
   }
 
   /**
@@ -100,10 +111,11 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
   /**
    * Build the render array for the field item.
    *
-   * @param FieldItemInterface $item
+   * @param \Drupal\Core\Field\FieldItemInterface $item
    *   The field item.
    *
    * @return array
+   *   A render array for the field item.
    */
   protected function viewValue(FieldItemInterface $item) {
     /** @var \Drupal\Core\Layout\LayoutInterface $layout */
