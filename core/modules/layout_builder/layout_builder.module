@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Provides hook implementations for Layout Builder.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function layout_builder_help($route_name) {
+  switch ($route_name) {
+    case 'help.page.layout_builder':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Layout Builder provides layout building utility, surprisingly.') . '</p>';
+      $output .= '<p>' . t('For more information, see the <a href=":layout-builder-documentation">online documentation for the Layout Builder module</a>.', [':layout-builder-documentation' => 'https://www.drupal.org/docs/8/core/modules/layout_builder']) . '</p>';
+      return $output;
+  }
+}
