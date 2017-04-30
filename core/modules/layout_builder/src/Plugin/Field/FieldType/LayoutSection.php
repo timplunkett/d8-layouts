@@ -38,7 +38,7 @@ class LayoutSection extends FieldItemBase {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritdoc}
    */
   public static function mainPropertyName() {
     return 'section';
@@ -60,7 +60,7 @@ class LayoutSection extends FieldItemBase {
           'size' => 'normal',
           'serialize' => TRUE,
         ],
-      ]
+      ],
     ];
 
     return $schema;
