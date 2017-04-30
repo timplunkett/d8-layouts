@@ -4,12 +4,12 @@ namespace Drupal\layout_builder\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\layout_builder\LayoutSectionItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -102,27 +102,26 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
     $elements = [];
 
     foreach ($items as $delta => $item) {
-      $elements[$delta] = $this->viewValue($item);
+      $elements[$delta] = $this->buildSection($item);
     }
 
     return $elements;
   }
 
   /**
-   * Build the render array for the field item.
+   * Builds the render array for the layout section.
    *
-   * @param \Drupal\Core\Field\FieldItemInterface $item
-   *   The field item.
+   * @param \Drupal\layout_builder\LayoutSectionItemInterface $item
+   *   The layout section item.
    *
    * @return array
    *   A render array for the field item.
    */
-  protected function viewValue(FieldItemInterface $item) {
+  protected function buildSection(LayoutSectionItemInterface $item) {
     /** @var \Drupal\Core\Layout\LayoutInterface $layout */
-    $layout = $this->layoutPluginManager->createInstance($item->get('layout')->getValue());
-    $section = $item->get('section')->getValue();
+    $layout = $this->layoutPluginManager->createInstance($item->layout);
     $regions = [];
-    foreach ($section as $region => $blocks) {
+    foreach ($item->section as $region => $blocks) {
       foreach ($blocks as $uuid => $configuration) {
         /** @var \Drupal\Core\Block\BlockPluginInterface $block */
         $block = $this->blockManager->createInstance($configuration['plugin_id'], $configuration);
