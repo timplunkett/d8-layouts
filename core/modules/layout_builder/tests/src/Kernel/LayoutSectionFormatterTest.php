@@ -80,21 +80,25 @@ class LayoutSectionFormatterTest extends KernelTestBase {
    *
    * @dataProvider providerTestLayoutSectionFormatter
    */
-  public function testLayoutSectionFormatter($layout, $section, $expected_selector, $expected_content) {
-    $entity = EntityTest::create([]);
-    $entity->{$this->fieldName}->layout = $layout;
-    $entity->{$this->fieldName}->section = $section;
+  public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content) {
+    $values = [];
+    $values[$this->fieldName] = $layout_data;
+    $entity = EntityTest::create($values);
 
     // Build and render the content.
     $content = $this->display->build($entity);
     $this->render($content);
 
     // Find the given selector.
-    $element = $this->cssSelect($expected_selector);
-    $this->assertNotEmpty($element);
+    foreach ((array) $expected_selector as $selector) {
+      $element = $this->cssSelect($selector);
+      $this->assertNotEmpty($element);
+    }
 
     // Find the given content.
-    $this->assertRaw($expected_content);
+    foreach ((array) $expected_content as $content) {
+      $this->assertRaw($content);
+    }
   }
 
   /**
@@ -102,17 +106,61 @@ class LayoutSectionFormatterTest extends KernelTestBase {
    */
   public function providerTestLayoutSectionFormatter() {
     $data = [];
-    $data[] = [
-      'layout_onecol',
+    $data['single_section_single_block'] = [
       [
-        'content' => [
-          'this_should_be_a_UUID' => [
-            'plugin_id' => 'system_powered_by_block',
+        [
+          'layout' => 'layout_onecol',
+          'section' => [
+            'content' => [
+              'baz' => [
+                'plugin_id' => 'system_powered_by_block',
+              ],
+            ],
           ],
         ],
       ],
       '.layout--onecol',
       'Powered by',
+    ];
+    $data['multiple_sections'] = [
+      [
+        [
+          'layout' => 'layout_onecol',
+          'section' => [
+            'content' => [
+              'baz' => [
+                'plugin_id' => 'system_powered_by_block',
+              ],
+            ],
+          ],
+        ],
+        [
+          'layout' => 'layout_twocol',
+          'section' => [
+            'left' => [
+              'foo' => [
+                'plugin_id' => 'test_content',
+                'text' => 'foo text',
+              ],
+            ],
+            'right' => [
+              'bar' => [
+                'plugin_id' => 'test_content',
+                'text' => 'bar text',
+              ],
+            ],
+          ],
+        ],
+      ],
+      [
+        '.layout--onecol',
+        '.layout--twocol',
+      ],
+      [
+        'Powered by',
+        'foo text',
+        'bar text',
+      ],
     ];
     return $data;
   }
