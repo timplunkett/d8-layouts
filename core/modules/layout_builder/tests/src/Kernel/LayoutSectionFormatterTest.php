@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\layout_builder\Kernel;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\User;
 
 /**
  * Tests the layout section formatter.
@@ -19,7 +19,15 @@ class LayoutSectionFormatterTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['field', 'layout_builder', 'layout_discovery', 'entity_test', 'user', 'system'];
+  public static $modules = [
+    'field',
+    'layout_builder',
+    'layout_discovery',
+    'entity_test',
+    'user',
+    'system',
+    'block_test',
+  ];
 
   /**
    * The name of the layout section field.
@@ -42,11 +50,13 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     parent::setUp();
 
     $this->installConfig(['field']);
+    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('user');
 
     $entity_type = 'entity_test';
     $bundle = $entity_type;
-    $this->fieldName = Unicode::strtolower($this->randomMachineName());
+    $this->fieldName = 'field_my_sections';
 
     $field_storage = FieldStorageConfig::create([
       'field_name' => $this->fieldName,
@@ -58,7 +68,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     $instance = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => $bundle,
-      'label' => $this->randomMachineName(),
+      'label' => 'My Sections',
     ]);
     $instance->save();
 
@@ -73,6 +83,13 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       'settings' => [],
     ]);
     $this->display->save();
+
+    $test_user = User::create([
+      'name' => 'foobar',
+      'mail' => 'foobar@example.com',
+    ]);
+    $test_user->save();
+    $this->container->get('current_user')->setAccount($test_user);
   }
 
   /**
@@ -88,16 +105,18 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     // Build and render the content.
     $content = $this->display->build($entity);
     $this->render($content);
+    // Pass the main content to the assertions to help with debugging.
+    $main_content = $this->cssSelect('main')[0]->asXML();
 
     // Find the given selector.
     foreach ((array) $expected_selector as $selector) {
       $element = $this->cssSelect($selector);
-      $this->assertNotEmpty($element);
+      $this->assertNotEmpty($element, $main_content);
     }
 
     // Find the given content.
     foreach ((array) $expected_content as $content) {
-      $this->assertRaw($content);
+      $this->assertRaw($content, $main_content);
     }
   }
 
@@ -106,6 +125,31 @@ class LayoutSectionFormatterTest extends KernelTestBase {
    */
   public function providerTestLayoutSectionFormatter() {
     $data = [];
+    $data['block_with_context'] = [
+      [
+        [
+          'layout' => 'layout_onecol',
+          'section' => [
+            'content' => [
+              'baz' => [
+                'plugin_id' => 'test_context_aware',
+                'context_mapping' => [
+                  'user' => '@user.current_user_context:current_user',
+                ],
+              ],
+            ],
+          ],
+        ],
+      ],
+      [
+        '.layout--onecol',
+        '#test_context_aware--username',
+      ],
+      [
+        'foobar',
+        'User context found',
+      ],
+    ];
     $data['single_section_single_block'] = [
       [
         [
@@ -139,14 +183,14 @@ class LayoutSectionFormatterTest extends KernelTestBase {
           'section' => [
             'left' => [
               'foo' => [
-                'plugin_id' => 'test_content',
-                'text' => 'foo text',
+                'plugin_id' => 'test_block_instantiation',
+                'display_message' => 'foo text',
               ],
             ],
             'right' => [
               'bar' => [
-                'plugin_id' => 'test_content',
-                'text' => 'bar text',
+                'plugin_id' => 'test_block_instantiation',
+                'display_message' => 'bar text',
               ],
             ],
           ],
