@@ -8,6 +8,9 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\ContextHandlerInterface;
+use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
+use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\layout_builder\LayoutSectionItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -47,6 +50,20 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
   protected $blockManager;
 
   /**
+   * The plugin context handler.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
+   */
+  protected $contextHandler;
+
+  /**
+   * The context manager service.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   */
+  protected $contextRepository;
+
+  /**
    * Constructs a LayoutSectionFormatter object.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
@@ -55,6 +72,10 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
    *   The layout plugin manager.
    * @param \Drupal\Core\Block\BlockManagerInterface $blockManager
    *   THe block plugin manager.
+   * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
+   *   The ContextHandler for applying contexts to conditions properly.
+   * @param \Drupal\Core\Plugin\Context\ContextRepositoryInterface $context_repository
+   *   The lazy context repository service.
    * @param string $plugin_id
    *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
@@ -70,10 +91,12 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
    * @param array $third_party_settings
    *   Any third party settings.
    */
-  public function __construct(AccountInterface $account, LayoutPluginManagerInterface $layoutPluginManager, BlockManagerInterface $blockManager, $plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings) {
+  public function __construct(AccountInterface $account, LayoutPluginManagerInterface $layoutPluginManager, BlockManagerInterface $blockManager, ContextHandlerInterface $context_handler, ContextRepositoryInterface $context_repository, $plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings) {
     $this->account = $account;
     $this->layoutPluginManager = $layoutPluginManager;
     $this->blockManager = $blockManager;
+    $this->contextHandler = $context_handler;
+    $this->contextRepository = $context_repository;
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
   }
 
@@ -85,6 +108,8 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
       $container->get('current_user'),
       $container->get('plugin.manager.core.layout'),
       $container->get('plugin.manager.block'),
+      $container->get('context.handler'),
+      $container->get('context.repository'),
       $plugin_id,
       $plugin_definition,
       $configuration['field_definition'],
@@ -125,6 +150,10 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
       foreach ($blocks as $uuid => $configuration) {
         /** @var \Drupal\Core\Block\BlockPluginInterface $block */
         $block = $this->blockManager->createInstance($configuration['plugin_id'], $configuration);
+        if ($block instanceof ContextAwarePluginInterface) {
+          $contexts = $this->contextRepository->getRuntimeContexts(array_values($block->getContextMapping()));
+          $this->contextHandler->applyContextMapping($block, $contexts);
+        }
         $access = $block->access($this->account, TRUE);
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = $block->build();
