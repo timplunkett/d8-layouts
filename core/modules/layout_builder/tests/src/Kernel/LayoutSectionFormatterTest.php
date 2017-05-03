@@ -4,6 +4,7 @@ namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Render\Element;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -119,12 +120,12 @@ class LayoutSectionFormatterTest extends KernelTestBase {
    *
    * @dataProvider providerTestLayoutSectionFormatter
    */
-  public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content) {
+  public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content, $expected_cache) {
     $values = [];
     $values[$this->fieldName] = $layout_data;
     $entity = EntityTest::create($values);
 
-    $this->assertRenderedEntity($entity, $expected_selector, $expected_content);
+    $this->assertRenderedEntity($entity, $expected_selector, $expected_content, $expected_cache);
   }
 
   /**
@@ -156,6 +157,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
         'foobar',
         'User context found',
       ],
+      [['contexts' => ['user'], 'tags' => ['user:1'], 'max-age' => -1]],
     ];
     $data['single_section_single_block'] = [
       [
@@ -172,6 +174,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       ],
       '.layout--onecol',
       'Powered by',
+      [],
     ];
     $data['multiple_sections'] = [
       [
@@ -211,6 +214,10 @@ class LayoutSectionFormatterTest extends KernelTestBase {
         'Powered by',
         'foo text',
         'bar text',
+      ],
+      [
+        [],
+        ['contexts' => ['user.permissions'], 'tags' => [], 'max-age' => -1],
       ],
     ];
     return $data;
@@ -257,7 +264,19 @@ class LayoutSectionFormatterTest extends KernelTestBase {
 
     // Build and render the es content.
     $entity = $entity->getTranslation('es');
-    $this->assertRenderedEntity($entity, '.layout--twocol', ['foo text', 'bar text']);
+    $expected_cacheable_metadata = [
+      [
+        'contexts' => ['user.permissions'],
+        'tags' => [],
+        'max-age' => -1,
+      ],
+      [
+        'contexts' => ['user.permissions'],
+        'tags' => [],
+        'max-age' => -1,
+      ],
+    ];
+    $this->assertRenderedEntity($entity, '.layout--twocol', ['foo text', 'bar text'], $expected_cacheable_metadata);
   }
 
   public function testLayoutSectionFormatterAccess() {
@@ -274,17 +293,23 @@ class LayoutSectionFormatterTest extends KernelTestBase {
         ],
       ],
     ];
+    $expected_cacheable_metadata = [[
+      'contexts' => [],
+      'tags' => [],
+      'max-age' => 0,
+    ]];
+
     $entity = EntityTest::create($values);
 
     // Restrict access to the block.
     $this->container->get('state')->set('test_block_access', FALSE);
-    $this->assertRenderedEntity($entity, '.layout--onecol', NULL);
+    $this->assertRenderedEntity($entity, '.layout--onecol', NULL, $expected_cacheable_metadata);
     // Ensure the block was not rendered.
     $this->assertNoRaw('Hello test world');
 
     // Grant access to the block, and ensure it was rendered.
     $this->container->get('state')->set('test_block_access', TRUE);
-    $this->assertRenderedEntity($entity, '.layout--onecol', 'Hello test world');
+    $this->assertRenderedEntity($entity, '.layout--onecol', 'Hello test world', $expected_cacheable_metadata);
   }
 
   /**
@@ -296,10 +321,23 @@ class LayoutSectionFormatterTest extends KernelTestBase {
    *   A selector or list of CSS selectors to find.
    * @param string|array $expected_content
    *   A string or list of strings to find.
+   * @param array|null $expected_cacheable_metadata
+   *   (optional) An array of cacheable metadata keyed by field delta.
    */
-  protected function assertRenderedEntity(FieldableEntityInterface $entity, $expected_selector, $expected_content) {
+  protected function assertRenderedEntity(FieldableEntityInterface $entity, $expected_selector, $expected_content, $expected_cacheable_metadata = []) {
     // Build and render the content.
     $content = $this->display->build($entity);
+    foreach (Element::children($content[$this->fieldName]) as $key) {
+      // If no cacheable metadata is expected, use the default values.
+      if (empty($expected_cacheable_metadata[$key])) {
+        $expected_cacheable_metadata[$key] = [
+          'contexts' => [],
+          'tags' => [],
+          'max-age' => -1,
+        ];
+      }
+      $this->assertEquals($expected_cacheable_metadata[$key], $content[$this->fieldName][$key]['#cache']);
+    }
     $this->render($content);
     // Pass the main content to the assertions to help with debugging.
     $main_content = $this->cssSelect('main')[0]->asXML();
