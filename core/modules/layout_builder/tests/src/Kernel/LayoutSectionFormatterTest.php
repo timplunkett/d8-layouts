@@ -260,6 +260,33 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     $this->assertRenderedEntity($entity, '.layout--twocol', ['foo text', 'bar text']);
   }
 
+  public function testLayoutSectionFormatterAccess() {
+    $values = [];
+    $values[$this->fieldName] = [
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'test_access',
+            ],
+          ],
+        ],
+      ],
+    ];
+    $entity = EntityTest::create($values);
+
+    // Restrict access to the block.
+    $this->container->get('state')->set('test_block_access', FALSE);
+    $this->assertRenderedEntity($entity, '.layout--onecol', NULL);
+    // Ensure the block was not rendered.
+    $this->assertNoRaw('Hello test world');
+
+    // Grant access to the block, and ensure it was rendered.
+    $this->container->get('state')->set('test_block_access', TRUE);
+    $this->assertRenderedEntity($entity, '.layout--onecol', 'Hello test world');
+  }
+
   /**
    * Asserts the output of a rendered entity.
    *
