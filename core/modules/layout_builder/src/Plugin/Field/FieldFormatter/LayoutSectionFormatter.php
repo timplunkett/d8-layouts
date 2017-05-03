@@ -3,6 +3,7 @@
 namespace Drupal\layout_builder\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
@@ -143,6 +144,8 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
    *   A render array for the field item.
    */
   protected function buildSection(LayoutSectionItemInterface $item) {
+    $cacheability = CacheableMetadata::createFromRenderArray([]);
+
     /** @var \Drupal\Core\Layout\LayoutInterface $layout */
     $layout = $this->layoutPluginManager->createInstance($item->layout);
     $regions = [];
@@ -155,12 +158,16 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
           $this->contextHandler->applyContextMapping($block, $contexts);
         }
         $access = $block->access($this->account, TRUE);
+        $cacheability->addCacheableDependency($access);
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = $block->build();
+          $cacheability->addCacheableDependency($block);
         }
       }
     }
-    return $layout->build($regions);
+    $section = $layout->build($regions);
+    $cacheability->applyTo($section);
+    return $section;
   }
 
 }
