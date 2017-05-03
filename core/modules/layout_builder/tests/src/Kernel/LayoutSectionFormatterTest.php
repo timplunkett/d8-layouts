@@ -3,10 +3,12 @@
 namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\user\Entity\User;
 
 /**
@@ -27,6 +29,10 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     'user',
     'system',
     'block_test',
+    'language',
+    'file',
+    'locale',
+    'config_translation',
   ];
 
   /**
@@ -44,12 +50,22 @@ class LayoutSectionFormatterTest extends KernelTestBase {
   protected $display;
 
   /**
+   * Languages to enable.
+   *
+   * @var array
+   */
+  protected $langcodes = [
+    'fr',
+    'es',
+  ];
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
 
-    $this->installConfig(['field']);
+    $this->installConfig(['field', 'config_translation']);
     $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('user');
@@ -63,6 +79,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       'entity_type' => $entity_type,
       'type' => 'layout_section',
     ]);
+    $field_storage->setTranslatable(TRUE);
     $field_storage->save();
 
     $instance = FieldConfig::create([
@@ -90,6 +107,11 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     ]);
     $test_user->save();
     $this->container->get('current_user')->setAccount($test_user);
+
+    // Add languages.
+    foreach ($this->langcodes as $langcode) {
+      ConfigurableLanguage::createFromLangcode($langcode)->save();
+    }
   }
 
   /**
@@ -102,22 +124,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     $values[$this->fieldName] = $layout_data;
     $entity = EntityTest::create($values);
 
-    // Build and render the content.
-    $content = $this->display->build($entity);
-    $this->render($content);
-    // Pass the main content to the assertions to help with debugging.
-    $main_content = $this->cssSelect('main')[0]->asXML();
-
-    // Find the given selector.
-    foreach ((array) $expected_selector as $selector) {
-      $element = $this->cssSelect($selector);
-      $this->assertNotEmpty($element, $main_content);
-    }
-
-    // Find the given content.
-    foreach ((array) $expected_content as $content) {
-      $this->assertRaw($content, $main_content);
-    }
+    $this->assertRenderedEntity($entity, $expected_selector, $expected_content);
   }
 
   /**
@@ -207,6 +214,79 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       ],
     ];
     return $data;
+  }
+
+  public function testMultilingualLayoutSectionFormatter() {
+    $fr_values = [];
+    $fr_values[$this->fieldName] = [
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'system_powered_by_block',
+            ],
+          ],
+        ],
+      ],
+    ];
+    $es_values = [];
+    $es_values[$this->fieldName] = [
+      [
+        'layout' => 'layout_twocol',
+        'section' => [
+          'left' => [
+            'foo' => [
+              'plugin_id' => 'test_block_instantiation',
+              'display_message' => 'foo text',
+            ],
+          ],
+          'right' => [
+            'bar' => [
+              'plugin_id' => 'test_block_instantiation',
+              'display_message' => 'bar text',
+            ],
+          ],
+        ],
+      ],
+    ];
+    $entity = EntityTest::create($fr_values);
+    $entity->addTranslation('es', $es_values);
+
+    $this->assertRenderedEntity($entity, '.layout--onecol', 'Powered by');
+
+    // Build and render the es content.
+    $entity = $entity->getTranslation('es');
+    $this->assertRenderedEntity($entity, '.layout--twocol', ['foo text', 'bar text']);
+  }
+
+  /**
+   * Asserts the output of a rendered entity.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity to render.
+   * @param string|array $expected_selector
+   *   A selector or list of CSS selectors to find.
+   * @param string|array $expected_content
+   *   A string or list of strings to find.
+   */
+  protected function assertRenderedEntity(FieldableEntityInterface $entity, $expected_selector, $expected_content) {
+    // Build and render the content.
+    $content = $this->display->build($entity);
+    $this->render($content);
+    // Pass the main content to the assertions to help with debugging.
+    $main_content = $this->cssSelect('main')[0]->asXML();
+
+    // Find the given selector.
+    foreach ((array) $expected_selector as $selector) {
+      $element = $this->cssSelect($selector);
+      $this->assertNotEmpty($element, $main_content);
+    }
+
+    // Find the given content.
+    foreach ((array) $expected_content as $content) {
+      $this->assertRaw($content, $main_content);
+    }
   }
 
 }
