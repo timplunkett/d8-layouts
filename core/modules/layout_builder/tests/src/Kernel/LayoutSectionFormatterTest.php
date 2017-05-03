@@ -7,6 +7,7 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\user\Entity\User;
 
 /**
@@ -27,6 +28,10 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     'user',
     'system',
     'block_test',
+    'language',
+    'file',
+    'locale',
+    'config_translation',
   ];
 
   /**
@@ -44,12 +49,22 @@ class LayoutSectionFormatterTest extends KernelTestBase {
   protected $display;
 
   /**
+   * Languages to enable.
+   *
+   * @var array
+   */
+  protected $langcodes = [
+    'fr',
+    'es',
+  ];
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
 
-    $this->installConfig(['field']);
+    $this->installConfig(['field', 'config_translation']);
     $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('entity_test');
     $this->installEntitySchema('user');
@@ -63,6 +78,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       'entity_type' => $entity_type,
       'type' => 'layout_section',
     ]);
+    $field_storage->setTranslatable(TRUE);
     $field_storage->save();
 
     $instance = FieldConfig::create([
@@ -90,6 +106,11 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     ]);
     $test_user->save();
     $this->container->get('current_user')->setAccount($test_user);
+
+    // Add languages.
+    foreach ($this->langcodes as $langcode) {
+      ConfigurableLanguage::createFromLangcode($langcode)->save();
+    }
   }
 
   /**
@@ -207,6 +228,72 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       ],
     ];
     return $data;
+  }
+
+  public function testMultilingualLayoutSectionFormatter() {
+    $fr_values = [];
+    $fr_values[$this->fieldName] = [
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'system_powered_by_block',
+            ],
+          ],
+        ],
+      ],
+    ];
+    $es_values = [];
+    $es_values[$this->fieldName] = [
+      [
+        'layout' => 'layout_twocol',
+        'section' => [
+          'left' => [
+            'foo' => [
+              'plugin_id' => 'test_block_instantiation',
+              'display_message' => 'foo text',
+            ],
+          ],
+          'right' => [
+            'bar' => [
+              'plugin_id' => 'test_block_instantiation',
+              'display_message' => 'bar text',
+            ],
+          ],
+        ],
+      ],
+    ];
+    $entity = EntityTest::create($fr_values);
+    $entity->addTranslation('es', $es_values);
+
+    // Build and render the fr content.
+    $content = $this->display->build($entity);
+    $this->render($content);
+    // Pass the main content to the assertions to help with debugging.
+    $main_content = $this->cssSelect('main')[0]->asXML();
+
+    // Find the fr selector.
+    $element = $this->cssSelect('.layout--onecol');
+    $this->assertNotEmpty($element, $main_content);
+
+    // Find the given content.
+    $this->assertRaw('Powered by', $main_content);
+
+    // Build and render the es content.
+    $entity = $entity->getTranslation('es');
+    $content = $this->display->build($entity);
+    $this->render($content);
+    // Pass the main content to the assertions to help with debugging.
+    $main_content = $this->cssSelect('main')[0]->asXML();
+
+    // Find the fr selector.
+    $element = $this->cssSelect('.layout--twocol');
+    $this->assertNotEmpty($element, $main_content);
+
+    // Find the given content.
+    $this->assertRaw('foo text', $main_content);
+    $this->assertRaw('bar text', $main_content);
   }
 
 }
