@@ -3,6 +3,7 @@
 namespace Drupal\Tests\layout_builder\Kernel;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -123,22 +124,7 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     $values[$this->fieldName] = $layout_data;
     $entity = EntityTest::create($values);
 
-    // Build and render the content.
-    $content = $this->display->build($entity);
-    $this->render($content);
-    // Pass the main content to the assertions to help with debugging.
-    $main_content = $this->cssSelect('main')[0]->asXML();
-
-    // Find the given selector.
-    foreach ((array) $expected_selector as $selector) {
-      $element = $this->cssSelect($selector);
-      $this->assertNotEmpty($element, $main_content);
-    }
-
-    // Find the given content.
-    foreach ((array) $expected_content as $content) {
-      $this->assertRaw($content, $main_content);
-    }
+    $this->assertRenderedEntity($entity, $expected_selector, $expected_content);
   }
 
   /**
@@ -267,33 +253,40 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     $entity = EntityTest::create($fr_values);
     $entity->addTranslation('es', $es_values);
 
-    // Build and render the fr content.
-    $content = $this->display->build($entity);
-    $this->render($content);
-    // Pass the main content to the assertions to help with debugging.
-    $main_content = $this->cssSelect('main')[0]->asXML();
-
-    // Find the fr selector.
-    $element = $this->cssSelect('.layout--onecol');
-    $this->assertNotEmpty($element, $main_content);
-
-    // Find the given content.
-    $this->assertRaw('Powered by', $main_content);
+    $this->assertRenderedEntity($entity, '.layout--onecol', 'Powered by');
 
     // Build and render the es content.
     $entity = $entity->getTranslation('es');
+    $this->assertRenderedEntity($entity, '.layout--twocol', ['foo text', 'bar text']);
+  }
+
+  /**
+   * Asserts the output of a rendered entity.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity to render.
+   * @param string|array $expected_selector
+   *   A selector or list of CSS selectors to find.
+   * @param string|array $expected_content
+   *   A string or list of strings to find.
+   */
+  protected function assertRenderedEntity(FieldableEntityInterface $entity, $expected_selector, $expected_content) {
+    // Build and render the content.
     $content = $this->display->build($entity);
     $this->render($content);
     // Pass the main content to the assertions to help with debugging.
     $main_content = $this->cssSelect('main')[0]->asXML();
 
-    // Find the fr selector.
-    $element = $this->cssSelect('.layout--twocol');
-    $this->assertNotEmpty($element, $main_content);
+    // Find the given selector.
+    foreach ((array) $expected_selector as $selector) {
+      $element = $this->cssSelect($selector);
+      $this->assertNotEmpty($element, $main_content);
+    }
 
     // Find the given content.
-    $this->assertRaw('foo text', $main_content);
-    $this->assertRaw('bar text', $main_content);
+    foreach ((array) $expected_content as $content) {
+      $this->assertRaw($content, $main_content);
+    }
   }
 
 }
