@@ -1,0 +1,2 @@
+route_callbacks:
+  - 'layout_builder.routes:routes'
