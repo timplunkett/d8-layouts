@@ -1,0 +1,3 @@
+configure any layout:
+  title: 'Configure any layout'
+  restrict access: true

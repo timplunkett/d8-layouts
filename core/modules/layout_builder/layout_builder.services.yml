@@ -2,3 +2,16 @@ services:
   layout_builder.builder:
     class: Drupal\layout_builder\LayoutSectionBuilder
     arguments: ['@current_user', '@plugin.manager.core.layout', '@plugin.manager.block', '@context.handler', '@context.repository']
+  access_check.entity.layout:
+    class: Drupal\layout_builder\Access\LayoutSectionAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _has_layout_selection }
+  layout_builder.routes:
+    class: Drupal\layout_builder\Routing\LayoutBuilder
+    arguments: ['@entity_type.manager']
+  layout_builder.route_enhancer:
+    class: Drupal\layout_builder\Routing\LayoutBuilderRouteEnhancer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: route_enhancer }
