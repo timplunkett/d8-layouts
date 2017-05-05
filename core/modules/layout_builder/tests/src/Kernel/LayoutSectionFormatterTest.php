@@ -223,6 +223,9 @@ class LayoutSectionFormatterTest extends KernelTestBase {
     return $data;
   }
 
+  /**
+   * Tests layout_section multilingual formatter output.
+   */
   public function testMultilingualLayoutSectionFormatter() {
     $fr_values = [];
     $fr_values[$this->fieldName] = [
