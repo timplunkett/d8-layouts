@@ -15,6 +15,8 @@ use Drupal\user\Entity\User;
 /**
  * Tests the layout section formatter.
  *
+ * @todo Merge into \Drupal\Tests\layout_builder\Functional\LayoutSectionTest.
+ *
  * @group layout_builder
  */
 class LayoutSectionFormatterTest extends KernelTestBase {
@@ -116,114 +118,6 @@ class LayoutSectionFormatterTest extends KernelTestBase {
   }
 
   /**
-   * Tests layout_section formatter output.
-   *
-   * @dataProvider providerTestLayoutSectionFormatter
-   */
-  public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content, $expected_cache) {
-    $values = [];
-    $values[$this->fieldName] = $layout_data;
-    $entity = EntityTest::create($values);
-
-    $this->assertRenderedEntity($entity, $expected_selector, $expected_content, $expected_cache);
-  }
-
-  /**
-   * Provides test data to ::testLayoutSectionFormatter().
-   */
-  public function providerTestLayoutSectionFormatter() {
-    $data = [];
-    $data['block_with_context'] = [
-      [
-        [
-          'layout' => 'layout_onecol',
-          'section' => [
-            'content' => [
-              'baz' => [
-                'plugin_id' => 'test_context_aware',
-                'context_mapping' => [
-                  'user' => '@user.current_user_context:current_user',
-                ],
-              ],
-            ],
-          ],
-        ],
-      ],
-      [
-        '.layout--onecol',
-        '#test_context_aware--username',
-      ],
-      [
-        'foobar',
-        'User context found',
-      ],
-      [['contexts' => ['user'], 'tags' => ['user:1'], 'max-age' => -1]],
-    ];
-    $data['single_section_single_block'] = [
-      [
-        [
-          'layout' => 'layout_onecol',
-          'section' => [
-            'content' => [
-              'baz' => [
-                'plugin_id' => 'system_powered_by_block',
-              ],
-            ],
-          ],
-        ],
-      ],
-      '.layout--onecol',
-      'Powered by',
-      [],
-    ];
-    $data['multiple_sections'] = [
-      [
-        [
-          'layout' => 'layout_onecol',
-          'section' => [
-            'content' => [
-              'baz' => [
-                'plugin_id' => 'system_powered_by_block',
-              ],
-            ],
-          ],
-        ],
-        [
-          'layout' => 'layout_twocol',
-          'section' => [
-            'left' => [
-              'foo' => [
-                'plugin_id' => 'test_block_instantiation',
-                'display_message' => 'foo text',
-              ],
-            ],
-            'right' => [
-              'bar' => [
-                'plugin_id' => 'test_block_instantiation',
-                'display_message' => 'bar text',
-              ],
-            ],
-          ],
-        ],
-      ],
-      [
-        '.layout--onecol',
-        '.layout--twocol',
-      ],
-      [
-        'Powered by',
-        'foo text',
-        'bar text',
-      ],
-      [
-        [],
-        ['contexts' => ['user.permissions'], 'tags' => [], 'max-age' => -1],
-      ],
-    ];
-    return $data;
-  }
-
-  /**
    * Tests layout_section multilingual formatter output.
    */
   public function testMultilingualLayoutSectionFormatter() {
@@ -280,39 +174,6 @@ class LayoutSectionFormatterTest extends KernelTestBase {
       ],
     ];
     $this->assertRenderedEntity($entity, '.layout--twocol', ['foo text', 'bar text'], $expected_cacheable_metadata);
-  }
-
-  public function testLayoutSectionFormatterAccess() {
-    $values = [];
-    $values[$this->fieldName] = [
-      [
-        'layout' => 'layout_onecol',
-        'section' => [
-          'content' => [
-            'baz' => [
-              'plugin_id' => 'test_access',
-            ],
-          ],
-        ],
-      ],
-    ];
-    $expected_cacheable_metadata = [[
-      'contexts' => [],
-      'tags' => [],
-      'max-age' => 0,
-    ]];
-
-    $entity = EntityTest::create($values);
-
-    // Restrict access to the block.
-    $this->container->get('state')->set('test_block_access', FALSE);
-    $this->assertRenderedEntity($entity, '.layout--onecol', NULL, $expected_cacheable_metadata);
-    // Ensure the block was not rendered.
-    $this->assertNoRaw('Hello test world');
-
-    // Grant access to the block, and ensure it was rendered.
-    $this->container->get('state')->set('test_block_access', TRUE);
-    $this->assertRenderedEntity($entity, '.layout--onecol', 'Hello test world', $expected_cacheable_metadata);
   }
 
   /**
