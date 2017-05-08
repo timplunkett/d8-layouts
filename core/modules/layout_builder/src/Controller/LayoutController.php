@@ -1,46 +1,29 @@
 <?php
 
-
 namespace Drupal\layout_builder\Controller;
-
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\layout_builder\LayoutSectionBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * @todo.
+ */
 class LayoutController extends ControllerBase {
 
   /**
-   * The layout builder.
+   * @todo.
    *
-   * @var \Drupal\layout_builder\LayoutSectionBuilder
-   */
-  protected $builder;
-
-  /**
-   * LayoutController constructor.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   *   The entity.
+   * @param string $layout_section_field_name
+   *   The field name.
    *
-   * @param \Drupal\layout_builder\LayoutSectionBuilder $builder
+   * @return array
+   *   A render array.
    */
-  public function __construct(LayoutSectionBuilder $builder) {
-    $this->builder = $builder;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('layout_builder.builder'));
-  }
-
-
-  public function layout(FieldableEntityInterface $entity, $field_name) {
-    $output = [];
-    foreach ($entity->$field_name as $item) {
-      $output[] = $this->builder->buildSection($item);
-    }
-    return $output;
+  public function layout(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
+    // Render the layout section field in isolation, with no label.
+    return $layout_section_entity->{$layout_section_field_name}->view(['label' => 'hidden']);
   }
 
 }
