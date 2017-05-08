@@ -1,0 +1,4 @@
+services:
+  layout_builder.builder:
+    class: Drupal\layout_builder\LayoutSectionBuilder
+    arguments: ['@current_user', '@plugin.manager.core.layout', '@plugin.manager.block', '@context.handler', '@context.repository']
