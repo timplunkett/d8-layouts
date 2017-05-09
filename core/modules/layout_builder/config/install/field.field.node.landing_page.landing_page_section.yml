@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.landing_page_section
+    - node.type.landing_page
+  module:
+    - layout_builder
+id: node.landing_page.landing_page_section
+field_name: landing_page_section
+entity_type: node
+bundle: landing_page
+label: 'Landing Page Section'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: layout_section
