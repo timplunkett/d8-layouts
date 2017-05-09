@@ -15,6 +15,19 @@ class LayoutController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
    *   The entity.
+   *
+   * @return string
+   *   The title for the layout page.
+   */
+  public function title(FieldableEntityInterface $layout_section_entity) {
+    return $this->t('Edit layout for %label', ['%label' => $layout_section_entity->label()]);
+  }
+
+  /**
+   * @todo.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   *   The entity.
    * @param string $layout_section_field_name
    *   The field name.
    *

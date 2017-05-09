@@ -41,7 +41,7 @@ class LayoutBuilderRoutes {
       $route = (new Route("$template/layout"))
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutController::layout',
-          'title' => 'Layout',
+          '_title_callback' => '\Drupal\layout_builder\Controller\LayoutController::title',
           'layout_section_entity' => NULL,
           'layout_section_field_name' => NULL,
           'entity_type_id' => $entity_type_id,
