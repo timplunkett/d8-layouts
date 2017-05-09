@@ -178,6 +178,11 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
 
     $this->drupalGet('node/1/layout');
+    // Admin routes are implicitly uncacheable, but are only marked as
+    // 'UNCACHEABLE' if the content on the page is explicitly uncacheable.
+    if ($expected_dynamic_cache !== 'UNCACHEABLE') {
+      $expected_dynamic_cache = NULL;
+    }
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
   }
 
