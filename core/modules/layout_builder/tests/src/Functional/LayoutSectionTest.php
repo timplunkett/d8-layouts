@@ -258,6 +258,18 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection('.layout--twocol', ['foo text', 'bar text']);
   }
 
+  /**
+   * Ensures that the entity title is displayed.
+   */
+  public function testLayoutPageTitle() {
+    $this->drupalPlaceBlock('page_title_block');
+    $this->createSectionNode([]);
+
+    $this->drupalGet('node/1/layout');
+    $this->assertSession()->titleEquals('Edit layout for The node title | Drupal');
+    $this->assertEquals('Edit layout for The node title', $this->cssSelect('h1.page-title')[0]->getText());
+  }
+
   public function testLayoutUrlNoSectionField() {
     $this->createNode([
       'type' => 'bundle_without_section_field',
