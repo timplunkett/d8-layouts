@@ -5,6 +5,7 @@ namespace Drupal\Tests\layout_builder\Functional;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -206,6 +207,55 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->container->get('state')->set('test_block_access', TRUE);
     $this->drupalGet('node/1');
     $this->assertLayoutSection('.layout--onecol', 'Hello test world', '', '', 'UNCACHEABLE');
+  }
+
+  public function testMultilingualLayoutSectionFormatter() {
+    $this->container->get('module_installer')->install(['content_translation']);
+    $this->rebuildContainer();
+
+    ConfigurableLanguage::createFromLangcode('es')->save();
+    $this->container->get('content_translation.manager')->setEnabled('node', 'bundle_with_section_field', TRUE);
+
+    $entity = $this->createSectionNode([
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'system_powered_by_block',
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $entity->addTranslation('es', [
+      'title' => 'Translated node title',
+      $this->fieldName => [
+        [
+          'layout' => 'layout_twocol',
+          'section' => [
+            'left' => [
+              'foo' => [
+                'plugin_id' => 'test_block_instantiation',
+                'display_message' => 'foo text',
+              ],
+            ],
+            'right' => [
+              'bar' => [
+                'plugin_id' => 'test_block_instantiation',
+                'display_message' => 'bar text',
+              ],
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $entity->save();
+
+    $this->drupalGet('node/1');
+    $this->assertLayoutSection('.layout--onecol', 'Powered by');
+    $this->drupalGet('es/node/1');
+    $this->assertLayoutSection('.layout--twocol', ['foo text', 'bar text']);
   }
 
   public function testLayoutUrlNoSectionField() {
