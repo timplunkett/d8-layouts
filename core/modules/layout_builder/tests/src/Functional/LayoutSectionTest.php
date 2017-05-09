@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\layout_builder\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -58,6 +59,13 @@ class LayoutSectionTest extends BrowserTestBase {
     ]);
     $instance->save();
 
+    $display = EntityFormDisplay::load('node.bundle_with_section_field.default');
+    $display->setComponent($this->fieldName, [
+      'type' => 'layout_section',
+      'settings' => [],
+    ]);
+    $display->save();
+
     $display = EntityViewDisplay::load('node.bundle_with_section_field.default');
     $display->setComponent($this->fieldName, [
       'type' => 'layout_section',
@@ -66,6 +74,7 @@ class LayoutSectionTest extends BrowserTestBase {
     $display->save();
     $this->drupalLogin($this->drupalCreateUser([
       'configure any layout',
+      'edit own bundle_with_section_field content',
     ], 'foobar'));
   }
 
@@ -287,6 +296,21 @@ class LayoutSectionTest extends BrowserTestBase {
     ]);
     $this->drupalGet('node/1/layout');
     $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Tests the layout section widget.
+   */
+  public function testLayoutSectionWidget() {
+    $node = $this->createSectionNode([]);
+    $this->drupalGet($node->toUrl('edit-form'));
+
+    $page = $this->getSession()->getPage();
+    $page->selectFieldOption('field_my_sections[0][layout]', 'layout_onecol');
+    $page->fillField('field_my_sections[0][section]', 'a:1:{s:7:"content";a:1:{s:3:"foo";a:1:{s:9:"plugin_id";s:23:"system_powered_by_block";}}}');
+    $this->submitForm([], 'Save');
+
+    $this->assertLayoutSection('.layout--onecol', 'Powered by Drupal');
   }
 
   /**
