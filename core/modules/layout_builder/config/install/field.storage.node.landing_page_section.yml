@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - layout_builder
+    - node
+id: node.landing_page_section
+field_name: landing_page_section
+entity_type: node
+type: layout_section
+settings: {  }
+module: layout_builder
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

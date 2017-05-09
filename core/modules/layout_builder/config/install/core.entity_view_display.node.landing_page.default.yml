@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.landing_page.landing_page_section
+    - node.type.landing_page
+  module:
+    - layout_builder
+    - user
+id: node.landing_page.default
+targetEntityType: node
+bundle: landing_page
+mode: default
+content:
+  landing_page_section:
+    weight: 0
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    type: layout_section
+    region: content
+  links:
+    weight: 100
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }
