@@ -5,6 +5,7 @@ namespace Drupal\Tests\layout_builder\Functional;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -171,16 +172,7 @@ class LayoutSectionTest extends BrowserTestBase {
    * @dataProvider providerTestLayoutSectionFormatter
    */
   public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache) {
-    $this->createNode([
-      'type' => 'bundle_with_section_field',
-      'title' => 'The node title',
-      'body' => [
-        [
-          'value' => 'The node body',
-        ],
-      ],
-      $this->fieldName => $layout_data,
-    ]);
+    $this->createSectionNode($layout_data);
 
     $this->drupalGet('node/1');
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
@@ -190,22 +182,13 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   public function testLayoutSectionFormatterAccess() {
-    $this->createNode([
-      'type' => 'bundle_with_section_field',
-      'title' => 'The node title',
-      'body' => [
-        [
-          'value' => 'The node body',
-        ],
-      ],
-      $this->fieldName => [
-        [
-          'layout' => 'layout_onecol',
-          'section' => [
-            'content' => [
-              'baz' => [
-                'plugin_id' => 'test_access',
-              ],
+    $this->createSectionNode([
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'test_access',
             ],
           ],
         ],
@@ -224,6 +207,55 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->container->get('state')->set('test_block_access', TRUE);
     $this->drupalGet('node/1');
     $this->assertLayoutSection('.layout--onecol', 'Hello test world', '', '', 'UNCACHEABLE');
+  }
+
+  public function testMultilingualLayoutSectionFormatter() {
+    $this->container->get('module_installer')->install(['content_translation']);
+    $this->rebuildContainer();
+
+    ConfigurableLanguage::createFromLangcode('es')->save();
+    $this->container->get('content_translation.manager')->setEnabled('node', 'bundle_with_section_field', TRUE);
+
+    $entity = $this->createSectionNode([
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'system_powered_by_block',
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $entity->addTranslation('es', [
+      'title' => 'Translated node title',
+      $this->fieldName => [
+        [
+          'layout' => 'layout_twocol',
+          'section' => [
+            'left' => [
+              'foo' => [
+                'plugin_id' => 'test_block_instantiation',
+                'display_message' => 'foo text',
+              ],
+            ],
+            'right' => [
+              'bar' => [
+                'plugin_id' => 'test_block_instantiation',
+                'display_message' => 'bar text',
+              ],
+            ],
+          ],
+        ],
+      ],
+    ]);
+    $entity->save();
+
+    $this->drupalGet('node/1');
+    $this->assertLayoutSection('.layout--onecol', 'Powered by');
+    $this->drupalGet('es/node/1');
+    $this->assertLayoutSection('.layout--twocol', ['foo text', 'bar text']);
   }
 
   public function testLayoutUrlNoSectionField() {
@@ -273,6 +305,28 @@ class LayoutSectionTest extends BrowserTestBase {
       $assert_session->responseHeaderContains('X-Drupal-Cache-Tags', $expected_cache_tags);
     }
     $assert_session->responseHeaderEquals('X-Drupal-Dynamic-Cache', $expected_dynamic_cache);
+  }
+
+  /**
+   * Creates a node with a section field.
+   *
+   * @param array $section_values
+   *   An array of values for a section field.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The node object.
+   */
+  protected function createSectionNode(array $section_values) {
+    return $this->createNode([
+      'type' => 'bundle_with_section_field',
+      'title' => 'The node title',
+      'body' => [
+        [
+          'value' => 'The node body',
+        ],
+      ],
+      $this->fieldName => $section_values,
+    ]);
   }
 
 }
