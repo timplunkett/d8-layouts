@@ -171,16 +171,7 @@ class LayoutSectionTest extends BrowserTestBase {
    * @dataProvider providerTestLayoutSectionFormatter
    */
   public function testLayoutSectionFormatter($layout_data, $expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache) {
-    $this->createNode([
-      'type' => 'bundle_with_section_field',
-      'title' => 'The node title',
-      'body' => [
-        [
-          'value' => 'The node body',
-        ],
-      ],
-      $this->fieldName => $layout_data,
-    ]);
+    $this->createSectionNode($layout_data);
 
     $this->drupalGet('node/1');
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
@@ -190,22 +181,13 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   public function testLayoutSectionFormatterAccess() {
-    $this->createNode([
-      'type' => 'bundle_with_section_field',
-      'title' => 'The node title',
-      'body' => [
-        [
-          'value' => 'The node body',
-        ],
-      ],
-      $this->fieldName => [
-        [
-          'layout' => 'layout_onecol',
-          'section' => [
-            'content' => [
-              'baz' => [
-                'plugin_id' => 'test_access',
-              ],
+    $this->createSectionNode([
+      [
+        'layout' => 'layout_onecol',
+        'section' => [
+          'content' => [
+            'baz' => [
+              'plugin_id' => 'test_access',
             ],
           ],
         ],
@@ -273,6 +255,28 @@ class LayoutSectionTest extends BrowserTestBase {
       $assert_session->responseHeaderContains('X-Drupal-Cache-Tags', $expected_cache_tags);
     }
     $assert_session->responseHeaderEquals('X-Drupal-Dynamic-Cache', $expected_dynamic_cache);
+  }
+
+  /**
+   * Creates a node with a section field.
+   *
+   * @param array $section_values
+   *   An array of values for a section field.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The node object.
+   */
+  protected function createSectionNode(array $section_values) {
+    return $this->createNode([
+      'type' => 'bundle_with_section_field',
+      'title' => 'The node title',
+      'body' => [
+        [
+          'value' => 'The node body',
+        ],
+      ],
+      $this->fieldName => $section_values,
+    ]);
   }
 
 }
