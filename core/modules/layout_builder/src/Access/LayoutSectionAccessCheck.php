@@ -47,7 +47,7 @@ class LayoutSectionAccessCheck implements AccessInterface {
     $field_name = $route_match->getParameter('layout_section_field_name');
     // If we don't have an entity, forbid access.
     if (empty($entity) || empty($field_name)) {
-      return AccessResult::forbidden();
+      return AccessResult::forbidden()->addCacheContexts(['route']);
     }
 
     // If the entity isn't fieldable, forbid access.
