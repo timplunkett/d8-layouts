@@ -49,9 +49,10 @@ function layout_builder_toolbar() {
   $match = \Drupal::routeMatch();
   if ($match->getCurrentRouteMatch()->getRouteName() == 'entity.node.canonical') {
     $defaults = $request->attributes->all();
+    $defaults['entity_type_id'] = 'node';
     /** @var \Symfony\Component\Routing\Route $route */
     $route = $defaults['_route_object'];
-    $route->addOptions(['_layout_builder' => 'node']);
+    $route->addOptions(['_layout_builder' => TRUE]);
     /** @var \Drupal\Core\Routing\Enhancer\RouteEnhancerInterface $enhancer */
     $enhancer = \Drupal::service('layout_builder.route_enhancer');
     $request->attributes->add($enhancer->enhance($defaults, $request));
@@ -62,7 +63,7 @@ function layout_builder_toolbar() {
   $access = \Drupal::service('access_check.entity.layout')->access($match, $current_user);
 
   // @todo #2732443 toolbar is awful and should be completely rebuilt.
-  $entity = $request->attributes->get('entity');
+  $entity = $request->attributes->get('layout_section_entity');
   $items['layout_builder'] = [
     '#cache' => [
       'contexts' => ['user.permissions', 'url.query_args'],
