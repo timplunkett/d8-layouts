@@ -1,2 +1,20 @@
+layout_builder.choose_section:
+  path: '/layout_builder/choose/section/{entity_type}/{entity}/{field_name}/{delta}'
+  defaults:
+   _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseSection'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
+layout_builder.add_section:
+  path: '/layout_builder/add/section/{entity_type}/{entity}/{field_name}/{delta}/{plugin_id}'
+  defaults:
+    _controller: '\Drupal\layout_builder\Controller\LayoutController::addSection'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
 route_callbacks:
   - 'layout_builder.routes:getRoutes'
