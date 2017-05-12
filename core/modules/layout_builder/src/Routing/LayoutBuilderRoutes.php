@@ -52,7 +52,6 @@ class LayoutBuilderRoutes {
         ])
         ->addOptions([
           '_layout_builder' => TRUE,
-          '_admin_route' => TRUE,
           'parameters' => [
             $entity_type_id => [
               'type' => "entity:$entity_type_id",
