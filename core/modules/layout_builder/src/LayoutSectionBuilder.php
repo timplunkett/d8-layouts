@@ -6,15 +6,19 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 
 /**
  * @todo.
  */
 class LayoutSectionBuilder {
+  use StringTranslationTrait;
 
   /**
    * The current user.
@@ -97,6 +101,52 @@ class LayoutSectionBuilder {
 
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = $block->build();
+          $cacheability->addCacheableDependency($block);
+        }
+      }
+    }
+
+    $layout = $this->layoutPluginManager->createInstance($layout_id);
+    $section = $layout->build($regions);
+    $cacheability->applyTo($section);
+    return $section;
+  }
+
+  public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $field_name, $delta) {
+    $cacheability = CacheableMetadata::createFromRenderArray([]);
+
+    $regions = [];
+    //@todo load a layout, figure out its regions, add a block add link to all regions.
+    $layout = $this->layoutPluginManager->getDefinition($layout_id);
+    foreach ($layout->getRegions() as $region => $info) {
+      $url = new Url(
+        'layout_builder.choose_block',
+        ['entity_type' => $entity_type, 'entity' => $entity_id, 'field_name' => $field_name, 'delta' => $delta, 'region' => $region],
+        ['attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-renderer' => 'off_canvas',
+          'data-outside-in-edit' => TRUE,
+        ]]
+      );
+      $link = new Link($this->t('Add Block'), $url);
+      $regions[$region]['layout_builder_add_block'] = $link->toRenderable();
+      $regions[$region]['layout_builder_add_block']['#prefix'] = "<div class=\"add-block\">";
+      $regions[$region]['layout_builder_add_block']['#suffix'] = "</div>";
+    }
+    foreach ($section as $region => $blocks) {
+      foreach ($blocks as $uuid => $configuration) {
+        $block = $this->getBlock($uuid, $configuration);
+        $access = $block->access($this->account, TRUE);
+        $cacheability->addCacheableDependency($access);
+
+        //@todo Figure out how to handle blocks a user doesn't have access to
+        // during administration.
+        if ($access->isAllowed()) {
+          $regions[$region][$uuid] = $block->build();
+          //@todo contextual links for configuration/delete
+          //$regions[$region][$uuid]['#contextual_links']
+          //@todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
       }
