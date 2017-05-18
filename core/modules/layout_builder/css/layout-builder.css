@@ -14,3 +14,7 @@
     outline: 2px dashed #2f91da;
     padding: 1.5em 0;
 }
+
+.layout-section .layout-region .add-block {
+    text-align: center;
+}

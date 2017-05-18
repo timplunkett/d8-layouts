@@ -16,5 +16,23 @@ layout_builder.add_section:
   options:
     _admin_route: TRUE
 
+layout_builder.choose_block:
+  path: '/layout_builder/choose/block/{entity_type}/{entity}/{field_name}/{delta}/{region}'
+  defaults:
+    _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseBlock'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
+layout_builder.add_block:
+  path: '/layout_builder/add/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{plugin_id}'
+  defaults:
+    _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseBlock'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
 route_callbacks:
   - 'layout_builder.routes:getRoutes'
