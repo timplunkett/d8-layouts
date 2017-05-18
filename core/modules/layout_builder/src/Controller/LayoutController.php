@@ -83,7 +83,7 @@ class LayoutController extends ControllerBase {
     }
     $url = new Url(
       'layout_builder.choose_section',
-      ['entity_type' => $layout_section_entity->getEntityType()->id(), 'entity' => $revision_id ? $revision_id : $entity_id, 'field_name' => $layout_section_field_name],
+      ['entity_type' => $layout_section_entity->getEntityTypeId(), 'entity' => $revision_id ? $revision_id : $entity_id, 'field_name' => $layout_section_field_name],
       ['attributes' => [
         'class' => ['use-ajax'],
         'data-dialog-type' => 'dialog',
@@ -100,7 +100,7 @@ class LayoutController extends ControllerBase {
     foreach ($layout_section_entity->$layout_section_field_name as $item) {
       $output[] = [
         '#prefix' => '<div class="layout-section">',
-        'layout-section' => $this->builder->buildSection($item->layout, $item->section ? $item->section : []),
+        'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $layout_section_field_name, $count - 1),
         '#suffix' => '</div>',
       ];
       $output[] = [
@@ -163,7 +163,7 @@ class LayoutController extends ControllerBase {
    * @param string $plugin_id
    *   The plugin id of the layout to add.
    *
-   * @return array
+   * @return TrustedRedirectResponse
    *   The render array.
    */
   public function addSection($entity_type, $entity, $field_name, $delta, $plugin_id) {
@@ -195,6 +195,31 @@ class LayoutController extends ControllerBase {
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
     $path = '/'. $this->getUrlGenerator()->getPathFromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()]);
     return new TrustedRedirectResponse($path);
+  }
+
+  public function chooseBlock($entity_type, $entity, $field_name, $delta, $region) {
+    /** @var \Drupal\Core\Block\BlockManagerInterface $manager */
+    $manager = \Drupal::service('plugin.manager.block');
+    // An array of blocks by categories.
+    $blocks = [];
+    foreach ($manager->getDefinitions() as $plugin_id => $definition) {
+      $blocks[$definition['category']][] = [
+        '#markup' => $this->l($definition['admin_label'], new Url('layout_builder.add_block', ['entity_type' => $entity_type, 'entity' => $entity, 'field_name' => $field_name, 'delta' => $delta, 'region' => $region, 'plugin_id' => $plugin_id]))
+      ];
+    }
+    $build = [];
+    //$keys = array_keys($blocks);
+    ksort($blocks, SORT_NATURAL | SORT_FLAG_CASE);
+    foreach ($blocks as $category => $links) {
+      $build[$category]['title'] = ['#markup' => '<h3>' . $category . '</h3>'];
+      $build[$category]['links'] = [
+        '#theme' => 'item_list',
+        '#items' => $links
+      ];
+    }
+    $build['#prefix'] = "<div class=\"block-categories\">";
+    $build['#suffix'] = "</div>";
+    return $build;
   }
 
   /**
