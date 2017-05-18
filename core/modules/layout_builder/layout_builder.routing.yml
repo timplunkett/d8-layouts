@@ -28,7 +28,7 @@ layout_builder.choose_block:
 layout_builder.add_block:
   path: '/layout_builder/add/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{plugin_id}'
   defaults:
-    _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseBlock'
+    _form: '\Drupal\layout_builder\Form\ConfigureBlock'
   requirements:
     _permission: 'configure any layout'
   options:
