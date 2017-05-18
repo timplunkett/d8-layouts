@@ -4,10 +4,10 @@ namespace Drupal\layout_builder\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutSectionBuilder;
+use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -15,6 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @todo.
  */
 class LayoutController extends ControllerBase {
+  use TempstoreIdHelper;
 
   /**
    * The layout builder.
@@ -208,7 +209,6 @@ class LayoutController extends ControllerBase {
       ];
     }
     $build = [];
-    //$keys = array_keys($blocks);
     ksort($blocks, SORT_NATURAL | SORT_FLAG_CASE);
     foreach ($blocks as $category => $links) {
       $build[$category]['title'] = ['#markup' => '<h3>' . $category . '</h3>'];
@@ -241,19 +241,6 @@ class LayoutController extends ControllerBase {
    */
   protected function generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id) {
     return new Url('layout_builder.add_section', ['entity_type' => $entity_type, 'entity' => $entity, 'field_name' => $field_name, 'delta' => $delta, 'plugin_id' => $plugin_id]);
-  }
-
-  /**
-   * @param FieldableEntityInterface $layout_section_entity
-   * @param $layout_section_field_name
-   */
-  protected function generateTempstoreId(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
-    $collection = "{$layout_section_entity->getEntityTypeId()}.$layout_section_field_name";
-    $id = "{$layout_section_entity->id()}.{$layout_section_entity->language()->getId()}";
-    if ($layout_section_entity instanceof RevisionableInterface) {
-      $id .= '.'. $layout_section_entity->getRevisionId();
-    }
-    return [$collection, $id];
   }
 
 }
