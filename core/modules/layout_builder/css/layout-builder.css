@@ -1,0 +1,20 @@
+.add-section {
+    width: 100%;
+    outline: 2px dashed #979797;
+    padding: 1.5em 0;
+    text-align: center;
+    margin-bottom: 1.5em;
+}
+
+.layout-section {
+    margin-bottom: 1.5em;
+}
+
+.layout-section .layout-region {
+    outline: 2px dashed #2f91da;
+    padding: 1.5em 0;
+}
+
+.layout-section .layout-region .add-block {
+    text-align: center;
+}

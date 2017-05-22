@@ -4,6 +4,8 @@
  * @file
  * Provides hook implementations for Layout Builder.
  */
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
@@ -16,4 +18,79 @@ function layout_builder_help($route_name) {
       $output .= '<p>' . t('For more information, see the <a href=":layout-builder-documentation">online documentation for the Layout Builder module</a>.', [':layout-builder-documentation' => 'https://www.drupal.org/docs/8/core/modules/layout_builder']) . '</p>';
       return $output;
   }
+}
+
+/**
+ * Implements hook_toolbar().
+ */
+function layout_builder_toolbar() {
+  // @todo determine if this query manipulation can be removed.
+  $query = \Drupal::request()->query->all();
+  $wrapper_class = '';
+  if (isset($query['layout-builder'])) {
+    $status_class = 'active';
+    $wrapper_class = 'is-active';
+    $description = t('Exit Layout Builder mode.');
+    unset($query['layout-builder']);
+    unset($query['destination']);
+  }
+  else {
+    $status_class = 'inactive';
+    $description = t('Enter Layout Builder mode.');
+    $query['layout-builder'] = '1';
+    $query['destination'] = Url::fromRoute('<current>')->toString();
+  }
+
+  /** @var \Symfony\Component\HttpFoundation\RequestStack $request_stack */
+  $request_stack = \Drupal::service('request_stack');
+  $request = $request_stack->getCurrentRequest();
+  $current_user = \Drupal::currentUser();
+  //@todo Hardcode menu access until https://www.drupal.org/node/2877853
+  $match = \Drupal::routeMatch();
+  if ($match->getCurrentRouteMatch()->getRouteName() == 'entity.node.canonical') {
+    $defaults = $request->attributes->all();
+    $defaults['entity_type_id'] = 'node';
+    /** @var \Symfony\Component\Routing\Route $route */
+    $route = $defaults['_route_object'];
+    $route->addOptions(['_layout_builder' => TRUE]);
+    /** @var \Drupal\Core\Routing\Enhancer\RouteEnhancerInterface $enhancer */
+    $enhancer = \Drupal::service('layout_builder.route_enhancer');
+    $request->attributes->add($enhancer->enhance($defaults, $request));
+    $parameters = $match->getParameters();
+    $parameters->add(['layout_section_entity' => $request->attributes->get('layout_section_entity'), 'layout_section_field_name' => $request->attributes->get('layout_section_field_name')]);
+  }
+  /** @var \Drupal\Core\Access\AccessResult $access */
+  $access = \Drupal::service('access_check.entity.layout')->access($match, $current_user);
+
+  // @todo #2732443 toolbar is awful and should be completely rebuilt.
+  $entity = $request->attributes->get('layout_section_entity');
+  $items['layout_builder'] = [
+    '#cache' => [
+      'contexts' => ['user.permissions', 'url.query_args'],
+    ],
+    '#type' => 'toolbar_item',
+    'tab' => [
+      '#access' => $access->isAllowed(),
+      '#type' => 'link',
+      '#title' => t('Content Layout'),
+      '#url' => Url::fromRoute('entity.node.layout', ['node' => $entity && is_object($entity) ? $entity->id() : '']),
+      '#attributes' => [
+        'title' => $description,
+        'class' => ['toolbar-icon', 'toolbar-icon-layout-builder-' . $status_class],
+      ],
+    ],
+    '#wrapper_attributes' => [
+      'class' => ['toolbar-tab', 'layout-builder-toolbar-tab', $wrapper_class],
+      'data-edit-mode-active' => 'true',
+    ],
+    '#weight' => 100,
+    '#attached' => [
+      'library' => [
+        'block_place/drupal.block_place.icons',
+      ],
+    ],
+  ];
+  $metadata = CacheableMetadata::createFromObject($access);
+  $metadata->applyTo($items['layout_builder']);
+  return $items;
 }
