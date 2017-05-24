@@ -10,6 +10,7 @@ use Drupal\layout_builder\LayoutSectionBuilder;
 use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * @todo.
@@ -220,6 +221,26 @@ class LayoutController extends ControllerBase {
     $build['#prefix'] = "<div class=\"block-categories\">";
     $build['#suffix'] = "</div>";
     return $build;
+  }
+
+  public function removeBlock($entity_type, $entity, $field_name, $delta, $region, $uuid) {
+    /** @var FieldableEntityInterface $entity */
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
+    list ($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+
+    $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'];
+    $values = $entity->$field_name->getValue();
+    unset($values[$delta]['section'][$region][$uuid]);
+    $entity->$field_name->setValue($values);
+
+    $tempstore['entity'] = $entity;
+    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
+
+    $redirect = Url::fromRoute('entity.' . $entity_type . '.layout', [
+      $entity_type => $entity->id(),
+    ]);
+
+    return new RedirectResponse($redirect->toString());
   }
 
   /**
