@@ -143,7 +143,19 @@ class LayoutSectionBuilder {
         //@todo Figure out how to handle blocks a user doesn't have access to
         // during administration.
         if ($access->isAllowed()) {
-          $regions[$region][$uuid] = $block->build();
+          $regions[$region][$uuid]['remove'] = [
+            '#type' => 'link',
+            '#url' => Url::fromRoute('layout_builder.remove_block', [
+              'entity_type' => $entity_type,
+              'entity' => $entity_id,
+              'field_name' => $field_name,
+              'delta' => $delta,
+              'region' => $region,
+              'uuid' => $uuid,
+            ]),
+            '#title' => $this->t('Remove'),
+          ];
+          $regions[$region][$uuid]['content'] = $block->build();
           //@todo contextual links for configuration/delete
           //$regions[$region][$uuid]['#contextual_links']
           //@todo cacheability in the administration? is that a thing?
@@ -174,11 +186,11 @@ class LayoutSectionBuilder {
    *   Thrown when the configuration parameter does not contain 'plugin_id'.
    */
   protected function getBlock($uuid, array $configuration) {
-    if (!isset($configuration['id'])) {
+    if (!isset($configuration['plugin_id'])) {
       throw new PluginException(sprintf('No plugin ID specified for block with "%s" UUID', $uuid));
     }
 
-    $block = $this->blockManager->createInstance($configuration['id'], $configuration);
+    $block = $this->blockManager->createInstance($configuration['plugin_id'], $configuration);
     if ($block instanceof ContextAwarePluginInterface) {
       $contexts = $this->contextRepository->getRuntimeContexts(array_values($block->getContextMapping()));
       $this->contextHandler->applyContextMapping($block, $contexts);

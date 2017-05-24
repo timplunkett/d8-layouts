@@ -92,5 +92,60 @@ function layout_builder_toolbar() {
   ];
   $metadata = CacheableMetadata::createFromObject($access);
   $metadata->applyTo($items['layout_builder']);
+  // If we're on a layout page, display the save/cancel buttons.
+  if ($match->getCurrentRouteMatch()->getRouteName() == 'entity.node.layout') {
+    $items['layout_builder_save'] = [
+      '#cache' => [
+        'contexts' => ['user.permissions', 'url.query_args'],
+      ],
+      '#type' => 'toolbar_item',
+      'tab' => [
+        '#access' => $access->isAllowed(),
+        '#type' => 'link',
+        '#title' => t('Save Layout'),
+        '#url' => Url::fromRoute('entity.node.save_layout', ['node' => $entity && is_object($entity) ? $entity->id() : '']),
+        '#attributes' => [
+          'title' => $description,
+          'class' => ['toolbar-icon', 'toolbar-icon-layout-builder-' . $status_class],
+        ],
+      ],
+      '#wrapper_attributes' => [
+        'class' => ['toolbar-tab', 'layout-builder-toolbar-tab', $wrapper_class],
+        'data-edit-mode-active' => 'true',
+      ],
+      '#weight' => 101,
+      '#attached' => [
+        'library' => [
+          'block_place/drupal.block_place.icons',
+        ],
+      ],
+    ];
+    $items['layout_builder_cancel'] = [
+      '#cache' => [
+        'contexts' => ['user.permissions', 'url.query_args'],
+      ],
+      '#type' => 'toolbar_item',
+      'tab' => [
+        '#access' => $access->isAllowed(),
+        '#type' => 'link',
+        '#title' => t('Cancel Layout'),
+        '#url' => Url::fromRoute('entity.node.cancel_layout', ['node' => $entity && is_object($entity) ? $entity->id() : '']),
+        '#attributes' => [
+          'title' => $description,
+          'class' => ['toolbar-icon', 'toolbar-icon-layout-builder-' . $status_class],
+        ],
+      ],
+      '#wrapper_attributes' => [
+        'class' => ['toolbar-tab', 'layout-builder-toolbar-tab', $wrapper_class],
+        'data-edit-mode-active' => 'true',
+      ],
+      '#weight' => 102,
+      '#attached' => [
+        'library' => [
+          'block_place/drupal.block_place.icons',
+        ],
+      ],
+    ];
+  }
   return $items;
 }
