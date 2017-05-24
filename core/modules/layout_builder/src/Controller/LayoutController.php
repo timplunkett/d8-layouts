@@ -204,21 +204,33 @@ class LayoutController extends ControllerBase {
   public function chooseBlock($entity_type, $entity, $field_name, $delta, $region) {
     /** @var \Drupal\Core\Block\BlockManagerInterface $manager */
     $manager = \Drupal::service('plugin.manager.block');
-    // An array of blocks by categories.
-    $blocks = [];
-    foreach ($manager->getDefinitions() as $plugin_id => $definition) {
-      $blocks[$definition['category']][] = [
-        '#markup' => $this->l($definition['admin_label'], new Url('layout_builder.add_block', ['entity_type' => $entity_type, 'entity' => $entity, 'field_name' => $field_name, 'delta' => $delta, 'region' => $region, 'plugin_id' => $plugin_id]))
-      ];
-    }
     $build = [];
-    ksort($blocks, SORT_NATURAL | SORT_FLAG_CASE);
-    foreach ($blocks as $category => $links) {
+    foreach ($manager->getGroupedDefinitions() as $category => $blocks) {
       $build[$category]['title'] = ['#markup' => '<summary class="title">' . $category . '</summary>'];
       $build[$category]['links'] = [
-        '#theme' => 'table',
-        '#rows' => $links
+        '#type' => 'table',
       ];
+      foreach ($blocks as $block_id => $block) {
+        $build[$category]['links'][]['data'] = [
+          '#type' => 'link',
+          '#title' => $block['admin_label'],
+          '#url' => Url::fromRoute('layout_builder.add_block',
+            [
+              'entity_type' => $entity_type,
+              'entity' => $entity,
+              'field_name' => $field_name,
+              'delta' => $delta,
+              'region' => $region,
+              'plugin_id' => $block['id'],
+            ]
+          ),
+          '#attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-renderer' => 'off_canvas',
+          ],
+        ];
+      }
       $build[$category]['#prefix'] = '<details open="open">';
       $build[$category]['#suffix'] = "</details>";
     }
