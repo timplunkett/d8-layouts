@@ -3,3 +3,8 @@ drupal.layout_builder:
   css:
     theme:
       css/layout-builder.css: {}
+drupal.layout_builder.icons:
+  version: VERSION
+  css:
+    theme:
+      css/layout-builder.icons.theme.css: {}
