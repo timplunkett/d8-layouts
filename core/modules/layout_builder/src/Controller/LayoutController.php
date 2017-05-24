@@ -245,6 +245,7 @@ class LayoutController extends ControllerBase {
     }
     // @todo figure out if we should save a new revision.
     $layout_section_entity->save();
+    $this->tempStoreFactory->get($collection)->delete($id);
     // @todo Make trusted redirect instead.
     return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }
