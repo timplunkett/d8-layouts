@@ -177,20 +177,20 @@ class LayoutSectionBuilder {
    *   The UUID of this block instance.
    * @param array $configuration
    *   An array of configuration relevant to the block instance. Must contain
-   *   the plugin ID with the key 'plugin_id'.
+   *   the plugin ID with the key 'id'.
    *
    * @return \Drupal\Core\Block\BlockPluginInterface
    *   The block instance.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *   Thrown when the configuration parameter does not contain 'plugin_id'.
+   *   Thrown when the configuration parameter does not contain 'id'.
    */
   protected function getBlock($uuid, array $configuration) {
-    if (!isset($configuration['plugin_id'])) {
+    if (!isset($configuration['id'])) {
       throw new PluginException(sprintf('No plugin ID specified for block with "%s" UUID', $uuid));
     }
 
-    $block = $this->blockManager->createInstance($configuration['plugin_id'], $configuration);
+    $block = $this->blockManager->createInstance($configuration['id'], $configuration);
     if ($block instanceof ContextAwarePluginInterface) {
       $contexts = $this->contextRepository->getRuntimeContexts(array_values($block->getContextMapping()));
       $this->contextHandler->applyContextMapping($block, $contexts);
