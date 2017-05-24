@@ -1,0 +1,20 @@
+/**
+ * @file
+ * Styling for layout_builder module toolbar icons.
+ */
+.toolbar .layout-builder-toolbar-tab.is-active {
+  background-image: -webkit-linear-gradient(rgba(255, 255, 255, 0.25) 20%, transparent 200%);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.25) 20%, transparent 200%);
+}
+
+[dir="rtl"] .toolbar .toolbar-bar .layout-builder-toolbar-tab {
+  float: left;
+}
+
+.toolbar-bar .toolbar-icon-layout-builder-active:before {
+  background-image: url(../icons/ffffff/layout-builder.svg);
+}
+
+.toolbar-bar .toolbar-icon-layout-builder-inactive:before {
+  background-image: url(../icons/bebebe/layout-builder.svg);
+}
