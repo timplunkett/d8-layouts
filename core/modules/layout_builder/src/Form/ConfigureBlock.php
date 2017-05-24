@@ -108,7 +108,7 @@ class ConfigureBlock extends FormBase {
    */
   protected function prepareBlock($block_id, array $value) {
     if ($value) {
-      return $this->blockManager->createInstance($value['plugin_id'], $value);
+      return $this->blockManager->createInstance($value['id'], $value);
     }
     /** @var \Drupal\Core\Block\BlockPluginInterface $block */
     $block = $this->blockManager->createInstance($block_id);
@@ -147,7 +147,7 @@ class ConfigureBlock extends FormBase {
 
     $form['#tree'] = TRUE;
     $form['settings'] = $this->block->buildConfigurationForm([], $form_state);
-    $form['settings']['plugin_id'] = [
+    $form['settings']['id'] = [
       '#type' => 'value',
       '#value' => $this->block->getPluginId(),
     ];

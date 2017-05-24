@@ -80,7 +80,7 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'plugin_id' => 'test_context_aware',
+                'id' => 'test_context_aware',
                 'context_mapping' => [
                   'user' => '@user.current_user_context:current_user',
                 ],
@@ -108,7 +108,7 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'plugin_id' => 'system_powered_by_block',
+                'id' => 'system_powered_by_block',
               ],
             ],
           ],
@@ -127,7 +127,7 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'plugin_id' => 'system_powered_by_block',
+                'id' => 'system_powered_by_block',
               ],
             ],
           ],
@@ -137,13 +137,13 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'first' => [
               'foo' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'foo text',
               ],
             ],
             'second' => [
               'bar' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'bar text',
               ],
             ],
@@ -188,7 +188,7 @@ class LayoutSectionTest extends BrowserTestBase {
         'section' => [
           'content' => [
             'baz' => [
-              'plugin_id' => 'test_access',
+              'id' => 'test_access',
             ],
           ],
         ],
@@ -222,7 +222,7 @@ class LayoutSectionTest extends BrowserTestBase {
         'section' => [
           'content' => [
             'baz' => [
-              'plugin_id' => 'system_powered_by_block',
+              'id' => 'system_powered_by_block',
             ],
           ],
         ],
@@ -236,13 +236,13 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'first' => [
               'foo' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'foo text',
               ],
             ],
             'second' => [
               'bar' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'bar text',
               ],
             ],
