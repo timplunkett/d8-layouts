@@ -34,5 +34,14 @@ layout_builder.add_block:
   options:
     _admin_route: TRUE
 
+layout_builder.remove_block:
+  path: '/layout_builder/remove/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{uuid}'
+  defaults:
+    _controller: '\Drupal\layout_builder\Controller\LayoutController::removeBlock'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
 route_callbacks:
   - 'layout_builder.routes:getRoutes'
