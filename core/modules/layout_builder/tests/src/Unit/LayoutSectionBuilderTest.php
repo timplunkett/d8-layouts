@@ -96,7 +96,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $this->layout->build(['content' => ['some_uuid' => $block_content]])->willReturnArgument(0);
 
     $block = $this->prophesize(BlockPluginInterface::class);
-    $this->blockManager->createInstance('block_plugin_id', ['plugin_id' => 'block_plugin_id'])->willReturn($block->reveal());
+    $this->blockManager->createInstance('block_plugin_id', ['id' => 'block_plugin_id'])->willReturn($block->reveal());
 
     $access_result = AccessResult::allowed();
     $block->access($this->account->reveal(), TRUE)->willReturn($access_result);
@@ -108,7 +108,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $section = [
       'content' => [
         'some_uuid' => [
-          'plugin_id' => 'block_plugin_id',
+          'id' => 'block_plugin_id',
         ],
       ],
     ];
@@ -133,7 +133,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $this->layout->build([])->willReturn([]);
 
     $block = $this->prophesize(BlockPluginInterface::class);
-    $this->blockManager->createInstance('block_plugin_id', ['plugin_id' => 'block_plugin_id'])->willReturn($block->reveal());
+    $this->blockManager->createInstance('block_plugin_id', ['id' => 'block_plugin_id'])->willReturn($block->reveal());
 
     $access_result = AccessResult::forbidden();
     $block->access($this->account->reveal(), TRUE)->willReturn($access_result);
@@ -142,7 +142,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $section = [
       'content' => [
         'some_uuid' => [
-          'plugin_id' => 'block_plugin_id',
+          'id' => 'block_plugin_id',
         ],
       ],
     ];
@@ -183,7 +183,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $this->layout->build(['content' => ['some_uuid' => []]])->willReturnArgument(0);
 
     $block = $this->prophesize(BlockPluginInterface::class)->willImplement(ContextAwarePluginInterface::class);
-    $this->blockManager->createInstance('block_plugin_id', ['plugin_id' => 'block_plugin_id'])->willReturn($block->reveal());
+    $this->blockManager->createInstance('block_plugin_id', ['id' => 'block_plugin_id'])->willReturn($block->reveal());
 
     $access_result = AccessResult::allowed();
     $block->access($this->account->reveal(), TRUE)->willReturn($access_result);
@@ -199,7 +199,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $section = [
       'content' => [
         'some_uuid' => [
-          'plugin_id' => 'block_plugin_id',
+          'id' => 'block_plugin_id',
         ],
       ],
     ];
