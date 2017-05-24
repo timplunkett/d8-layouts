@@ -59,6 +59,48 @@ class LayoutBuilderRoutes {
           ],
         ]);
       $routes["entity.$entity_type_id.layout"] = $route;
+
+      $route = (new Route("$template/layout/save"))
+        ->setDefaults([
+          '_controller' => '\Drupal\layout_builder\Controller\LayoutController::saveLayout',
+          'layout_section_entity' => NULL,
+          'layout_section_field_name' => NULL,
+          'entity_type_id' => $entity_type_id,
+        ])
+        ->addRequirements([
+          $entity_type_id => '\d+',
+          '_has_layout_selection' => 'true',
+        ])
+        ->addOptions([
+          '_layout_builder' => TRUE,
+          'parameters' => [
+            $entity_type_id => [
+              'type' => "entity:$entity_type_id",
+            ],
+          ],
+        ]);
+      $routes["entity.$entity_type_id.save_layout"] = $route;
+
+      $route = (new Route("$template/layout/cancel"))
+        ->setDefaults([
+          '_controller' => '\Drupal\layout_builder\Controller\LayoutController::cancelLayout',
+          'layout_section_entity' => NULL,
+          'layout_section_field_name' => NULL,
+          'entity_type_id' => $entity_type_id,
+        ])
+        ->addRequirements([
+          $entity_type_id => '\d+',
+          '_has_layout_selection' => 'true',
+        ])
+        ->addOptions([
+          '_layout_builder' => TRUE,
+          'parameters' => [
+            $entity_type_id => [
+              'type' => "entity:$entity_type_id",
+            ],
+          ],
+        ]);
+      $routes["entity.$entity_type_id.cancel_layout"] = $route;
     }
     return $routes;
   }
