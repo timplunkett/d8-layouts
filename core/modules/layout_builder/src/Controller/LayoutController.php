@@ -213,11 +213,13 @@ class LayoutController extends ControllerBase {
     $build = [];
     ksort($blocks, SORT_NATURAL | SORT_FLAG_CASE);
     foreach ($blocks as $category => $links) {
-      $build[$category]['title'] = ['#markup' => '<h3>' . $category . '</h3>'];
+      $build[$category]['title'] = ['#markup' => '<summary class="title">' . $category . '</summary>'];
       $build[$category]['links'] = [
-        '#theme' => 'item_list',
-        '#items' => $links
+        '#theme' => 'table',
+        '#rows' => $links
       ];
+      $build[$category]['#prefix'] = '<details open="open">';
+      $build[$category]['#suffix'] = "</details>";
     }
     $build['#prefix'] = "<div class=\"block-categories\">";
     $build['#suffix'] = "</div>";

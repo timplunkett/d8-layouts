@@ -3,8 +3,8 @@
  * Visual styling for Settings Tray module.
  */
 
-/* @todo Move this into toolbar when this module is no longer experimental:
- *   https://www.drupal.org/node/2784593.
+/* @todo remove the @imports when we find a better way to load these styles last.
+ * https://www.drupal.org/node/1945262.
  */
 
 /* Style the edit mode toolbar and tabs. */
