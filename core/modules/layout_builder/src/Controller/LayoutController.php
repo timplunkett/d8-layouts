@@ -11,6 +11,8 @@ use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
+
 
 /**
  * @todo.
@@ -212,11 +214,13 @@ class LayoutController extends ControllerBase {
     $build = [];
     ksort($blocks, SORT_NATURAL | SORT_FLAG_CASE);
     foreach ($blocks as $category => $links) {
-      $build[$category]['title'] = ['#markup' => '<h3>' . $category . '</h3>'];
+      $build[$category]['title'] = ['#markup' => '<summary class="title">' . $category . '</summary>'];
       $build[$category]['links'] = [
-        '#theme' => 'item_list',
-        '#items' => $links
+        '#theme' => 'table',
+        '#rows' => $links
       ];
+      $build[$category]['#prefix'] = '<details open="open">';
+      $build[$category]['#suffix'] = "</details>";
     }
     $build['#prefix'] = "<div class=\"block-categories\">";
     $build['#suffix'] = "</div>";
@@ -241,6 +245,49 @@ class LayoutController extends ControllerBase {
     ]);
 
     return new RedirectResponse($redirect->toString());
+  }
+
+  /**
+   * Save the layout.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   *   The entity.
+   * @param string $layout_section_field_name
+   *   The field name.
+   *
+   * @return RedirectResponse
+   *   A redirect response.
+   */
+  public function saveLayout(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
+    list($collection, $id) = $this->generateTempstoreId($layout_section_entity, $layout_section_field_name);
+    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
+      if (!empty($tempstore['entity'])) {
+      $layout_section_entity = $tempstore['entity'];
+    }
+    // @todo figure out if we should save a new revision.
+    $layout_section_entity->save();
+    $this->tempStoreFactory->get($collection)->delete($id);
+    // @todo Make trusted redirect instead.
+    return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
+  }
+
+
+  /**
+   * Cancel the layout.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   *   The entity.
+   * @param string $layout_section_field_name
+   *   The field name.
+   *
+   * @return RedirectResponse
+   *   A redirect response.
+   */
+  public function cancelLayout(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
+    list($collection, $id) = $this->generateTempstoreId($layout_section_entity, $layout_section_field_name);
+    $this->tempStoreFactory->get($collection)->delete($id);
+    // @todo Make trusted redirect instead.
+    return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }
 
   /**

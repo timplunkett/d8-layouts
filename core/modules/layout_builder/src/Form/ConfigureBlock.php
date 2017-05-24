@@ -147,7 +147,7 @@ class ConfigureBlock extends FormBase {
 
     $form['#tree'] = TRUE;
     $form['settings'] = $this->block->buildConfigurationForm([], $form_state);
-    $form['settings']['id'] = [
+    $form['settings']['plugin_id'] = [
       '#type' => 'value',
       '#value' => $this->block->getPluginId(),
     ];
