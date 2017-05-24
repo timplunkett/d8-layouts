@@ -113,7 +113,6 @@ class LayoutController extends ControllerBase {
       $count++;
     }
     $output['#attached']['library'][] = 'layout_builder/drupal.layout_builder';
-    $output['#attached']['library'][] = 'outside_in/drupal.off_canvas';
     return $output;
   }
 
