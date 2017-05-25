@@ -178,7 +178,10 @@ class LayoutController extends ControllerBase {
     $output['layouts'] = [
       '#theme' => 'item_list',
       '#items' => $items,
+      '#prefix' => '<details class="layout-selection" open="open"><summary class="title">Basic Layouts</summary>',
+      '#suffix'=> "</details>",
     ];
+
     return $output;
   }
 
