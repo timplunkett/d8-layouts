@@ -5,6 +5,7 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Url;
@@ -13,6 +14,7 @@ use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 
@@ -373,6 +375,46 @@ class LayoutController extends ControllerBase {
     $this->tempStoreFactory->get($collection)->delete($id);
     // @todo Make trusted redirect instead.
     return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
+  }
+
+  public function moveBlock(Request $request, $entity_type, $entity, $field_name) {
+    /** @var FieldableEntityInterface $entity */
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
+    list($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
+    if (!empty($tempstore['entity'])) {
+      $entity = $tempstore['entity'];
+    }
+    $data = Json::decode($request->getContent());
+//    region_from
+//    region_to
+//    block_uuid
+//    delta_from
+//    delta_to
+//    preceding_block_uuid
+
+    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
+    $field = $entity->$field_name->get($data['delta_from']);
+    $values = $field->section;
+    $configuration = $values[$data['region_from']][$data['block_uuid']];
+    unset($values[$data['region_from']][$data['block_uuid']]);
+    $field->section = array_filter($values);
+    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
+    $field = $entity->$field_name->get($data['delta_to']);
+    $values = $field_name->section;
+    if ($data['preceding_block_uuid']) {
+      $slice_id = array_search($data['preceding_block_uuid'], array_keys($values));
+      $before = array_slice($values, 0, $slice_id);
+      $after = array_slice($values, $slice_id);
+      $values = array_merge($before, [$data['preceding_block_uuid'] => $configuration], $after);
+    }
+    else {
+      $values = array_merge([$data['preceding_block_uuid'] => $configuration], $values);
+    }
+    $field->section = array_filter($values);
+    $tempstore['entity'] = $entity;
+    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
+    return new AjaxResponse();
   }
 
   /**
