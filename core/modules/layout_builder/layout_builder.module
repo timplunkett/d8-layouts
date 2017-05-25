@@ -116,7 +116,7 @@ function layout_builder_toolbar() {
       '#weight' => 101,
       '#attached' => [
         'library' => [
-          'block_place/drupal.block_place.icons',
+          'layout_builder/drupal.layout_builder.icons',
         ],
       ],
     ];
@@ -142,7 +142,7 @@ function layout_builder_toolbar() {
       '#weight' => 102,
       '#attached' => [
         'library' => [
-          'block_place/drupal.block_place.icons',
+          'layout_builder/drupal.layout_builder.icons',
         ],
       ],
     ];
