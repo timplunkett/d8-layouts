@@ -80,8 +80,7 @@ class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterf
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $sections = $this->get(static::mainPropertyName())->getValue();
-    return empty($sections);
+    return empty($this->layout);
   }
 
 }
