@@ -16,6 +16,15 @@ layout_builder.add_section:
   options:
     _admin_route: TRUE
 
+layout_builder.remove_section:
+  path: '/layout_builder/remove/section/{entity_type}/{entity}/{field_name}/{delta}'
+  defaults:
+    _controller: '\Drupal\layout_builder\Controller\LayoutController::removeSection'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
 layout_builder.choose_block:
   path: '/layout_builder/choose/block/{entity_type}/{entity}/{field_name}/{delta}/{region}'
   defaults:
