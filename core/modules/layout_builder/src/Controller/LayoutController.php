@@ -2,6 +2,9 @@
 
 namespace Drupal\layout_builder\Controller;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Url;
@@ -122,6 +125,8 @@ class LayoutController extends ControllerBase {
       $count++;
     }
     $output['#attached']['library'][] = 'layout_builder/drupal.layout_builder';
+    $output['#prefix'] = '<div id="layout-builder">';
+    $output['#suffix'] = '</div>';
     return $output;
   }
 
@@ -172,6 +177,9 @@ class LayoutController extends ControllerBase {
           '#type' => 'link',
           '#title' => $definition->getLabel(),
           '#url' => $this->generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id),
+          '#attributes' => [
+            'class' => 'use-ajax',
+          ],
         ],
       ];
     }
@@ -199,7 +207,7 @@ class LayoutController extends ControllerBase {
    * @param string $plugin_id
    *   The plugin id of the layout to add.
    *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @return \Drupal\Core\Ajax\AjaxResponse
    *   The render array.
    */
   public function addSection($entity_type, $entity, $field_name, $delta, $plugin_id) {
@@ -229,7 +237,10 @@ class LayoutController extends ControllerBase {
     $entity->$field_name->setValue($values);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    return new RedirectResponse(Url::fromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()])->setAbsolute()->toString());
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
+    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
+    return $response;
   }
 
   /**
@@ -259,6 +270,10 @@ class LayoutController extends ControllerBase {
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
     return new RedirectResponse(Url::fromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()])->setAbsolute()->toString());
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
+    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
+    return $response;
   }
 
   public function chooseBlock($entity_type, $entity, $field_name, $delta, $region) {
