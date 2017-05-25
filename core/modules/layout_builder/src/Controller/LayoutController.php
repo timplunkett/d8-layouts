@@ -385,6 +385,7 @@ class LayoutController extends ControllerBase {
     $values = $field->section ?: [];
 
     $region_from = $data['region_from'];
+    $region_to = $data['region_to'];
     $block_uuid = $data['block_uuid'];
     $configuration = $values[$region_from][$block_uuid];
     unset($values[$region_from][$block_uuid]);
@@ -394,13 +395,16 @@ class LayoutController extends ControllerBase {
     $field = $entity->$field_name->get($data['delta_to']);
     $values = $field_name->section ?: [];
     if ($data['preceding_block_uuid']) {
-      $slice_id = array_search($data['preceding_block_uuid'], array_keys($values));
-      $before = array_slice($values, 0, $slice_id);
-      $after = array_slice($values, $slice_id);
-      $values = array_merge($before, [$block_uuid => $configuration], $after);
+      $slice_id = array_search($data['preceding_block_uuid'], array_keys($values[$region_to]));
+      $before = array_slice($values[$region_to], 0, $slice_id);
+      $after = array_slice($values[$region_to], $slice_id);
+      $values[$region_to] = array_merge($before, [$block_uuid => $configuration], $after);
     }
     else {
-      $values[$data['region_to']][$block_uuid] = $configuration;
+      if (empty($values[$region_to])) {
+        $values[$region_to] = [];
+      }
+      $values[$region_to] = array_merge([$block_uuid => $configuration], $values[$region_to]);
     }
     $field->section = array_filter($values);
 
