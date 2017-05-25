@@ -130,6 +130,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $this->clickLink('Save Layout');
     $assert_session->addressEquals('node/1');
     $assert_session->pageTextContains('Powered by Drupal');
+    $assert_session->pageTextContains('My Sections');
 
     // Remove a block.
     $this->drupalGet('node/1/layout');
@@ -138,13 +139,21 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
     $this->clickLink('Save Layout');
-    $this->drupalGet('node/1/layout');
+    $assert_session->pageTextContains('My Sections');
 
     // Test deriver-based blocks.
+    $this->drupalGet('node/1/layout');
     $this->clickAjaxLink('Add Block');
     $this->clickAjaxLink('My custom block');
     $page->pressButton('Add Block');
     $assert_session->pageTextContains('This is the block content');
+
+    // Remove a section.
+    $this->clickLink('Remove section');
+    $assert_session->pageTextNotContains('This is the block content');
+    $assert_session->linkNotExists('Add Block');
+    $this->clickLink('Save Layout');
+    $assert_session->pageTextNotContains('My Sections');
   }
 
   /**

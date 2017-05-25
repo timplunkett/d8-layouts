@@ -103,6 +103,16 @@ class LayoutController extends ControllerBase {
     foreach ($layout_section_entity->$layout_section_field_name as $item) {
       $output[] = [
         '#prefix' => '<div class="layout-section">',
+        'remove' => [
+          '#type' => 'link',
+          '#title' => $this->t('Remove section'),
+          '#url' => Url::fromRoute('layout_builder.remove_section', [
+            'entity_type' => $layout_section_entity->getEntityTypeId(),
+            'entity' => $revision_id ?: $entity_id,
+            'field_name' => $layout_section_field_name,
+            'delta' => $count - 1,
+          ]),
+        ],
         'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $layout_section_field_name, $count - 1),
         '#suffix' => '</div>',
       ];
@@ -214,6 +224,35 @@ class LayoutController extends ControllerBase {
       ];
     }
     $entity->$field_name->setValue($values);
+    $tempstore['entity'] = $entity;
+    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
+    return new RedirectResponse(Url::fromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()])->setAbsolute()->toString());
+  }
+
+  /**
+   * Add the layout to the entity field in a tempstore.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $entity
+   *   The entity id.
+   * @param string $field_name
+   *   The layout field name.
+   * @param int $delta
+   *   The delta of the section to splice.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   The render array.
+   */
+  public function removeSection($entity_type, $entity, $field_name, $delta) {
+    /** @var FieldableEntityInterface $entity */
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
+    list($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
+    if (!empty($tempstore['entity'])) {
+      $entity = $tempstore['entity'];
+    }
+    $entity->$field_name->removeItem($delta);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
     return new RedirectResponse(Url::fromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()])->setAbsolute()->toString());
