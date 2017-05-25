@@ -10,6 +10,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -126,7 +127,6 @@ class LayoutSectionBuilder {
           'class' => ['use-ajax'],
           'data-dialog-type' => 'dialog',
           'data-dialog-renderer' => 'off_canvas',
-          'data-outside-in-edit' => TRUE,
         ]]
       );
       $link = new Link($this->t('Add Block'), $url);
@@ -135,6 +135,7 @@ class LayoutSectionBuilder {
       $regions[$region]['layout_builder_add_block']['#suffix'] = "</div>";
     }
     foreach ($section as $region => $blocks) {
+      $weight = 0;
       foreach ($blocks as $uuid => $configuration) {
         $block = $this->getBlock($uuid, $configuration);
         $access = $block->access($this->account, TRUE);
@@ -143,21 +144,31 @@ class LayoutSectionBuilder {
         //@todo Figure out how to handle blocks a user doesn't have access to
         // during administration.
         if ($access->isAllowed()) {
-          $regions[$region][$uuid]['remove'] = [
-            '#type' => 'link',
-            '#url' => Url::fromRoute('layout_builder.remove_block', [
-              'entity_type' => $entity_type,
-              'entity' => $entity_id,
-              'field_name' => $field_name,
-              'delta' => $delta,
-              'region' => $region,
-              'uuid' => $uuid,
-            ]),
-            '#title' => $this->t('Remove block'),
+          $regions[$region][$uuid] = [
+            '#theme' => 'block',
+            '#attributes' => [],
+            '#contextual_links' => [],
+            '#weight' => $weight++,
+            '#configuration' => $block->getConfiguration(),
+            '#plugin_id' => $block->getPluginId(),
+            '#base_plugin_id' => $block->getBaseId(),
+            '#derivative_plugin_id' => $block->getDerivativeId(),
+          ];
+
+          $regions[$region][$uuid]['#contextual_links'] = [
+            'layout_builder_block' => [
+              'route_parameters' => [
+                'entity_type' => $entity_type,
+                'entity' => $entity_id,
+                'field_name' => $field_name,
+                'delta' => $delta,
+                'region' => $region,
+                'uuid' => $uuid,
+                'plugin_id' => $uuid,
+              ],
+            ],
           ];
           $regions[$region][$uuid]['content'] = $block->build();
-          //@todo contextual links for configuration/delete
-          //$regions[$region][$uuid]['#contextual_links']
           //@todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
