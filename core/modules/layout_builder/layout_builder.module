@@ -106,11 +106,11 @@ function layout_builder_toolbar() {
         '#url' => Url::fromRoute('entity.node.save_layout', ['node' => $entity && is_object($entity) ? $entity->id() : '']),
         '#attributes' => [
           'title' => $description,
-          'class' => ['toolbar-icon', 'toolbar-icon-layout-builder-' . $status_class],
+          'class' => ['toolbar-icon', 'layout-builder-save'],
         ],
       ],
       '#wrapper_attributes' => [
-        'class' => ['toolbar-tab', 'layout-builder-toolbar-tab', $wrapper_class],
+        'class' => ['toolbar-tab', 'layout-builder-toolbar-button', $wrapper_class],
         'data-edit-mode-active' => 'true',
       ],
       '#weight' => 101,
@@ -132,11 +132,11 @@ function layout_builder_toolbar() {
         '#url' => Url::fromRoute('entity.node.cancel_layout', ['node' => $entity && is_object($entity) ? $entity->id() : '']),
         '#attributes' => [
           'title' => $description,
-          'class' => ['toolbar-icon', 'toolbar-icon-layout-builder-' . $status_class],
+          'class' => ['toolbar-icon', 'layout-builder-cancel'],
         ],
       ],
       '#wrapper_attributes' => [
-        'class' => ['toolbar-tab', 'layout-builder-toolbar-tab', $wrapper_class],
+        'class' => ['toolbar-tab', 'layout-builder-toolbar-button', $wrapper_class],
         'data-edit-mode-active' => 'true',
       ],
       '#weight' => 102,
