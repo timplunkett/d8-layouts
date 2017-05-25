@@ -382,25 +382,31 @@ class LayoutController extends ControllerBase {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->$field_name->get($data['delta_from']);
-    $values = $field->section;
-    $configuration = $values[$data['region_from']][$data['block_uuid']];
-    unset($values[$data['region_from']][$data['block_uuid']]);
+    $values = $field->section ?: [];
+
+    $region_from = $data['region_from'];
+    $block_uuid = $data['block_uuid'];
+    $configuration = $values[$region_from][$block_uuid];
+    unset($values[$region_from][$block_uuid]);
     $field->section = array_filter($values);
+
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->$field_name->get($data['delta_to']);
-    $values = $field_name->section;
+    $values = $field_name->section ?: [];
     if ($data['preceding_block_uuid']) {
       $slice_id = array_search($data['preceding_block_uuid'], array_keys($values));
       $before = array_slice($values, 0, $slice_id);
       $after = array_slice($values, $slice_id);
-      $values = array_merge($before, [$data['preceding_block_uuid'] => $configuration], $after);
+      $values = array_merge($before, [$block_uuid => $configuration], $after);
     }
     else {
-      $values = array_merge([$data['preceding_block_uuid'] => $configuration], $values);
+      $values[$data['region_to']][$block_uuid] = $configuration;
     }
     $field->section = array_filter($values);
+
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
+
     return new AjaxResponse();
   }
 
