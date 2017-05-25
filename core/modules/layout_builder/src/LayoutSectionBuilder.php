@@ -170,6 +170,31 @@ class LayoutSectionBuilder {
             '#derivative_plugin_id' => $block->getDerivativeId(),
           ];
 
+          // Build the block and bubble its attributes up if possible. This
+          // allows modules like Quickedit to function.
+          // See \Drupal\block\BlockViewBuilder::preRender() for reference.
+          $content = $block->build();
+          if ($content !== NULL && !Element::isEmpty($content)) {
+            foreach (['#attributes', '#contextual_links'] as $property) {
+              if (isset($content[$property])) {
+                $regions[$region][$uuid][$property] += $content[$property];
+                unset($content[$property]);
+              }
+            }
+          }
+
+          // If the block is empty, instead of trying to render the block
+          // correctly return just #cache, so that the render system knows the
+          // reasons (cache contexts & tags) why this block is empty.
+          if (Element::isEmpty($content)) {
+            $block_render_array = [];
+            $cacheable_metadata = CacheableMetadata::createFromObject($block_render_array);
+            $cacheable_metadata->applyTo($block_render_array);
+            if (isset($content['#cache'])) {
+              $regions[$region][$uuid]['#cache'] += $content['#cache'];
+            }
+          }
+
           $regions[$region][$uuid]['#contextual_links'] = [
             'layout_builder_block' => [
               'route_parameters' => [
@@ -180,10 +205,10 @@ class LayoutSectionBuilder {
                 'region' => $region,
                 'uuid' => $uuid,
                 'plugin_id' => $uuid,
-              ],
-            ],
+              ]
+            ]
           ];
-          $regions[$region][$uuid]['content'] = $block->build();
+          $regions[$region][$uuid]['content'] = $content;
           //@todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
