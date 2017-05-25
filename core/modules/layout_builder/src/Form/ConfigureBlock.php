@@ -153,7 +153,7 @@ class ConfigureBlock extends FormBase {
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Add Block'),
+      '#value' => $value ? $this->t('Update') : $this->t('Add Block'),
       '#button_type' => 'primary',
     ];
     return $form;
