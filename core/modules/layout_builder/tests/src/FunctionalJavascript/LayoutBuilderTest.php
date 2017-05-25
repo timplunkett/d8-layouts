@@ -131,6 +131,18 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->pageTextContains('Powered by Drupal');
     $assert_session->pageTextContains('My Sections');
 
+    // Drag one block from one region to another.
+    $this->drupalGet('node/1/layout');
+    $this->clickAjaxLink('Add Section');
+    $this->clickAjaxLink('Two column');
+    $assert_session->elementNotExists('css', '.layout__region--second .block-system-powered-by-block');
+    $page->find('css', '.layout__region--content .block-system-powered-by-block')->dragTo($page->find('css', '.layout__region--second'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
+    $this->clickLink('Save Layout');
+    // @todo Dragging blocks does not persist, once it does switch from content to second.
+    $assert_session->elementTextContains('css', '.layout__region--content', 'Powered by Drupal');
+
     // Remove a block.
     $this->drupalGet('node/1/layout');
 
@@ -150,7 +162,8 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $page->pressButton('Add Block');
     $assert_session->pageTextContains('This is the block content');
 
-    // Remove a section.
+    // Remove both sections.
+    $this->clickLink('Remove section');
     $this->clickLink('Remove section');
     $assert_session->pageTextNotContains('This is the block content');
     $assert_session->linkNotExists('Add Block');
