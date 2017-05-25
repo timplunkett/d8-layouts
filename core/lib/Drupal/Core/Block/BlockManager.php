@@ -65,10 +65,7 @@ class BlockManager extends DefaultPluginManager implements BlockManagerInterface
    * {@inheritdoc}
    */
   public function getGroupedDefinitions(array $definitions = NULL) {
-    $definitions = $this->traitGetGroupedDefinitions($definitions, 'admin_label');
-    // Do not display the 'broken' plugin in the UI.
-    unset($definitions[$this->t('Block')]['broken']);
-    return $definitions;
+    return $this->traitGetGroupedDefinitions($definitions, 'admin_label');
   }
 
   /**
