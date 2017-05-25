@@ -114,15 +114,12 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->addressEquals('node/1');
     $assert_session->pageTextContains('Powered by Drupal');
 
-    /*
-    // @todo.
     // Remove a block.
     $this->drupalGet('node/1/layout');
     $page->clickLink('Remove');
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
-    */
   }
 
   /**
