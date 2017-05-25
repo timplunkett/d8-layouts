@@ -263,9 +263,11 @@ class LayoutController extends ControllerBase {
 
     $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;
 
-    $values = $entity->$field_name->getValue();
-    unset($values[$delta]['section'][$region][$uuid]);
-    $entity->$field_name->setValue($values);
+    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
+    $field = $entity->$field_name->get($delta);
+    $values = $field->section;
+    unset($values[$region][$uuid]);
+    $field->section = array_filter($values);
 
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
