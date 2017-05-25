@@ -14,7 +14,13 @@
           data.delta_from = ui.sender.closest('[data-layout-delta]').data('layout-delta');
           data.delta_to = ui.item.closest('[data-layout-delta]').data('layout-delta');
           data.preceding_block_uuid = ui.item.prev('[data-layout-block-uuid]').data('layout-block-uuid');
-          console.log(data);
+
+          let url = $(this).closest('[data-layout-update-url]').data('layout-update-url');
+
+          $.ajax(url, {
+            data: JSON.stringify(data),
+            method: 'POST'
+          });
         },
       });
     }
