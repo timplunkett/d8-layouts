@@ -93,6 +93,7 @@ class LayoutSectionBuilder {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
+    $weight = 0;
     foreach ($section as $region => $blocks) {
       foreach ($blocks as $uuid => $configuration) {
         $block = $this->getBlock($uuid, $configuration);
@@ -101,7 +102,19 @@ class LayoutSectionBuilder {
         $cacheability->addCacheableDependency($access);
 
         if ($access->isAllowed()) {
-          $regions[$region][$uuid] = $block->build();
+          $regions[$region][$uuid] = [
+            '#theme' => 'block',
+            '#attributes' => [
+              'class' => ['draggable'],
+            ],
+            '#contextual_links' => [],
+            '#weight' => $weight++,
+            '#configuration' => $block->getConfiguration(),
+            '#plugin_id' => $block->getPluginId(),
+            '#base_plugin_id' => $block->getBaseId(),
+            '#derivative_plugin_id' => $block->getDerivativeId(),
+          ];
+          $regions[$region][$uuid]['content'] = $block->build();
           $cacheability->addCacheableDependency($block);
         }
       }
@@ -146,7 +159,10 @@ class LayoutSectionBuilder {
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = [
             '#theme' => 'block',
-            '#attributes' => [],
+            '#attributes' => [
+              'class' => ['draggable'],
+              'data-layout-block-uuid' => $uuid,
+            ],
             '#contextual_links' => [],
             '#weight' => $weight++,
             '#configuration' => $block->getConfiguration(),
@@ -202,6 +218,14 @@ class LayoutSectionBuilder {
 
     $layout = $this->layoutPluginManager->createInstance($layout_id);
     $section = $layout->build($regions);
+
+    $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
+      'entity_type' => $entity_type,
+      'entity' => $entity_id,
+      'field_name' => $field_name,
+    ])->toString();
+    $section['#attributes']['data-layout-delta'] = $delta;
+
     $cacheability->applyTo($section);
     return $section;
   }

@@ -19,7 +19,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'node', 'block_content'];
+  public static $modules = ['layout_builder', 'node', 'block_content', 'contextual'];
 
   /**
    * {@inheritdoc}
@@ -79,10 +79,15 @@ class LayoutBuilderTest extends JavascriptTestBase {
 
     $this->drupalLogin($this->drupalCreateUser([
       'access toolbar',
+      'access contextual links',
       'configure any layout',
     ], 'foobar'));
   }
 
+  /**
+   * @todo:
+   *   Add tests for revision support.
+   */
   public function test() {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
@@ -114,9 +119,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $page->pressButton('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->pageTextContains('Powered by Drupal');
-    // @todo The label should be shown, but this is currently handled by
-    //   template_preprocess_block() for block entities.
-    $assert_session->pageTextNotContains('This is the label');
+    $assert_session->pageTextContains('This is the label');
 
     // Until the layout is saved, the new block is not visible on the node page.
     $this->drupalGet('node/1');
@@ -130,10 +133,26 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $this->clickLink('Save Layout');
     $assert_session->addressEquals('node/1');
     $assert_session->pageTextContains('Powered by Drupal');
+    $assert_session->pageTextContains('This is the label');
     $assert_session->pageTextContains('My Sections');
+
+    // Drag one block from one region to another.
+    $this->drupalGet('node/1/layout');
+    $this->clickAjaxLink('Add Section');
+    $this->clickAjaxLink('Two column');
+    $assert_session->elementNotExists('css', '.layout__region--second .block-system-powered-by-block');
+    $page->find('css', '.layout__region--content .block-system-powered-by-block')->dragTo($page->find('css', '.layout__region--second'));
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
+    $this->clickLink('Save Layout');
+    // @todo Dragging blocks does not persist, once it does switch from content to second.
+    $assert_session->elementTextContains('css', '.layout__region--content', 'Powered by Drupal');
 
     // Remove a block.
     $this->drupalGet('node/1/layout');
+
+    $this->toggleContextualTriggerVisibility('.block-system-powered-by-block');
+    $page->find('css', '.block-system-powered-by-block .contextual .trigger')->click();
     $page->clickLink('Remove block');
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
@@ -148,12 +167,20 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $page->pressButton('Add Block');
     $assert_session->pageTextContains('This is the block content');
 
-    // Remove a section.
+    // Remove both sections.
+    $this->clickLink('Remove section');
     $this->clickLink('Remove section');
     $assert_session->pageTextNotContains('This is the block content');
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
     $assert_session->pageTextNotContains('My Sections');
+  }
+
+  protected function toggleContextualTriggerVisibility($selector) {
+    // Hovering over the element itself with should be enough, but does not
+    // work. Manually remove the visually-hidden class.
+    // @see https://www.drupal.org/node/2821724
+    $this->getSession()->executeScript("jQuery('{$selector} .contextual .trigger').toggleClass('visually-hidden');");
   }
 
   /**
