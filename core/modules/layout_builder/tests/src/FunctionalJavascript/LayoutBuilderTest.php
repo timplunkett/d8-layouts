@@ -19,7 +19,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'node', 'block_content'];
+  public static $modules = ['layout_builder', 'node', 'block_content', 'contextual'];
 
   /**
    * {@inheritdoc}
@@ -79,6 +79,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
 
     $this->drupalLogin($this->drupalCreateUser([
       'access toolbar',
+      'access contextual links',
       'configure any layout',
     ], 'foobar'));
   }
@@ -114,9 +115,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $page->pressButton('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->pageTextContains('Powered by Drupal');
-    // @todo The label should be shown, but this is currently handled by
-    //   template_preprocess_block() for block entities.
-    $assert_session->pageTextNotContains('This is the label');
+    $assert_session->pageTextContains('This is the label');
 
     // Until the layout is saved, the new block is not visible on the node page.
     $this->drupalGet('node/1');
@@ -134,6 +133,9 @@ class LayoutBuilderTest extends JavascriptTestBase {
 
     // Remove a block.
     $this->drupalGet('node/1/layout');
+
+    $this->toggleContextualTriggerVisibility('.block-system-powered-by-block');
+    $page->find('css', '.block-system-powered-by-block .contextual .trigger')->click();
     $page->clickLink('Remove block');
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
@@ -154,6 +156,13 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
     $assert_session->pageTextNotContains('My Sections');
+  }
+
+  protected function toggleContextualTriggerVisibility($selector) {
+    // Hovering over the element itself with should be enough, but does not
+    // work. Manually remove the visually-hidden class.
+    // @see https://www.drupal.org/node/2821724
+    $this->getSession()->executeScript("jQuery('{$selector} .contextual .trigger').toggleClass('visually-hidden');");
   }
 
   /**
