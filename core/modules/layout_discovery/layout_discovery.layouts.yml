@@ -1,6 +1,7 @@
 layout_onecol:
   label: 'One column'
   path: layouts/onecol
+  icon: onecol.svg
   template: layout--onecol
   library: layout_discovery/onecol
   category: 'Columns: 1'
@@ -12,6 +13,7 @@ layout_onecol:
 layout_twocol:
   label: 'Two column'
   path: layouts/twocol
+  icon: twocol.svg
   template: layout--twocol
   library: layout_discovery/twocol
   category: 'Columns: 2'
@@ -71,6 +73,7 @@ layout_threecol_25_50_25:
 layout_threecol_33_34_33:
   label: 'Three column 33/34/33'
   path: layouts/threecol_33_34_33
+  icon: threecol_33_34_33.svg
   template: layout--threecol-33-34-33
   library: layout_discovery/threecol_33_34_33
   category: 'Columns: 3'
