@@ -156,6 +156,7 @@ function layout_builder_toolbar() {
  * Change Configure Blocks into off_canvas links.
  */
 function layout_builder_contextual_links_view_alter(&$element, $items) {
+  $attach_lib = FALSE;
   if (isset($element['#links']['layout-builder-block-configure'])) {
     $attributes = [
       'class' => ['use-ajax'],
@@ -167,6 +168,22 @@ function layout_builder_contextual_links_view_alter(&$element, $items) {
     $url_attributes = $url->getOption('attributes');
     $url_attributes = $url_attributes ? $url_attributes += $attributes : $attributes;
     $url->setOption('attributes', $url_attributes);
+    $attach_lib = TRUE;
+  }
+
+  if (isset($element['#links']['layout-builder-block-delete'])) {
+    $attributes = [
+      'class' => ['use-ajax'],
+    ];
+    /** @var \Drupal\Core\Url $url */
+    $url = $element['#links']['layout-builder-block-delete']['url'];
+    $url_attributes = $url->getOption('attributes');
+    $url_attributes = $url_attributes ? $url_attributes += $attributes : $attributes;
+    $url->setOption('attributes', $url_attributes);
+    $attach_lib = TRUE;
+  }
+
+  if ($attach_lib) {
     $element['#attached']['library'][] = 'outside_in/drupal.off_canvas';
   }
 }
