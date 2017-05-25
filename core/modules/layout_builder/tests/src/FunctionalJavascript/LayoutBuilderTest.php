@@ -165,4 +165,12 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $this->htmlOutput($this->getSession()->getPage()->getContent());
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function clickLink($label, $index = 0) {
+    parent::clickLink($label, $index);
+    $this->htmlOutput($this->getSession()->getPage()->getContent());
+  }
+
 }
