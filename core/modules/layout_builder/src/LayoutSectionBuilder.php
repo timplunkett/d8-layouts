@@ -146,7 +146,10 @@ class LayoutSectionBuilder {
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = [
             '#theme' => 'block',
-            '#attributes' => [],
+            '#attributes' => [
+              'class' => ['draggable'],
+              'data-layout-block-uuid' => $uuid,
+            ],
             '#contextual_links' => [],
             '#weight' => $weight++,
             '#configuration' => $block->getConfiguration(),
@@ -169,7 +172,6 @@ class LayoutSectionBuilder {
             ],
           ];
           $regions[$region][$uuid]['content'] = $block->build();
-          $regions[$region][$uuid]['#theme_wrappers']['container']['#attributes']['class'][] = 'draggable';
           //@todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
@@ -178,6 +180,17 @@ class LayoutSectionBuilder {
 
     $layout = $this->layoutPluginManager->createInstance($layout_id);
     $section = $layout->build($regions);
+
+    /* $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
+      'entity_type' => $entity_type,
+      'entity' => $entity_id,
+      'field_name' => $field_name,
+    ])->toString(); */
+    $section['#attributes']['data-layout-entity-type'] = $entity_type;
+    $section['#attributes']['data-layout-entity-id'] = $entity_id;
+    $section['#attributes']['data-layout-field'] = $field_name;
+    $section['#attributes']['data-layout-delta'] = $delta;
+
     $cacheability->applyTo($section);
     return $section;
   }
