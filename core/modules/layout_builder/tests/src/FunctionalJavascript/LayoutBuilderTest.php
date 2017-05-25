@@ -137,6 +137,8 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
+    $this->clickLink('Save Layout');
+    $this->drupalGet('node/1/layout');
 
     // Test deriver-based blocks.
     $this->clickAjaxLink('Add Block');
