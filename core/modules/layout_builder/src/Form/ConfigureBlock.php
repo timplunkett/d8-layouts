@@ -4,6 +4,9 @@
 namespace Drupal\layout_builder\Form;
 
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
@@ -12,6 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
+use Drupal\layout_builder\Controller\LayoutController;
 use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,6 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfigureBlock extends FormBase {
   use ContextAwarePluginAssignmentTrait;
   use TempstoreIdHelper;
+  use DialogFormTrait;
 
   /**
    * Tempstore factory.
@@ -156,7 +161,40 @@ class ConfigureBlock extends FormBase {
       '#value' => $value ? $this->t('Update') : $this->t('Add Block'),
       '#button_type' => 'primary',
     ];
+
+    $this->buildFormDialog($form, $form_state);
+    $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
+
     return $form;
+  }
+
+  /**
+   * Submit form dialog #ajax callback.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An AJAX response that display validation error messages or redirects
+   *   to a URL
+   */
+  public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
+    // @todo Check for errors.
+    // @see \Drupal\layout_builder\Form\DialogFormTrait::submitFormDialog()
+
+    // @todo Use class resolver. for realz.
+
+    $response = new AjaxResponse();
+    $layout_controller = new LayoutController(\Drupal::service('layout_builder.builder'), \Drupal::service('user.shared_tempstore'));
+    $entity = $form_state->get('entity');
+    $field = $form_state->get('field_name');
+    $layout = $layout_controller->layout($entity, $field);
+    $command = new ReplaceCommand('#layout-builder', $layout);
+    $response->addCommand($command);
+    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
+    return $response;
   }
 
   /**
