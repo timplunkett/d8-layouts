@@ -80,7 +80,7 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'plugin_id' => 'test_context_aware',
+                'id' => 'test_context_aware',
                 'context_mapping' => [
                   'user' => '@user.current_user_context:current_user',
                 ],
@@ -108,7 +108,7 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'plugin_id' => 'system_powered_by_block',
+                'id' => 'system_powered_by_block',
               ],
             ],
           ],
@@ -127,7 +127,7 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'plugin_id' => 'system_powered_by_block',
+                'id' => 'system_powered_by_block',
               ],
             ],
           ],
@@ -135,15 +135,15 @@ class LayoutSectionTest extends BrowserTestBase {
         [
           'layout' => 'layout_twocol',
           'section' => [
-            'left' => [
+            'first' => [
               'foo' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'foo text',
               ],
             ],
-            'right' => [
+            'second' => [
               'bar' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'bar text',
               ],
             ],
@@ -178,11 +178,6 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
 
     $this->drupalGet('node/1/layout');
-    // Admin routes are implicitly uncacheable, but are only marked as
-    // 'UNCACHEABLE' if the content on the page is explicitly uncacheable.
-    if ($expected_dynamic_cache !== 'UNCACHEABLE') {
-      $expected_dynamic_cache = NULL;
-    }
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
   }
 
@@ -193,7 +188,7 @@ class LayoutSectionTest extends BrowserTestBase {
         'section' => [
           'content' => [
             'baz' => [
-              'plugin_id' => 'test_access',
+              'id' => 'test_access',
             ],
           ],
         ],
@@ -227,7 +222,7 @@ class LayoutSectionTest extends BrowserTestBase {
         'section' => [
           'content' => [
             'baz' => [
-              'plugin_id' => 'system_powered_by_block',
+              'id' => 'system_powered_by_block',
             ],
           ],
         ],
@@ -239,15 +234,15 @@ class LayoutSectionTest extends BrowserTestBase {
         [
           'layout' => 'layout_twocol',
           'section' => [
-            'left' => [
+            'first' => [
               'foo' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'foo text',
               ],
             ],
-            'right' => [
+            'second' => [
               'bar' => [
-                'plugin_id' => 'test_block_instantiation',
+                'id' => 'test_block_instantiation',
                 'display_message' => 'bar text',
               ],
             ],

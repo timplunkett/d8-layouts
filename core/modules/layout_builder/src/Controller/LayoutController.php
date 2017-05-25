@@ -113,7 +113,6 @@ class LayoutController extends ControllerBase {
       $count++;
     }
     $output['#attached']['library'][] = 'layout_builder/drupal.layout_builder';
-    $output['#attached']['library'][] = 'outside_in/drupal.off_canvas';
     return $output;
   }
 
@@ -240,11 +239,11 @@ class LayoutController extends ControllerBase {
   }
 
   public function removeBlock($entity_type, $entity, $field_name, $delta, $region, $uuid) {
-    /** @var FieldableEntityInterface $entity */
-    $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
-    list ($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+    $entity_from_storage = $this->entityTypeManager()->getStorage($entity_type)->load($entity);
+    list($collection, $id) = $this->generateTempstoreId($entity_from_storage, $field_name);
 
-    $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'];
+    $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;
+
     $values = $entity->$field_name->getValue();
     unset($values[$delta]['section'][$region][$uuid]);
     $entity->$field_name->setValue($values);

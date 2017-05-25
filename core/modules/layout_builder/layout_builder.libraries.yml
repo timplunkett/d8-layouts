@@ -3,6 +3,10 @@ drupal.layout_builder:
   css:
     theme:
       css/layout-builder.css: {}
+  dependencies:
+    - outside_in/drupal.off_canvas
+    - outside_in/drupal.outside_in
+
 drupal.layout_builder.icons:
   version: VERSION
   css:
