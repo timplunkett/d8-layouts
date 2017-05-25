@@ -329,7 +329,7 @@ class LayoutController extends ControllerBase {
       $entity_type => $entity->id(),
     ]);
 
-    return new RedirectResponse($redirect->toString());
+    return $this->ajaxRebuildLayout($entity, $field_name);
   }
 
   /**
