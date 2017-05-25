@@ -146,7 +146,9 @@ class LayoutSectionBuilder {
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = [
             '#theme' => 'block',
-            '#attributes' => [],
+            '#attributes' => [
+              'class' => ['draggable'],
+            ],
             '#contextual_links' => [],
             '#weight' => $weight++,
             '#configuration' => $block->getConfiguration(),
@@ -169,7 +171,6 @@ class LayoutSectionBuilder {
             ],
           ];
           $regions[$region][$uuid]['content'] = $block->build();
-          $regions[$region][$uuid]['#theme_wrappers']['container']['#attributes']['class'][] = 'draggable';
           //@todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
