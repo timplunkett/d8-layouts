@@ -153,7 +153,7 @@ class LayoutSectionBuilder {
               'region' => $region,
               'uuid' => $uuid,
             ]),
-            '#title' => $this->t('Remove'),
+            '#title' => $this->t('Remove block'),
           ];
           $regions[$region][$uuid]['content'] = $block->build();
           //@todo contextual links for configuration/delete
