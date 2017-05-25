@@ -37,3 +37,7 @@
   display: block;
   padding-top: 0.55em;
 }
+
+#drupal-off-canvas tr:hover td {
+  background-color: transparent;
+}
