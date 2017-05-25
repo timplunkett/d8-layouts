@@ -17,7 +17,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'node', 'block_test'];
+  public static $modules = ['layout_builder', 'node'];
 
   /**
    * {@inheritdoc}
@@ -58,18 +58,6 @@ class LayoutBuilderTest extends JavascriptTestBase {
           'value' => 'The node body',
         ],
       ],
-      'field_my_sections' => [
-        [
-          'layout' => 'layout_onecol',
-          'section' => [
-            'content' => [
-              'baz' => [
-                'id' => 'system_powered_by_block',
-              ],
-            ],
-          ],
-        ],
-      ],
     ]);
 
     $this->drupalLogin($this->drupalCreateUser([
@@ -82,28 +70,68 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
-    $this->container->get('state')->set('test_block_access', TRUE);
-
+    // Ensure the block is not displayed initially.
     $this->drupalGet('node/1');
-    $assert_session->pageTextContains('Powered by');
+    $assert_session->pageTextNotContains('Powered by Drupal');
 
-    $page->clickLink('Content Layout');
-    $assert_session->assertWaitOnAjaxRequest();
+    // Enter the layout editing mode.
+    $this->clickAjaxLink('Content Layout');
+    $assert_session->linkExists('Add Section');
+    $assert_session->linkNotExists('Add Block');
+
+    // Add a new section.
+    $this->clickAjaxLink('Add Section');
+    $this->clickAjaxLink('One column');
     $assert_session->linkExists('Add Section');
     $assert_session->linkExists('Add Block');
 
-    $this->clickLink('Add Block');
-    $assert_session->assertWaitOnAjaxRequest();
-    $assert_session->waitForElementVisible('css', '#drupal-off-canvas');
+    // Add a new block.
+    $this->clickAjaxLink('Add Block');
     $assert_session->elementExists('css', '#drupal-off-canvas');
 
-    $this->clickLink('Display message');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->clickAjaxLink('Powered by Drupal');
     $page->fillField('settings[label]', 'This is the label');
-    $page->fillField('settings[display_message]', 'This is the message');
+    $page->checkField('settings[label_display]');
+
+    // Save the new block, and ensure it is displayed on the page.
     $page->pressButton('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
-    $assert_session->pageTextContains('This is the message');
+    $assert_session->pageTextContains('Powered by Drupal');
+    // @todo The label should be shown, but this is currently handled by
+    //   template_preprocess_block() for block entities.
+    $assert_session->pageTextNotContains('This is the label');
+
+    // Until the layout is saved, the new block is not visible on the node page.
+    $this->drupalGet('node/1');
+    $assert_session->pageTextNotContains('Powered by Drupal');
+
+    // When returning to the layout edit mode, the new block is visible.
+    $this->drupalGet('node/1/layout');
+    $assert_session->pageTextContains('Powered by Drupal');
+
+    // Save the layout, and the new block is visible.
+    $this->clickLink('Save Layout');
+    $assert_session->addressEquals('node/1');
+    $assert_session->pageTextContains('Powered by Drupal');
+
+    /*
+    // @todo.
+    // Remove a block.
+    $this->drupalGet('node/1/layout');
+    $page->clickLink('Remove');
+    $assert_session->pageTextNotContains('Powered by Drupal');
+    $assert_session->linkExists('Add Block');
+    $assert_session->addressEquals('node/1/layout');
+    */
+  }
+
+  /**
+   * @todo.
+   */
+  protected function clickAjaxLink($label) {
+    $this->getSession()->getPage()->clickLink($label);
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->htmlOutput($this->getSession()->getPage()->getContent());
   }
 
 }
