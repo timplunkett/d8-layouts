@@ -93,7 +93,20 @@ class LayoutSectionBuilderTest extends UnitTestCase {
    */
   public function testBuildSection() {
     $block_content = ['#markup' => 'The block content.'];
-    $this->layout->build(['content' => ['some_uuid' => $block_content]])->willReturnArgument(0);
+    $render_array = [
+      '#theme' => 'block',
+      '#attributes' => [
+        'class' => ['draggable'],
+      ],
+      '#contextual_links' => [],
+      '#weight' => 0,
+      '#configuration' => [],
+      '#plugin_id' => 'block_plugin_id',
+      '#base_plugin_id' => 'block_plugin_id',
+      '#derivative_plugin_id' => NULL,
+      'content' => $block_content,
+    ];
+    $this->layout->build(['content' => ['some_uuid' => $render_array]])->willReturnArgument(0);
 
     $block = $this->prophesize(BlockPluginInterface::class);
     $this->blockManager->createInstance('block_plugin_id', ['id' => 'block_plugin_id'])->willReturn($block->reveal());
@@ -104,6 +117,10 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $block->getCacheContexts()->willReturn([]);
     $block->getCacheTags()->willReturn([]);
     $block->getCacheMaxAge()->willReturn(Cache::PERMANENT);
+    $block->getPluginId()->willReturn('block_plugin_id');
+    $block->getBaseId()->willReturn('block_plugin_id');
+    $block->getDerivativeId()->willReturn(NULL);
+    $block->getConfiguration()->willReturn([]);
 
     $section = [
       'content' => [
@@ -119,7 +136,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
         'max-age' => -1,
       ],
       'content' => [
-        'some_uuid' => $block_content,
+        'some_uuid' => $render_array,
       ],
     ];
     $result = $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
@@ -180,7 +197,20 @@ class LayoutSectionBuilderTest extends UnitTestCase {
    * @covers ::getBlock
    */
   public function testContextAwareBlock() {
-    $this->layout->build(['content' => ['some_uuid' => []]])->willReturnArgument(0);
+    $render_array = [
+      '#theme' => 'block',
+      '#attributes' => [
+        'class' => ['draggable'],
+      ],
+      '#contextual_links' => [],
+      '#weight' => 0,
+      '#configuration' => [],
+      '#plugin_id' => 'block_plugin_id',
+      '#base_plugin_id' => 'block_plugin_id',
+      '#derivative_plugin_id' => NULL,
+      'content' => [],
+    ];
+    $this->layout->build(['content' => ['some_uuid' => $render_array]])->willReturnArgument(0);
 
     $block = $this->prophesize(BlockPluginInterface::class)->willImplement(ContextAwarePluginInterface::class);
     $this->blockManager->createInstance('block_plugin_id', ['id' => 'block_plugin_id'])->willReturn($block->reveal());
@@ -192,6 +222,10 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $block->getCacheTags()->willReturn([]);
     $block->getCacheMaxAge()->willReturn(Cache::PERMANENT);
     $block->getContextMapping()->willReturn([]);
+    $block->getPluginId()->willReturn('block_plugin_id');
+    $block->getBaseId()->willReturn('block_plugin_id');
+    $block->getDerivativeId()->willReturn(NULL);
+    $block->getConfiguration()->willReturn([]);
 
     $this->contextRepository->getRuntimeContexts([])->willReturn([]);
     $this->contextHandler->applyContextMapping($block->reveal(), [])->shouldBeCalled();
@@ -203,7 +237,18 @@ class LayoutSectionBuilderTest extends UnitTestCase {
         ],
       ],
     ];
-    $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $expected = [
+      '#cache' => [
+        'contexts' => [],
+        'tags' => [],
+        'max-age' => -1,
+      ],
+      'content' => [
+        'some_uuid' => $render_array,
+      ],
+    ];
+    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $this->assertEquals($expected, $result);
   }
 
   /**

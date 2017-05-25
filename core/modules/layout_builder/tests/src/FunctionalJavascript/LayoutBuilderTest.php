@@ -129,6 +129,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $this->clickLink('Save Layout');
     $assert_session->addressEquals('node/1');
     $assert_session->pageTextContains('Powered by Drupal');
+    $assert_session->pageTextContains('This is the label');
     $assert_session->pageTextContains('My Sections');
 
     // Drag one block from one region to another.
