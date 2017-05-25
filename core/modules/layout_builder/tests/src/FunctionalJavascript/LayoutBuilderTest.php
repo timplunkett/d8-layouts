@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
+use Drupal\block_content\Entity\BlockContent;
+use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
@@ -17,13 +19,28 @@ class LayoutBuilderTest extends JavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'node'];
+  public static $modules = ['layout_builder', 'node', 'block_content'];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
+
+    $bundle = BlockContentType::create([
+      'id' => 'basic',
+      'label' => 'Basic',
+    ]);
+    $bundle->save();
+    block_content_add_body_field($bundle->id());
+    BlockContent::create([
+      'info' => 'My custom block',
+      'type' => 'basic',
+      'body' => [[
+        'value' => 'This is the block content',
+        'format' => filter_default_format(),
+      ]],
+    ])->save();
 
     $this->createContentType(['type' => 'bundle_with_section_field']);
 
@@ -120,6 +137,12 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
+
+    // Test deriver-based blocks.
+    $this->clickAjaxLink('Add Block');
+    $this->clickAjaxLink('My custom block');
+    $page->pressButton('Add Block');
+    $assert_session->pageTextContains('This is the block content');
   }
 
   /**

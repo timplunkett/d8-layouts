@@ -239,7 +239,7 @@ class LayoutController extends ControllerBase {
               'field_name' => $field_name,
               'delta' => $delta,
               'region' => $region,
-              'plugin_id' => $block['id'],
+              'plugin_id' => $block_id,
             ]
           ),
           '#attributes' => [
