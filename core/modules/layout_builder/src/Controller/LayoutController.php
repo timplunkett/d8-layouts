@@ -181,7 +181,10 @@ class LayoutController extends ControllerBase {
     $output['layouts'] = [
       '#theme' => 'item_list',
       '#items' => $items,
+      '#prefix' => '<details class="layout-selection" open="open"><summary class="title">Basic Layouts</summary>',
+      '#suffix'=> "</details>",
     ];
+
     return $output;
   }
 
@@ -300,7 +303,7 @@ class LayoutController extends ControllerBase {
   }
 
   public function removeBlock($entity_type, $entity, $field_name, $delta, $region, $uuid) {
-    $entity_from_storage = $this->entityTypeManager()->getStorage($entity_type)->load($entity);
+    $entity_from_storage = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
     list($collection, $id) = $this->generateTempstoreId($entity_from_storage, $field_name);
 
     $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;

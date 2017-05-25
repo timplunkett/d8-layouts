@@ -93,6 +93,7 @@ class LayoutSectionBuilder {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
+    $weight = 0;
     foreach ($section as $region => $blocks) {
       foreach ($blocks as $uuid => $configuration) {
         $block = $this->getBlock($uuid, $configuration);
@@ -101,7 +102,19 @@ class LayoutSectionBuilder {
         $cacheability->addCacheableDependency($access);
 
         if ($access->isAllowed()) {
-          $regions[$region][$uuid] = $block->build();
+          $regions[$region][$uuid] = [
+            '#theme' => 'block',
+            '#attributes' => [
+              'class' => ['draggable'],
+            ],
+            '#contextual_links' => [],
+            '#weight' => $weight++,
+            '#configuration' => $block->getConfiguration(),
+            '#plugin_id' => $block->getPluginId(),
+            '#base_plugin_id' => $block->getBaseId(),
+            '#derivative_plugin_id' => $block->getDerivativeId(),
+          ];
+          $regions[$region][$uuid]['content'] = $block->build();
           $cacheability->addCacheableDependency($block);
         }
       }
