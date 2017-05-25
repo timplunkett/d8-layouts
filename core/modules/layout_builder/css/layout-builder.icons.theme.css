@@ -18,3 +18,19 @@
 .toolbar-bar .toolbar-icon-layout-builder-inactive:before {
   background-image: url(../icons/bebebe/layout-builder.svg);
 }
+
+.toolbar .toolbar-bar > .layout-builder-toolbar-button > .toolbar-icon {
+  background-color: #bebebe;
+  color: #222222;
+  font-weight: normal;
+  padding: 0.5em 1.5em;
+  border-radius: 20px;
+  margin-top: 0.5em;
+  text-decoration: none;
+}
+
+.toolbar .toolbar-bar > .layout-builder-toolbar-button > .layout-builder-save {
+  background-color: #40b740;
+  color: white;
+  margin-right: 1em;
+}
