@@ -115,6 +115,9 @@ class LayoutController extends ControllerBase {
             'field_name' => $layout_section_field_name,
             'delta' => $count - 1,
           ]),
+          '#attributes' => [
+            'class' => ['use-ajax'],
+          ],
         ],
         'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $layout_section_field_name, $count - 1),
         '#suffix' => '</div>',
@@ -255,7 +258,7 @@ class LayoutController extends ControllerBase {
    * @param int $delta
    *   The delta of the section to splice.
    *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @return \Drupal\Core\Ajax\AjaxResponse
    *   The render array.
    */
   public function removeSection($entity_type, $entity, $field_name, $delta) {
@@ -269,7 +272,6 @@ class LayoutController extends ControllerBase {
     $entity->$field_name->removeItem($delta);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    return new RedirectResponse(Url::fromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()])->setAbsolute()->toString());
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
     $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
