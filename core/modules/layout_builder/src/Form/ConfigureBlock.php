@@ -8,6 +8,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\Core\DependencyInjection\ClassResolver;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
@@ -66,17 +67,25 @@ class ConfigureBlock extends FormBase {
   protected $uuid;
 
   /**
+   * The class resolver.
+   *
+   * @var \Drupal\Core\DependencyInjection\ClassResolver
+   */
+  protected $classResolver;
+
+  /**
    * Constructs a new ConfigureBlock.
    *
    * @param \Drupal\user\SharedTempStoreFactory $tempstore
    *   The tempstore factory.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid) {
+  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolver $class_resolver) {
     $this->tempStoreFactory = $tempstore;
     $this->contextRepository = $context_repository;
     $this->entityTypeManager = $entity_type_manager;
     $this->blockManager = $block_manager;
     $this->uuid = $uuid;
+    $this->classResolver = $class_resolver;
   }
 
   /**
@@ -88,7 +97,8 @@ class ConfigureBlock extends FormBase {
       $container->get('context.repository'),
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.block'),
-      $container->get('uuid')
+      $container->get('uuid'),
+      $container->get('class_resolver')
     );
   }
 
@@ -187,7 +197,7 @@ class ConfigureBlock extends FormBase {
     // @todo Use class resolver. for realz.
 
     $response = new AjaxResponse();
-    $layout_controller = new LayoutController(\Drupal::service('layout_builder.builder'), \Drupal::service('user.shared_tempstore'));
+    $layout_controller = $this->classResolver->getInstanceFromDefinition('\Drupal\layout_builder\Controller\LayoutController');
     $entity = $form_state->get('entity');
     $field = $form_state->get('field_name');
     $layout = $layout_controller->layout($entity, $field);
