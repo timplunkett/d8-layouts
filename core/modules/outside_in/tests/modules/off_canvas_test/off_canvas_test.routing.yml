@@ -27,3 +27,10 @@ off_canvas_test.dialog_links:
     _controller: '\Drupal\off_canvas_test\Controller\TestController::otherDialogLinks'
   requirements:
     _access: 'TRUE'
+
+off_canvas_test.form:
+  path: '/off-canvas-form'
+  defaults:
+    _form: '\Drupal\off_canvas_test\Form\TestForm'
+  requirements:
+    _access: 'TRUE'

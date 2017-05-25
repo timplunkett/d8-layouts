@@ -92,6 +92,25 @@ class TestController {
           ],
         ],
       ],
+      'off_canvas_form' => [
+        '#title' => 'Show form!',
+        '#type' => 'link',
+        '#url' => Url::fromRoute(
+          'off_canvas_test.form',
+          [],
+          ['query' => ['destination' => 'off-canvas-test-links']]
+        ),
+        '#attributes' => [
+          'class' => ['use-ajax'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-renderer' => 'off_canvas',
+        ],
+        '#attached' => [
+          'library' => [
+            'outside_in/drupal.outside_in',
+          ],
+        ],
+      ],
     ];
   }
 

@@ -36,7 +36,7 @@ class OffCanvasDialogTest extends AjaxTestBase {
       'command' => 'openDialog',
       'selector' => '#drupal-off-canvas',
       'settings' => NULL,
-      'data' => $dialog_contents,
+      'data' => $dialog_contents . "<div class=\"messages__wrapper\"></div>\n",
       'dialogOptions' =>
         [
           'title' => 'AJAX Dialog & contents',

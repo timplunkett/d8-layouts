@@ -7,6 +7,7 @@ use Drupal\block\BlockInterface;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginWithFormsInterface;
+use Drupal\outside_in\OffCanvasFormDialogTrait;
 
 /**
  * Provides form for block instance forms when used in the off-canvas dialog.
@@ -15,6 +16,8 @@ use Drupal\Core\Plugin\PluginWithFormsInterface;
  * visibility settings, machine ID and region.
  */
 class BlockEntityOffCanvasForm extends BlockForm {
+
+  use OffCanvasFormDialogTrait;
 
   /**
    * Provides a title callback to get the block's admin label.
@@ -36,6 +39,7 @@ class BlockEntityOffCanvasForm extends BlockForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
+    $form['#attributes']['data-off-canvas-form'] = TRUE;
 
     // Create link to full block form.
     $query = [];
@@ -95,6 +99,16 @@ class BlockEntityOffCanvasForm extends BlockForm {
       return $this->pluginFormFactory->createInstance($block, 'off_canvas', 'configure');
     }
     return $block;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+    // \Drupal\block\BlockForm::submitForm() always redirects to block listing.
+    // This would doesn't work with Ajax submit.
+    $form_state->disableRedirect();
   }
 
 }
