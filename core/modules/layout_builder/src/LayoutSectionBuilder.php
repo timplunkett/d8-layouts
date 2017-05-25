@@ -156,6 +156,7 @@ class LayoutSectionBuilder {
             '#title' => $this->t('Remove'),
           ];
           $regions[$region][$uuid]['content'] = $block->build();
+          $regions[$region][$uuid]['#theme_wrappers']['container']['#attributes']['class'][] = 'draggable';
           //@todo contextual links for configuration/delete
           //$regions[$region][$uuid]['#contextual_links']
           //@todo cacheability in the administration? is that a thing?
