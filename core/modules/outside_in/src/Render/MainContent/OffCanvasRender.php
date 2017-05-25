@@ -41,6 +41,15 @@ class OffCanvasRender extends DialogRenderer {
   public function renderResponse(array $main_content, Request $request, RouteMatchInterface $route_match) {
     $response = new AjaxResponse();
 
+    // Add place holder form messages from Ajax form requests.
+    $main_content = [
+      'off_canvas_messages' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['messages__wrapper']],
+        '#weight' => 100,
+      ],
+    ] + $main_content;
+
     // First render the main content, because it might provide a title.
     $content = $this->renderer->renderRoot($main_content);
     // Attach the library necessary for using the OpenOffCanvasDialogCommand and

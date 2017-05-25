@@ -17,6 +17,8 @@ drupal.outside_in:
     - core/drupal
     - core/jquery.once
     - core/drupal.ajax
+    - core/drupalSettings
+    - core/jquery.form
 drupal.off_canvas:
   version: VERSION
   js:

@@ -111,10 +111,8 @@ class OutsideInBlockFormTest extends OutsideInJavascriptTestBase {
     if (isset($new_page_text)) {
       $page->pressButton($button_text);
       // Make sure the changes are present.
-      // @todo Use a wait method that will take into account the form submitting
-      //   and all JavaScript activity. https://www.drupal.org/node/2837676
-      //   The use \Behat\Mink\WebAssert::pageTextContains to check text.
-      $this->assertJsCondition('jQuery("' . $block_selector . ' ' . $label_selector . '").html() == "' . $new_page_text . '"');
+      $new_page_text_locator = "$block_selector $label_selector:contains($new_page_text)";
+      $web_assert->waitForElement('css', $new_page_text_locator);
     }
 
     $this->openBlockForm($block_selector);
@@ -151,7 +149,7 @@ class OutsideInBlockFormTest extends OutsideInJavascriptTestBase {
     $blocks = [
       'block-powered' => [
         'id' => 'powered',
-        'new_page_text' => 'Can you imagine anyone showing the label on this block?',
+        'new_page_text' => 'Can you imagine anyone showing the label on this block',
         'element_selector' => '.content a',
         'label_selector' => 'h2',
         'button_text' => 'Save Powered by Drupal',
@@ -159,7 +157,7 @@ class OutsideInBlockFormTest extends OutsideInJavascriptTestBase {
       ],
       'block-branding' => [
         'id' => 'branding',
-        'new_page_text' => 'The site that will live a very short life.',
+        'new_page_text' => 'The site that will live a very short life',
         'element_selector' => 'a[rel="home"]:nth-child(2)',
         'label_selector' => '.site-branding__name a',
         'button_text' => 'Save Site branding',
