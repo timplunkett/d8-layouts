@@ -4,7 +4,6 @@ namespace Drupal\layout_builder\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutSectionBuilder;
 use Drupal\layout_builder\Traits\TempstoreIdHelper;
@@ -166,7 +165,7 @@ class LayoutController extends ControllerBase {
    * @param string $plugin_id
    *   The plugin id of the layout to add.
    *
-   * @return TrustedRedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
    *   The render array.
    */
   public function addSection($entity_type, $entity, $field_name, $delta, $plugin_id) {
@@ -196,8 +195,7 @@ class LayoutController extends ControllerBase {
     $entity->$field_name->setValue($values);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    $path = '/'. $this->getUrlGenerator()->getPathFromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()]);
-    return new TrustedRedirectResponse($path);
+    return new RedirectResponse(Url::fromRoute("entity.$entity_type.layout", [$entity_type => $entity->id()])->setAbsolute()->toString());
   }
 
   public function chooseBlock($entity_type, $entity, $field_name, $delta, $region) {
