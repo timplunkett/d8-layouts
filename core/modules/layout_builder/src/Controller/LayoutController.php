@@ -240,10 +240,7 @@ class LayoutController extends ControllerBase {
     $entity->$field_name->setValue($values);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
-    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
-    return $response;
+    return $this->ajaxRebuildLayout($entity, $field_name);
   }
 
   /**
@@ -272,10 +269,7 @@ class LayoutController extends ControllerBase {
     $entity->$field_name->removeItem($delta);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
-    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
-    return $response;
+    return $this->ajaxRebuildLayout($entity, $field_name);
   }
 
   public function chooseBlock($entity_type, $entity, $field_name, $delta, $region) {
@@ -400,6 +394,24 @@ class LayoutController extends ControllerBase {
    */
   protected function generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id) {
     return new Url('layout_builder.add_section', ['entity_type' => $entity_type, 'entity' => $entity, 'field_name' => $field_name, 'delta' => $delta, 'plugin_id' => $plugin_id]);
+  }
+
+  /**
+   * Rebuild layout, add Ajax commands replace and close dialog.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The entity.
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The ajax response to replace the layout and close the dialog.
+   */
+  protected function ajaxRebuildLayout(FieldableEntityInterface $entity, $field_name) {
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
+    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
+    return $response;
   }
 
 }
