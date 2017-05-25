@@ -84,6 +84,10 @@ class LayoutBuilderTest extends JavascriptTestBase {
     ], 'foobar'));
   }
 
+  /**
+   * @todo:
+   *   Add tests for revision support.
+   */
   public function test() {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
