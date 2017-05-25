@@ -141,8 +141,29 @@ class LayoutController extends ControllerBase {
      * @var \Drupal\Core\Layout\LayoutDefinition $definition
      */
     foreach ($layout_manager->getDefinitions() as $plugin_id => $definition) {
+      $icon = $definition->getIconPath();
+      if ($icon) {
+        $icon = [
+          '#theme' => 'image',
+          '#uri' => $icon,
+          '#alt' => $definition->getLabel(),
+          '#theme_wrappers' => [
+            'container' => [
+              '#attributes' => [
+                'class' => ['layout-icon'],
+              ],
+            ],
+          ],
+        ];
+      }
+
       $items[] = [
-        '#markup' => $this->l($definition->getLabel(), $this->generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id)),
+        'icon' => $icon ?: [],
+        'label' => [
+          '#type' => 'link',
+          '#title' => $definition->getLabel(),
+          '#url' => $this->generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id),
+        ],
       ];
     }
     $output['layouts'] = [
