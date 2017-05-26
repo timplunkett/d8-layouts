@@ -95,6 +95,7 @@ class LayoutSectionBuilder {
     $regions = [];
     $weight = 0;
     foreach ($section as $region => $blocks) {
+      // @todo determine if config should at least always be an empty array.
       foreach ($blocks as $uuid => $configuration) {
         $block = $this->getBlock($uuid, $configuration);
 
@@ -161,6 +162,7 @@ class LayoutSectionBuilder {
             '#theme' => 'block',
             '#attributes' => [
               'class' => ['draggable'],
+              'data-layout-block-uuid' => $uuid,
             ],
             '#contextual_links' => [],
             '#weight' => $weight++,
@@ -169,6 +171,31 @@ class LayoutSectionBuilder {
             '#base_plugin_id' => $block->getBaseId(),
             '#derivative_plugin_id' => $block->getDerivativeId(),
           ];
+
+          // Build the block and bubble its attributes up if possible. This
+          // allows modules like Quickedit to function.
+          // See \Drupal\block\BlockViewBuilder::preRender() for reference.
+          $content = $block->build();
+          if ($content !== NULL && !Element::isEmpty($content)) {
+            foreach (['#attributes', '#contextual_links'] as $property) {
+              if (isset($content[$property])) {
+                $regions[$region][$uuid][$property] += $content[$property];
+                unset($content[$property]);
+              }
+            }
+          }
+
+          // If the block is empty, instead of trying to render the block
+          // correctly return just #cache, so that the render system knows the
+          // reasons (cache contexts & tags) why this block is empty.
+          if (Element::isEmpty($content)) {
+            $block_render_array = [];
+            $cacheable_metadata = CacheableMetadata::createFromObject($block_render_array);
+            $cacheable_metadata->applyTo($block_render_array);
+            if (isset($content['#cache'])) {
+              $regions[$region][$uuid]['#cache'] += $content['#cache'];
+            }
+          }
 
           $regions[$region][$uuid]['#contextual_links'] = [
             'layout_builder_block' => [
@@ -180,10 +207,10 @@ class LayoutSectionBuilder {
                 'region' => $region,
                 'uuid' => $uuid,
                 'plugin_id' => $uuid,
-              ],
-            ],
+              ]
+            ]
           ];
-          $regions[$region][$uuid]['content'] = $block->build();
+          $regions[$region][$uuid]['content'] = $content;
           //@todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
@@ -192,6 +219,14 @@ class LayoutSectionBuilder {
 
     $layout = $this->layoutPluginManager->createInstance($layout_id);
     $section = $layout->build($regions);
+
+    $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
+      'entity_type' => $entity_type,
+      'entity' => $entity_id,
+      'field_name' => $field_name,
+    ])->toString();
+    $section['#attributes']['data-layout-delta'] = $delta;
+
     $cacheability->applyTo($section);
     return $section;
   }
