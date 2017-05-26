@@ -19,13 +19,13 @@
 {% if content %}
   <div{{ attributes.addClass(classes) }}>
     {% if content.first %}
-      <div class="layout__region layout__region--first">
+      <div data-region="first" class="layout__region layout__region--first">
         {{ content.first }}
       </div>
     {% endif %}
 
     {% if content.second %}
-      <div class="layout__region layout__region--second">
+      <div data-region="second" class="layout__region layout__region--second">
         {{ content.second }}
       </div>
     {% endif %}
