@@ -95,6 +95,7 @@ class LayoutSectionBuilder {
     $regions = [];
     $weight = 0;
     foreach ($section as $region => $blocks) {
+      // @todo determine if config should at least always be an empty array.
       foreach ($blocks as $uuid => $configuration) {
         $block = $this->getBlock($uuid, $configuration);
 
