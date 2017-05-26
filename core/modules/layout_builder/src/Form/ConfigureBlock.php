@@ -193,9 +193,6 @@ class ConfigureBlock extends FormBase {
   public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
     // @todo Check for errors.
     // @see \Drupal\layout_builder\Form\DialogFormTrait::submitFormDialog()
-
-    // @todo Use class resolver. for realz.
-
     $response = new AjaxResponse();
     $layout_controller = $this->classResolver->getInstanceFromDefinition('\Drupal\layout_builder\Controller\LayoutController');
     $entity = $form_state->get('entity');
