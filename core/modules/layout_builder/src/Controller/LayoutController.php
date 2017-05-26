@@ -118,7 +118,7 @@ class LayoutController extends ControllerBase {
             'delta' => $count - 1,
           ]),
           '#attributes' => [
-            'class' => ['use-ajax'],
+            'class' => ['use-ajax', 'remove-section'],
           ],
         ],
         'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $layout_section_field_name, $count - 1),
