@@ -385,7 +385,7 @@ class LayoutController extends ControllerBase {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->$field_name->get($data['delta_from']);
-    $values = $field->section ?: [];
+    $values = $field->section ? $field->section : [];
 
     $region_from = $data['region_from'];
     $region_to = $data['region_to'];
@@ -396,11 +396,11 @@ class LayoutController extends ControllerBase {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->$field_name->get($data['delta_to']);
-    $values = $field_name->section ?: [];
+    $values = $field->section ? $field->section : [];
     if ($data['preceding_block_uuid']) {
       $slice_id = array_search($data['preceding_block_uuid'], array_keys($values[$region_to]));
-      $before = array_slice($values[$region_to], 0, $slice_id);
-      $after = array_slice($values[$region_to], $slice_id);
+      $before = array_slice($values[$region_to], 0, $slice_id + 1);
+      $after = array_slice($values[$region_to], $slice_id + 1);
       $values[$region_to] = array_merge($before, [$block_uuid => $configuration], $after);
     }
     else {
