@@ -7,14 +7,15 @@ use Drupal\block_content\Entity\BlockContentType;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\FunctionalJavascriptTests\JavascriptTestBase;
+use Drupal\Tests\outside_in\FunctionalJavascript\OutsideInJavascriptTestBase;
 
 /**
- * @todo.
+ * @todo Extending OutsideInJavascriptTestBase for now get OffCanvas related
+ *   asserts. Move these asserts to a trait.
  *
  * @group layout_builder
  */
-class LayoutBuilderTest extends JavascriptTestBase {
+class LayoutBuilderTest extends OutsideInJavascriptTestBase {
 
   /**
    * {@inheritdoc}
@@ -154,6 +155,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $this->toggleContextualTriggerVisibility('.block-system-powered-by-block');
     $page->find('css', '.block-system-powered-by-block .contextual .trigger')->click();
     $page->clickLink('Remove block');
+    $assert_session->assertWaitOnAjaxRequest();
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
@@ -165,11 +167,14 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $this->clickAjaxLink('Add Block');
     $this->clickAjaxLink('My custom block');
     $page->pressButton('Add Block');
+    $this->waitForOffCanvasToClose();
     $assert_session->pageTextContains('This is the block content');
 
     // Remove both sections.
     $this->clickLink('Remove section');
+    $assert_session->assertWaitOnAjaxRequest();
     $this->clickLink('Remove section');
+    $assert_session->assertWaitOnAjaxRequest();
     $assert_session->pageTextNotContains('This is the block content');
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
