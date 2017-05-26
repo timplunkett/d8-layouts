@@ -161,6 +161,7 @@ class LayoutSectionBuilder {
             '#theme' => 'block',
             '#attributes' => [
               'class' => ['draggable'],
+              'data-layout-block-uuid' => $uuid,
             ],
             '#contextual_links' => [],
             '#weight' => $weight++,
@@ -192,6 +193,14 @@ class LayoutSectionBuilder {
 
     $layout = $this->layoutPluginManager->createInstance($layout_id);
     $section = $layout->build($regions);
+
+    $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
+      'entity_type' => $entity_type,
+      'entity' => $entity_id,
+      'field_name' => $field_name,
+    ])->toString();
+    $section['#attributes']['data-layout-delta'] = $delta;
+
     $cacheability->applyTo($section);
     return $section;
   }
