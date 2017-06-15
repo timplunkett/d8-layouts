@@ -1,0 +1,18 @@
+entity.node.layout:
+  route_name: entity.node.layout
+  base_route: entity.node.canonical
+  title: 'Layout'
+  class: '\Drupal\layout_builder\Plugin\Menu\LayoutBuilderLayoutTab'
+  weight: 11
+entity.node.save_layout:
+  route_name: entity.node.save_layout
+  base_route: entity.node.layout
+  title: 'Save Layout'
+  parent_id: entity.node.layout
+  class: '\Drupal\layout_builder\Plugin\Menu\LayoutBuilderLayoutTab'
+entity.node.cancel_layout:
+  route_name: entity.node.cancel_layout
+  base_route: entity.node.layout
+  title: 'Cancel Layout'
+  parent_id: entity.node.layout
+  class: '\Drupal\layout_builder\Plugin\Menu\LayoutBuilderLayoutTab'

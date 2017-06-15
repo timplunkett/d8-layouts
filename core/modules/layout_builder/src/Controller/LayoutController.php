@@ -386,12 +386,6 @@ class LayoutController extends ControllerBase {
       $entity = $tempstore['entity'];
     }
     $data = Json::decode($request->getContent());
-//    region_from
-//    region_to
-//    block_uuid
-//    delta_from
-//    delta_to
-//    preceding_block_uuid
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->$field_name->get($data['delta_from']);
