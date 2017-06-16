@@ -10,6 +10,8 @@ services:
   layout_builder.routes:
     class: Drupal\layout_builder\Routing\LayoutBuilderRoutes
     arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
   layout_builder.route_enhancer:
     class: Drupal\layout_builder\Routing\LayoutBuilderRouteEnhancer
     arguments: ['@entity_type.manager']
