@@ -132,6 +132,8 @@ class LayoutController extends ControllerBase {
     $output['#attached']['library'][] = 'layout_builder/drupal.layout_builder';
     $output['#prefix'] = '<div id="layout-builder">';
     $output['#suffix'] = '</div>';
+    // Mark this UI as uncacheable.
+    $output['#cache']['max-age'] = 0;
     return $output;
   }
 
