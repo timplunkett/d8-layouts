@@ -1,3 +1,2 @@
 layout_builder_ui:
-  class: '\Drupal\layout_builder\Plugin\Menu\LayoutBuilderLayoutTab'
-  deriver: '\Drupal\layout_builder\Plugin\Derivative\LayoutBuilderLayoutLocalTask'
+  deriver: '\Drupal\layout_builder\Plugin\Derivative\LayoutBuilderLocalTaskDeriver'
