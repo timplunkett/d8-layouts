@@ -2,14 +2,17 @@
 
 namespace Drupal\layout_builder\Routing;
 
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Routing\RouteSubscriberBase;
 use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
 
 /**
  * @todo.
  */
-class LayoutBuilderRoutes {
+class LayoutBuilderRoutes extends RouteSubscriberBase {
 
   /**
    * The entity type manager.
@@ -37,7 +40,8 @@ class LayoutBuilderRoutes {
   public function getRoutes() {
     $routes = [];
 
-    foreach ($this->getFieldableEntityCanonicalLinkTemplates() as $entity_type_id => $template) {
+    foreach ($this->getEntityTypes() as $entity_type_id => $entity_type) {
+      $template = $entity_type->getLinkTemplate('canonical');
       $route = (new Route("$template/layout"))
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutController::layout',
@@ -106,19 +110,33 @@ class LayoutBuilderRoutes {
   }
 
   /**
-   * Returns an array of canonical link templates for fieldable entities.
-   *
-   * @return string[]
-   *   An array of canonical link templates.
+   * {@inheritdoc}
    */
-  protected function getFieldableEntityCanonicalLinkTemplates() {
-    $templates = [];
-    foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      if ($entity_type->entityClassImplements(FieldableEntityInterface::class) && $entity_type->hasLinkTemplate('canonical') && $entity_type->hasViewBuilderClass()) {
-        $templates[$entity_type_id] = $entity_type->getLinkTemplate('canonical');
+  protected function alterRoutes(RouteCollection $collection) {
+    foreach ($this->getEntityTypes() as $entity_type) {
+      if ($route = $collection->get('entity.' . $entity_type->id() . '.canonical')) {
+        // Mark this as a Layout Builder route so that links like local tasks
+        // will be enhanced.
+        $route->setOption('_layout_builder', TRUE);
+        $route->addDefaults([
+          'layout_section_entity' => NULL,
+          'layout_section_field_name' => NULL,
+          'entity_type_id' => $entity_type->id(),
+        ]);
       }
     }
-    return $templates;
+  }
+
+  /**
+   * Returns an array of relevant entity types.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeInterface[]
+   *   An array of entity types.
+   */
+  protected function getEntityTypes() {
+    return array_filter($this->entityTypeManager->getDefinitions(), function (EntityTypeInterface $entity_type) {
+      return $entity_type->entityClassImplements(FieldableEntityInterface::class) && $entity_type->hasLinkTemplate('canonical') && $entity_type->hasViewBuilderClass();
+    });
   }
 
 }
