@@ -28,6 +28,8 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
   protected function setUp() {
     parent::setUp();
 
+    $this->drupalPlaceBlock('local_tasks_block');
+
     $bundle = BlockContentType::create([
       'id' => 'basic',
       'label' => 'Basic',
@@ -79,7 +81,6 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     ]);
 
     $this->drupalLogin($this->drupalCreateUser([
-      'access toolbar',
       'access contextual links',
       'configure any layout',
     ], 'foobar'));
@@ -98,7 +99,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->pageTextNotContains('Powered by Drupal');
 
     // Enter the layout editing mode.
-    $this->clickAjaxLink('Content Layout');
+    $this->clickAjaxLink('Layout');
     $assert_session->linkExists('Add Section');
     $assert_session->linkNotExists('Add Block');
 
