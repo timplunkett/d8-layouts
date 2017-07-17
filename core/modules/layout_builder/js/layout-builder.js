@@ -25,10 +25,11 @@
 
             let url = ui.item.closest('[data-layout-update-url]').data('layout-update-url');
 
-            $.ajax(url, {
-              data: JSON.stringify(data),
-              method: 'POST'
+            let ajax = Drupal.ajax({
+              url: url,
+              submit: data
             });
+            ajax.execute();
           }
         }
       });
