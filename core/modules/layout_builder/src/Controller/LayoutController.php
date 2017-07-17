@@ -387,7 +387,7 @@ class LayoutController extends ControllerBase {
     if (!empty($tempstore['entity'])) {
       $entity = $tempstore['entity'];
     }
-    $data = Json::decode($request->getContent());
+    $data = $request->request->all();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->$field_name->get($data['delta_from']);
@@ -420,7 +420,7 @@ class LayoutController extends ControllerBase {
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
 
-    return new AjaxResponse();
+    return $this->ajaxRebuildLayout($entity, $field_name);
   }
 
   /**
