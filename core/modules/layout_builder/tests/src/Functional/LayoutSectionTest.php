@@ -178,7 +178,7 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
 
     $this->drupalGet('node/1/layout');
-    $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, $expected_dynamic_cache);
+    $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, 'UNCACHEABLE');
   }
 
   public function testLayoutSectionFormatterAccess() {
