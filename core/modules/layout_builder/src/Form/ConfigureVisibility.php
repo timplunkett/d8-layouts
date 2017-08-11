@@ -1,13 +1,12 @@
 <?php
 
-
 namespace Drupal\layout_builder\Form;
 
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\Core\Condition\ConditionManager;
 use Drupal\Core\DependencyInjection\ClassResolver;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
@@ -16,15 +15,17 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
-use Drupal\layout_builder\Controller\LayoutController;
 use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class ConfigureBlock extends FormBase {
+/**
+ *
+ */
+class ConfigureVisibility extends FormBase {
   use ContextAwarePluginAssignmentTrait;
   use TempstoreIdHelper;
-  use DialogFormTrait;
+  //use DialogFormTrait;
 
   /**
    * Tempstore factory.
@@ -38,31 +39,31 @@ class ConfigureBlock extends FormBase {
    *
    * @var \Drupal\Core\Block\BlockPluginInterface
    */
-  protected $block;
+  protected $condition;
 
   /**
    * The context repository.
    *
-   * @var ContextRepositoryInterface
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
    */
   protected $contextRepository;
 
   /**
    * The entity type manager.
    *
-   * @var EntityTypeManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
   /**
-   * The block manager.
+   * The condition manager.
    *
-   * @var BlockManagerInterface
+   * @var \Drupal\Core\Condition\ConditionManager
    */
-  protected $blockManager;
+  protected $conditionManager;
 
   /**
-   * @var UuidInterface
+   * @var \Drupal\Component\Uuid\UuidInterface
    */
   protected $uuid;
 
@@ -79,11 +80,11 @@ class ConfigureBlock extends FormBase {
    * @param \Drupal\user\SharedTempStoreFactory $tempstore
    *   The tempstore factory.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolver $class_resolver) {
+  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, ConditionManager $condition_manager, UuidInterface $uuid, ClassResolver $class_resolver) {
     $this->tempStoreFactory = $tempstore;
     $this->contextRepository = $context_repository;
     $this->entityTypeManager = $entity_type_manager;
-    $this->blockManager = $block_manager;
+    $this->conditionManager = $condition_manager;
     $this->uuid = $uuid;
     $this->classResolver = $class_resolver;
   }
@@ -96,7 +97,7 @@ class ConfigureBlock extends FormBase {
       $container->get('user.shared_tempstore'),
       $container->get('context.repository'),
       $container->get('entity_type.manager'),
-      $container->get('plugin.manager.block'),
+      $container->get('plugin.manager.condition'),
       $container->get('uuid'),
       $container->get('class_resolver')
     );
@@ -106,34 +107,37 @@ class ConfigureBlock extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'layout_builder_configure_block';
+    return 'layout_builder_configure_visibility';
   }
 
   /**
-   * Prepares the block plugin based on the block ID.
+   * Prepares the condition plugin based on the condition ID.
    *
-   * @param string $block_id
-   *   Either a block ID, or the plugin ID used to create a new block.
+   * @param string $condition_id
+   *   A condition UUID, or the plugin ID used to create a new condition.
    *
    * @param array $value
-   *   The block configuration.
-   * @return \Drupal\Core\Block\BlockPluginInterface The block plugin.
-   * The block plugin.
+   *   The condition configuration.
+   *
+   * @return \Drupal\Core\Condition\ConditionInterface
+   *   The condition plugin.
    */
-  protected function prepareBlock($block_id, array $value) {
+  protected function prepareCondition($condition_id, array $value) {
     if ($value) {
-      return $this->blockManager->createInstance($value['id'], $value);
+      return $this->conditionManager->createInstance($value['id'], $value);
     }
-    /** @var \Drupal\Core\Block\BlockPluginInterface $block */
-    $block = $this->blockManager->createInstance($block_id);
-    $block->setConfigurationValue('uuid', $this->uuid->generate());
-    return $block;
+    /** @var \Drupal\Core\Condition\ConditionInterface $condition */
+    $condition = $this->conditionManager->createInstance($condition_id);
+    $configuration = $condition->getConfiguration();
+    $configuration['uuid'] = $this->uuid->generate();
+    $condition->setConfiguration($configuration);
+    return $condition;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $field_name = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $field_name = NULL, $delta = NULL, $region = NULL, $block_id = NULL, $plugin_id = NULL) {
     $entity = $this->entityTypeManager->getStorage($entity_type)->loadRevision($entity);
     list($collection, $id) = $this->generateTempstoreId($entity, $field_name);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
@@ -141,8 +145,8 @@ class ConfigureBlock extends FormBase {
       $entity = $tempstore['entity'];
     }
     $values = $entity->$field_name->getValue();
-    $value = !empty($values[$delta]['section'][$region][$plugin_id]) ? $values[$delta]['section'][$region][$plugin_id]['block'] : [];
-    $this->block = $this->prepareBlock($plugin_id, $value);
+    $value = !empty($values[$delta]['section'][$region][$block_id]['visibility'][$plugin_id]) ? $values[$delta]['section'][$region][$block_id]['visibility'][$plugin_id] : [];
+    $this->condition = $this->prepareCondition($plugin_id, $value);
 
     $form_state->setTemporaryValue('gathered_contexts', $this->contextRepository->getAvailableContexts());
 
@@ -153,27 +157,30 @@ class ConfigureBlock extends FormBase {
     $form_state->set('field_name', $field_name);
     $form_state->set('delta', $delta);
     $form_state->set('region', $region);
-    $form_state->set('block_id', $this->block->getConfiguration()['uuid']);
+    $form_state->set('block_id', $block_id);
+    $form_state->set('condition_id', $this->condition->getConfiguration()['uuid']);
 
     // Some Block Plugins rely on the block_theme value to load theme settings.
     // @see \Drupal\system\Plugin\Block\SystemBrandingBlock::blockForm().
     $form_state->set('block_theme', $this->config('system.theme')->get('default'));
 
     $form['#tree'] = TRUE;
-    $form['settings'] = $this->block->buildConfigurationForm([], $form_state);
+    $form['settings'] = $this->condition->buildConfigurationForm([], $form_state);
     $form['settings']['id'] = [
       '#type' => 'value',
-      '#value' => $this->block->getPluginId(),
+      '#value' => $this->condition->getPluginId(),
     ];
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $value ? $this->t('Update') : $this->t('Add Block'),
+      '#value' => $value ? $this->t('Update') : $this->t('Add Condition'),
       '#button_type' => 'primary',
     ];
 
-    $this->buildFormDialog($form, $form_state);
-    $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
+    //$this->buildFormDialog($form, $form_state);
+    $form['actions']['submit']['#ajax']['callback'] = [$this, 'ajaxSubmit'];
+    $form['#validate'][] = [$this, 'validateForm'];
+    $form['#submit'][] = [$this, 'submitForm'];
 
     return $form;
   }
@@ -191,15 +198,17 @@ class ConfigureBlock extends FormBase {
    *   to a URL
    */
   public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
-    $response = $this->submitFormDialog($form, $form_state);
-    if (!$form_state->hasAnyErrors()) {
-      $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutController::class);
-      $entity = $form_state->get('entity');
-      $field = $form_state->get('field_name');
-      $layout = $layout_controller->layout($entity, $field);
-      $command = new ReplaceCommand('#layout-builder', $layout);
-      $response->addCommand($command);
-    }
+    // @todo Check for errors.
+    // @see \Drupal\layout_builder\Form\DialogFormTrait::submitFormDialog()
+    $response = new AjaxResponse();
+    /** @var \Drupal\layout_builder\Controller\LayoutController $layout_controller */
+    $layout_controller = $this->classResolver->getInstanceFromDefinition('\Drupal\layout_builder\Controller\LayoutController');
+    $entity = $form_state->get('entity');
+    $field = $form_state->get('field_name');
+    $layout = $layout_controller->layout($entity, $field);
+    $command = new ReplaceCommand('#layout-builder', $layout);
+    $response->addCommand($command);
+    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
     return $response;
   }
 
@@ -209,7 +218,7 @@ class ConfigureBlock extends FormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $settings = (new FormState())->setValues($form_state->getValue('settings'));
     // Call the plugin validate handler.
-    $this->block->validateConfigurationForm($form, $settings);
+    $this->condition->validateConfigurationForm($form, $settings);
     // Update the original form values.
     $form_state->setValue('settings', $settings->getValues());
   }
@@ -221,15 +230,15 @@ class ConfigureBlock extends FormBase {
     $settings = (new FormState())->setValues($form_state->getValue('settings'));
 
     // Call the plugin submit handler.
-    $this->block->submitConfigurationForm($form, $settings);
+    $this->condition->submitConfigurationForm($form, $settings);
     // Update the original form values.
     $form_state->setValue('settings', $settings->getValues());
 
-    if ($this->block instanceof ContextAwarePluginInterface) {
-      $this->block->setContextMapping($settings->getValue('context_mapping', []));
+    if ($this->condition instanceof ContextAwarePluginInterface) {
+      $this->condition->setContextMapping($settings->getValue('context_mapping', []));
     }
 
-    $configuration = $this->block->getConfiguration();
+    $configuration = $this->condition->getConfiguration();
 
     $entity = $form_state->get('entity');
     $collection = $form_state->get('collection');
@@ -238,11 +247,13 @@ class ConfigureBlock extends FormBase {
     $field_name = $form_state->get('field_name');
     $delta = $form_state->get('delta');
     $region = $form_state->get('region');
+    $block_id = $form_state->get('block_id');
+    $condition_id = $form_state->get('condition_id');
     if (!empty($tempstore['entity'])) {
       $entity = $tempstore['entity'];
     }
     $values = $entity->$field_name->getValue();
-    $values[$delta]['section'][$region][$configuration['uuid']]['block'] = $configuration;
+    $values[$delta]['section'][$region][$block_id]['visibility'][$condition_id] = $configuration;
     $entity->$field_name->setValue($values);
 
     $tempstore['entity'] = $entity;

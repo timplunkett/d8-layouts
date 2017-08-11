@@ -27,6 +27,7 @@ function layout_builder_contextual_links_view_alter(&$element, $items) {
   $links = [
     'layout-builder-block-configure' => TRUE,
     'layout-builder-block-remove' => TRUE,
+    'layout-builder-block-visibility' => TRUE,
   ];
   $attach_lib = FALSE;
   foreach ($links as $link => $use_dialog) {

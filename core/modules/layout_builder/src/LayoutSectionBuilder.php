@@ -2,9 +2,14 @@
 
 namespace Drupal\layout_builder;
 
+use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Component\Plugin\Exception\PluginException;
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockManagerInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Condition\ConditionAccessResolverTrait;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
@@ -20,6 +25,7 @@ use Drupal\Core\Url;
  */
 class LayoutSectionBuilder {
   use StringTranslationTrait;
+  use ConditionAccessResolverTrait;
 
   /**
    * The current user.
@@ -97,12 +103,43 @@ class LayoutSectionBuilder {
     foreach ($section as $region => $blocks) {
       // @todo determine if config should at least always be an empty array.
       foreach ($blocks as $uuid => $configuration) {
-        $block = $this->getBlock($uuid, $configuration);
+        $block = $this->getBlock($uuid, $configuration['block']);
 
         $access = $block->access($this->account, TRUE);
         $cacheability->addCacheableDependency($access);
+        $configuration['visibility'] = !empty($configuration['visibility']) ? $configuration['visibility'] : [];
+        $conditions = $this->getVisibilityConditions($configuration['visibility']);
 
-        if ($access->isAllowed()) {
+
+        $missing_context = FALSE;
+        foreach ($conditions as $condition_id => $condition) {
+          if ($condition instanceof ContextAwarePluginInterface) {
+            try {
+              $contexts = $this->contextRepository->getRuntimeContexts(array_values($condition->getContextMapping()));
+              $this->contextHandler->applyContextMapping($condition, $contexts);
+            }
+            catch (ContextException $e) {
+              $missing_context = TRUE;
+            }
+          }
+          $conditions[$condition_id] = $condition;
+        }
+
+        if ($missing_context) {
+          // If any context is missing then we might be missing cacheable
+          // metadata, and don't know based on what conditions the block is
+          // accessible or not. For example, blocks that have a node type
+          // condition will have a missing context on any non-node route like the
+          // frontpage.
+          // @todo Avoid setting max-age 0 for some or all cases, for example by
+          //   treating available contexts without value differently in
+          //   https://www.drupal.org/node/2521956.
+          $access = AccessResult::forbidden()->setCacheMaxAge(0);
+        }
+        $this->mergeCacheabilityFromConditions($access, $conditions);
+        $cacheability->addCacheableDependency($access);
+        $cacheability->addCacheableDependency($block);
+        if ($access->isAllowed() && $this->resolveConditions($conditions, 'and')) {
           $regions[$region][$uuid] = [
             '#theme' => 'block',
             '#attributes' => [
@@ -116,7 +153,6 @@ class LayoutSectionBuilder {
             '#derivative_plugin_id' => $block->getDerivativeId(),
           ];
           $regions[$region][$uuid]['content'] = $block->build();
-          $cacheability->addCacheableDependency($block);
         }
       }
     }
@@ -151,7 +187,7 @@ class LayoutSectionBuilder {
     foreach ($section as $region => $blocks) {
       $weight = 0;
       foreach ($blocks as $uuid => $configuration) {
-        $block = $this->getBlock($uuid, $configuration);
+        $block = $this->getBlock($uuid, $configuration['block']);
         $access = $block->access($this->account, TRUE);
         $cacheability->addCacheableDependency($access);
 
@@ -260,6 +296,43 @@ class LayoutSectionBuilder {
       $this->contextHandler->applyContextMapping($block, $contexts);
     }
     return $block;
+  }
+
+  /**
+   * @param array $configuration
+   *
+   * @return \Drupal\Core\Condition\ConditionInterface[]
+   */
+  protected function getVisibilityConditions(array $configuration = []) {
+    $conditions = [];
+    if (!$configuration) {
+      return $conditions;
+    }
+    /** @var \Drupal\Core\Condition\ConditionManager $manager */
+    $manager = \Drupal::service('plugin.manager.condition');
+    foreach ($configuration as $uuid => $condition) {
+      /** @var \Drupal\Core\Condition\ConditionInterface $condition */
+      $conditions[$uuid] = $manager->createInstance($condition['id'], $condition);
+    }
+    return $conditions;
+  }
+
+  /**
+   * Merges cacheable metadata from conditions onto the access result object.
+   *
+   * @param \Drupal\Core\Access\AccessResult $access
+   *   The access result object.
+   * @param \Drupal\Core\Condition\ConditionInterface[] $conditions
+   *   List of visibility conditions.
+   */
+  protected function mergeCacheabilityFromConditions(AccessResult $access, array $conditions) {
+    foreach ($conditions as $condition) {
+      if ($condition instanceof CacheableDependencyInterface) {
+        $access->addCacheTags($condition->getCacheTags());
+        $access->addCacheContexts($condition->getCacheContexts());
+        $access->setCacheMaxAge(Cache::mergeMaxAges($access->getCacheMaxAge(), $condition->getCacheMaxAge()));
+      }
+    }
   }
 
 }

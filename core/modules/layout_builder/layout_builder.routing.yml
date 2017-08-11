@@ -62,5 +62,32 @@ layout_builder.move_block:
   options:
     _admin_route: TRUE
 
+layout_builder.visibility:
+  path: '/layout_builder/visibility/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{uuid}'
+  defaults:
+    _form: '\Drupal\layout_builder\Form\BlockVisibilityForm'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
+layout_builder.add_visibility:
+  path: '/layout_builder/visibility/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{block_id}/{plugin_id}'
+  defaults:
+    _form: '\Drupal\layout_builder\Form\ConfigureVisibility'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
+layout_builder.delete_visibility:
+  path: '/layout_builder/visibility/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{block_id}/{plugin_id}/delete'
+  defaults:
+    _form: '\Drupal\layout_builder\Form\DeleteVisibility'
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
 route_callbacks:
   - 'layout_builder.routes:getRoutes'
