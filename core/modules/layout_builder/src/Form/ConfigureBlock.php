@@ -172,7 +172,7 @@ class ConfigureBlock extends FormBase {
       '#button_type' => 'primary',
     ];
 
-    $this->buildFormDialog($form, $form_state);
+    $this->buildFormDialog($form, $form_state, FALSE, '#drupal-off-canvas');
     $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
 
     return $form;
@@ -191,16 +191,15 @@ class ConfigureBlock extends FormBase {
    *   to a URL
    */
   public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
-    // @todo Check for errors.
-    // @see \Drupal\layout_builder\Form\DialogFormTrait::submitFormDialog()
-    $response = new AjaxResponse();
-    $layout_controller = $this->classResolver->getInstanceFromDefinition('\Drupal\layout_builder\Controller\LayoutController');
-    $entity = $form_state->get('entity');
-    $field = $form_state->get('field_name');
-    $layout = $layout_controller->layout($entity, $field);
-    $command = new ReplaceCommand('#layout-builder', $layout);
-    $response->addCommand($command);
-    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
+    $response = $this->submitFormDialog($form, $form_state);
+    if (!$form_state->hasAnyErrors()) {
+      $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutController::class);
+      $entity = $form_state->get('entity');
+      $field = $form_state->get('field_name');
+      $layout = $layout_controller->layout($entity, $field);
+      $command = new ReplaceCommand('#layout-builder', $layout);
+      $response->addCommand($command);
+    }
     return $response;
   }
 
