@@ -174,7 +174,9 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
 
     // Remove both sections.
     $this->clickAjaxLink('Remove section');
+    $this->pressAjaxButton('Remove');
     $this->clickAjaxLink('Remove section');
+    $this->pressAjaxButton('Remove');
     $assert_session->pageTextNotContains('This is the block content');
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
