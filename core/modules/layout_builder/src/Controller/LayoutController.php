@@ -317,28 +317,6 @@ class LayoutController extends ControllerBase {
     return $build;
   }
 
-  public function removeBlock($entity_type, $entity, $field_name, $delta, $region, $uuid) {
-    $entity_from_storage = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
-    list($collection, $id) = $this->generateTempstoreId($entity_from_storage, $field_name);
-
-    $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;
-
-    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $field = $entity->$field_name->get($delta);
-    $values = $field->section;
-    unset($values[$region][$uuid]);
-    $field->section = array_filter($values);
-
-    $tempstore['entity'] = $entity;
-    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-
-    $redirect = Url::fromRoute('entity.' . $entity_type . '.layout', [
-      $entity_type => $entity->id(),
-    ]);
-
-    return $this->ajaxRebuildLayout($entity, $field_name);
-  }
-
   /**
    * Save the layout.
    *
