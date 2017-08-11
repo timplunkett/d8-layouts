@@ -157,6 +157,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $this->toggleContextualTriggerVisibility('.block-system-powered-by-block');
     $page->find('css', '.block-system-powered-by-block .contextual .trigger')->click();
     $this->clickAjaxLink('Remove block');
+    $this->pressAjaxButton('Remove');
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
@@ -192,6 +193,15 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
    */
   protected function clickAjaxLink($label) {
     $this->getSession()->getPage()->clickLink($label);
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->htmlOutput($this->getSession()->getPage()->getContent());
+  }
+
+  /**
+   * @todo.
+   */
+  protected function pressAjaxButton($label) {
+    $this->getSession()->getPage()->pressButton($label);
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->htmlOutput($this->getSession()->getPage()->getContent());
   }

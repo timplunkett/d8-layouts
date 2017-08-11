@@ -26,7 +26,7 @@ function layout_builder_help($route_name) {
 function layout_builder_contextual_links_view_alter(&$element, $items) {
   $links = [
     'layout-builder-block-configure' => TRUE,
-    'layout-builder-block-delete' => FALSE,
+    'layout-builder-block-remove' => TRUE,
   ];
   $attach_lib = FALSE;
   foreach ($links as $link => $use_dialog) {

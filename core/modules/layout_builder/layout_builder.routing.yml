@@ -46,7 +46,7 @@ layout_builder.add_block:
 layout_builder.remove_block:
   path: '/layout_builder/remove/block/{entity_type}/{entity}/{field_name}/{delta}/{region}/{uuid}'
   defaults:
-    _controller: '\Drupal\layout_builder\Controller\LayoutController::removeBlock'
+    _form: '\Drupal\layout_builder\Form\RemoveBlockForm'
   requirements:
     _permission: 'configure any layout'
   options:
