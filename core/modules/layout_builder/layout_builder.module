@@ -24,31 +24,23 @@ function layout_builder_help($route_name) {
  * Change Configure Blocks into off_canvas links.
  */
 function layout_builder_contextual_links_view_alter(&$element, $items) {
+  $links = [
+    'layout-builder-block-configure' => TRUE,
+    'layout-builder-block-delete' => FALSE,
+  ];
   $attach_lib = FALSE;
-  if (isset($element['#links']['layout-builder-block-configure'])) {
-    $attributes = [
-      'class' => ['use-ajax'],
-      'data-dialog-type' => 'dialog',
-      'data-dialog-renderer' => 'off_canvas',
-    ];
-    /** @var \Drupal\Core\Url $url */
-    $url = $element['#links']['layout-builder-block-configure']['url'];
-    $url_attributes = $url->getOption('attributes');
-    $url_attributes = $url_attributes ? $url_attributes += $attributes : $attributes;
-    $url->setOption('attributes', $url_attributes);
-    $attach_lib = TRUE;
-  }
-
-  if (isset($element['#links']['layout-builder-block-delete'])) {
-    $attributes = [
-      'class' => ['use-ajax'],
-    ];
-    /** @var \Drupal\Core\Url $url */
-    $url = $element['#links']['layout-builder-block-delete']['url'];
-    $url_attributes = $url->getOption('attributes');
-    $url_attributes = $url_attributes ? $url_attributes += $attributes : $attributes;
-    $url->setOption('attributes', $url_attributes);
-    $attach_lib = TRUE;
+  foreach ($links as $link => $use_dialog) {
+    if (isset($element['#links'][$link])) {
+      $attributes = [
+        'class' => ['use-ajax'],
+      ];
+      if ($use_dialog) {
+        $attributes['data-dialog-type'] = 'dialog';
+        $attributes['data-dialog-renderer'] = 'off_canvas';
+      }
+      $element['#links'][$link]['url']->mergeOptions(['attributes' => $attributes]);
+      $attach_lib = TRUE;
+    }
   }
 
   if ($attach_lib) {
