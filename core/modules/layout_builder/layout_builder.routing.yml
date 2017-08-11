@@ -19,7 +19,7 @@ layout_builder.add_section:
 layout_builder.remove_section:
   path: '/layout_builder/remove/section/{entity_type}/{entity}/{field_name}/{delta}'
   defaults:
-    _controller: '\Drupal\layout_builder\Controller\LayoutController::removeSection'
+    _form: '\Drupal\layout_builder\Form\RemoveSectionForm'
   requirements:
     _permission: 'configure any layout'
   options:
