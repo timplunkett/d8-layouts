@@ -168,21 +168,19 @@ class LayoutController extends ControllerBase {
           '#theme' => 'image',
           '#uri' => $icon,
           '#alt' => $definition->getLabel(),
-          '#theme_wrappers' => [
-            'container' => [
-              '#attributes' => [
-                'class' => ['layout-icon'],
-              ],
-            ],
-          ],
         ];
       }
 
       $items[] = [
-        'icon' => $icon ?: [],
         'label' => [
           '#type' => 'link',
-          '#title' => $definition->getLabel(),
+          '#title' => [
+            $icon ?: [],
+            [
+              '#type' => 'container',
+              '#children' => $definition->getLabel(),
+            ],
+          ],
           '#url' => $this->generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id),
           '#attributes' => [
             'class' => 'use-ajax',
@@ -195,6 +193,11 @@ class LayoutController extends ControllerBase {
       '#items' => $items,
       '#prefix' => '<details class="layout-selection" open="open"><summary class="title">Basic Layouts</summary>',
       '#suffix'=> "</details>",
+      '#attributes' => [
+        'class' => [
+          'layout-list',
+        ],
+      ],
     ];
 
     return $output;
