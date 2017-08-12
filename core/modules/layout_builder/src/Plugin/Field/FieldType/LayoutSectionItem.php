@@ -17,7 +17,9 @@ use Drupal\layout_builder\LayoutSectionItemInterface;
  *   id = "layout_section",
  *   label = @Translation("Layout Section"),
  *   description = @Translation("Layout Section"),
- *   default_formatter = "layout_section"
+ *   default_formatter = "layout_section",
+ *   no_ui = TRUE,
+ *   cardinality = \Drupal\Core\Field\FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED
  * )
  */
 class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterface {
