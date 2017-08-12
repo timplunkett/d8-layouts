@@ -107,13 +107,22 @@ class LayoutController extends ControllerBase {
     );
     $output = [];
     $count = 0;
+    $link = Link::fromTextAndUrl($this->t('Add Section'), $url->setRouteParameter('delta', $count));
     $output[] = [
-      '#markup' => "<div class=\"add-section\">" . $this->l('Add Section', $url->setRouteParameter('delta', $count)) . "</div>"
+      'link' => $link->toRenderable(),
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['add-section'],
+      ],
     ];
     $count++;
     foreach ($layout_section_entity->layout_builder__layout as $item) {
+      $link->getUrl()->setRouteParameter('delta', $count);
       $output[] = [
-        '#prefix' => '<div class="layout-section">',
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['layout-section'],
+        ],
         'remove' => [
           '#type' => 'link',
           '#title' => $this->t('Remove section'),
@@ -129,16 +138,19 @@ class LayoutController extends ControllerBase {
           ],
         ],
         'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $count - 1),
-        '#suffix' => '</div>',
       ];
       $output[] = [
-        '#markup' => '<div class="add-section">' . $this->l('Add Section', $url->setRouteParameter('delta', $count)) . '</div>',
+        'link' => $link->toRenderable(),
+        '#type' => 'container',
+        '#attributes' => [
+          'class' => ['add-section'],
+        ],
       ];
       $count++;
     }
     $output['#attached']['library'][] = 'layout_builder/drupal.layout_builder';
-    $output['#prefix'] = '<div id="layout-builder">';
-    $output['#suffix'] = '</div>';
+    $output['#type'] = 'container';
+    $output['#attributes']['id'] = 'layout-builder';
     // Mark this UI as uncacheable.
     $output['#cache']['max-age'] = 0;
     return $output;
@@ -190,13 +202,21 @@ class LayoutController extends ControllerBase {
       ];
     }
     $output['layouts'] = [
-      '#theme' => 'item_list',
-      '#items' => $items,
-      '#prefix' => '<details class="layout-selection" open="open"><summary class="title">Basic Layouts</summary>',
-      '#suffix' => '</details>',
+      '#type' => 'details',
+      '#title' => $this->t('Basic Layouts'),
+      '#open' => TRUE,
       '#attributes' => [
         'class' => [
-          'layout-list',
+          'layout-selection',
+        ],
+      ],
+      'list' => [
+        '#theme' => 'item_list',
+        '#items' => $items,
+        '#attributes' => [
+          'class' => [
+            'layout-list',
+          ],
         ],
       ],
     ];
@@ -265,11 +285,15 @@ class LayoutController extends ControllerBase {
    *   A render array.
    */
   public function chooseBlock($entity_type, $entity, $delta, $region) {
+    $build['#type'] = 'container';
+    $build['#attributes']['class'][] = 'block-categories';
+
     /** @var \Drupal\Core\Block\BlockManagerInterface $manager */
     $manager = \Drupal::service('plugin.manager.block');
-    $build = [];
     foreach ($manager->getGroupedDefinitions() as $category => $blocks) {
-      $build[$category]['title'] = ['#markup' => '<summary class="title">' . $category . '</summary>'];
+      $build[$category]['#type'] = 'details';
+      $build[$category]['#open'] = TRUE;
+      $build[$category]['#title'] = $category;
       $build[$category]['links'] = [
         '#type' => 'table',
       ];
@@ -293,11 +317,7 @@ class LayoutController extends ControllerBase {
           ],
         ];
       }
-      $build[$category]['#prefix'] = '<details open="open">';
-      $build[$category]['#suffix'] = "</details>";
     }
-    $build['#prefix'] = "<div class=\"block-categories\">";
-    $build['#suffix'] = "</div>";
     return $build;
   }
 
