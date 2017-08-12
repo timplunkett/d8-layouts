@@ -19,6 +19,7 @@ use Drupal\Core\Url;
  * @todo.
  */
 class LayoutSectionBuilder {
+
   use StringTranslationTrait;
 
   /**
@@ -153,10 +154,11 @@ class LayoutSectionBuilder {
           ],
         ]
       );
-      $link = new Link($this->t('Add Block'), $url);
-      $regions[$region]['layout_builder_add_block'] = $link->toRenderable();
-      $regions[$region]['layout_builder_add_block']['#prefix'] = "<div class=\"add-block\">";
-      $regions[$region]['layout_builder_add_block']['#suffix'] = "</div>";
+      $link = Link::fromTextAndUrl($this->t('Add Block'), $url);
+      $regions[$region]['layout_builder_add_block']['link'] = $link->toRenderable();
+      $regions[$region]['layout_builder_add_block']['#attributes'] = [
+        'class' => ['add-block'],
+      ];
     }
     foreach ($section as $region => $blocks) {
       $weight = 0;
