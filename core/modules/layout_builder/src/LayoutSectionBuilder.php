@@ -16,9 +16,10 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 
 /**
- * @todo.
+ * Builds the UI for layout sections.
  */
 class LayoutSectionBuilder {
+
   use StringTranslationTrait;
 
   /**
@@ -127,26 +128,51 @@ class LayoutSectionBuilder {
     return $section;
   }
 
+  /**
+   * Builds the render array for the layout section while editing.
+   *
+   * @param string $layout_id
+   *   The ID of the layout.
+   * @param array $section
+   *   An array of configuration, keyed first by region and then by block UUID.
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $entity_id
+   *   The entity ID.
+   * @param int $delta
+   *   The delta of the section to splice.
+   *
+   * @return array
+   *   The render array for a given section.
+   */
   public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $delta) {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
-    //@todo load a layout, figure out its regions, add a block add link to all regions.
+    // @todo load a layout, figure out its regions, add a block add link to all regions.
     $layout = $this->layoutPluginManager->getDefinition($layout_id);
     foreach ($layout->getRegions() as $region => $info) {
       $url = new Url(
         'layout_builder.choose_block',
-        ['entity_type' => $entity_type, 'entity' => $entity_id, 'delta' => $delta, 'region' => $region],
-        ['attributes' => [
-          'class' => ['use-ajax'],
-          'data-dialog-type' => 'dialog',
-          'data-dialog-renderer' => 'off_canvas',
-        ]]
+        [
+          'entity_type' => $entity_type,
+          'entity' => $entity_id,
+          'delta' => $delta,
+          'region' => $region,
+        ],
+        [
+          'attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-renderer' => 'off_canvas',
+          ],
+        ]
       );
-      $link = new Link($this->t('Add Block'), $url);
-      $regions[$region]['layout_builder_add_block'] = $link->toRenderable();
-      $regions[$region]['layout_builder_add_block']['#prefix'] = "<div class=\"add-block\">";
-      $regions[$region]['layout_builder_add_block']['#suffix'] = "</div>";
+      $link = Link::fromTextAndUrl($this->t('Add Block'), $url);
+      $regions[$region]['layout_builder_add_block']['link'] = $link->toRenderable();
+      $regions[$region]['layout_builder_add_block']['#attributes'] = [
+        'class' => ['add-block'],
+      ];
     }
     foreach ($section as $region => $blocks) {
       $weight = 0;
@@ -155,7 +181,7 @@ class LayoutSectionBuilder {
         $access = $block->access($this->account, TRUE);
         $cacheability->addCacheableDependency($access);
 
-        //@todo Figure out how to handle blocks a user doesn't have access to
+        // @todo Figure out how to handle blocks a user doesn't have access to
         // during administration.
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = [
@@ -207,7 +233,7 @@ class LayoutSectionBuilder {
             ],
           ];
           $regions[$region][$uuid]['content'] = $content;
-          //@todo cacheability in the administration? is that a thing?
+          // @todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
       }

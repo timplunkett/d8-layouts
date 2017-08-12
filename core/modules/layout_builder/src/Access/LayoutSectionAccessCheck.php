@@ -10,7 +10,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * @todo.
+ * Provides an access check for the Layout Builder UI.
  */
 class LayoutSectionAccessCheck implements AccessInterface {
 
