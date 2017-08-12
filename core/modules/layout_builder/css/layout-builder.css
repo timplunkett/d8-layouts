@@ -37,7 +37,7 @@
 }
 
 .layout-section .remove-section:hover {
-  background-image: url(../../../misc/icons/787878/ex.svg)
+  background-image: url(../../../misc/icons/787878/ex.svg);
 }
 
 #drupal-off-canvas  details.layout-selection {
