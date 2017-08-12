@@ -127,7 +127,7 @@ class LayoutSectionBuilder {
     return $section;
   }
 
-  public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $field_name, $delta) {
+  public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $delta) {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
@@ -136,7 +136,7 @@ class LayoutSectionBuilder {
     foreach ($layout->getRegions() as $region => $info) {
       $url = new Url(
         'layout_builder.choose_block',
-        ['entity_type' => $entity_type, 'entity' => $entity_id, 'field_name' => $field_name, 'delta' => $delta, 'region' => $region],
+        ['entity_type' => $entity_type, 'entity' => $entity_id, 'delta' => $delta, 'region' => $region],
         ['attributes' => [
           'class' => ['use-ajax'],
           'data-dialog-type' => 'dialog',
@@ -202,7 +202,6 @@ class LayoutSectionBuilder {
               'route_parameters' => [
                 'entity_type' => $entity_type,
                 'entity' => $entity_id,
-                'field_name' => $field_name,
                 'delta' => $delta,
                 'region' => $region,
                 'uuid' => $uuid,
@@ -226,7 +225,6 @@ class LayoutSectionBuilder {
     $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
       'entity_type' => $entity_type,
       'entity' => $entity_id,
-      'field_name' => $field_name,
     ])->toString();
     $section['#attributes']['data-layout-delta'] = $delta;
 

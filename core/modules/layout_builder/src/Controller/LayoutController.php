@@ -76,14 +76,12 @@ class LayoutController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
    *   The entity.
-   * @param string $layout_section_field_name
-   *   The field name.
    *
    * @return array
    *   A render array.
    */
-  public function layout(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
-    list($collection, $id) = $this->generateTempstoreId($layout_section_entity, $layout_section_field_name);
+  public function layout(FieldableEntityInterface $layout_section_entity) {
+    list($collection, $id) = $this->generateTempstoreId($layout_section_entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     list($entity_id, $language, $revision_id) = explode('.', $id);
     if (!empty($tempstore['entity'])) {
@@ -91,7 +89,7 @@ class LayoutController extends ControllerBase {
     }
     $url = new Url(
       'layout_builder.choose_section',
-      ['entity_type' => $layout_section_entity->getEntityTypeId(), 'entity' => $revision_id ? $revision_id : $entity_id, 'field_name' => $layout_section_field_name],
+      ['entity_type' => $layout_section_entity->getEntityTypeId(), 'entity' => $revision_id ? $revision_id : $entity_id],
       ['attributes' => [
         'class' => ['use-ajax'],
         'data-dialog-type' => 'dialog',
@@ -105,7 +103,7 @@ class LayoutController extends ControllerBase {
       '#markup' => "<div class=\"add-section\">" . $this->l('Add Section', $url->setRouteParameter('delta', $count)) . "</div>"
     ];
     $count++;
-    foreach ($layout_section_entity->$layout_section_field_name as $item) {
+    foreach ($layout_section_entity->layout_builder__layout as $item) {
       $output[] = [
         '#prefix' => '<div class="layout-section">',
         'remove' => [
@@ -114,7 +112,6 @@ class LayoutController extends ControllerBase {
           '#url' => Url::fromRoute('layout_builder.remove_section', [
             'entity_type' => $layout_section_entity->getEntityTypeId(),
             'entity' => $revision_id ?: $entity_id,
-            'field_name' => $layout_section_field_name,
             'delta' => $count - 1,
           ]),
           '#attributes' => [
@@ -123,7 +120,7 @@ class LayoutController extends ControllerBase {
             'data-dialog-renderer' => 'off_canvas',
           ],
         ],
-        'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $layout_section_field_name, $count - 1),
+        'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $count - 1),
         '#suffix' => '</div>',
       ];
       $output[] = [
@@ -146,15 +143,13 @@ class LayoutController extends ControllerBase {
    *   The entity type.
    * @param string $entity
    *   The entity id.
-   * @param string $field_name
-   *   The layout field name.
    * @param int $delta
    *   The delta of the section to splice.
    *
    * @return array
    *   The render array.
    */
-  public function chooseSection($entity_type, $entity, $field_name, $delta) {
+  public function chooseSection($entity_type, $entity, $delta) {
     $output = [];
     /** @var PluginManagerInterface $layout_manager */
     $layout_manager = \Drupal::service('plugin.manager.core.layout');
@@ -183,7 +178,7 @@ class LayoutController extends ControllerBase {
               '#children' => $definition->getLabel(),
             ],
           ],
-          '#url' => $this->generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id),
+          '#url' => $this->generateSectionUrl($entity_type, $entity, $delta, $plugin_id),
           '#attributes' => [
             'class' => 'use-ajax',
           ],
@@ -212,8 +207,6 @@ class LayoutController extends ControllerBase {
    *   The entity type.
    * @param string $entity
    *   The entity id.
-   * @param string $field_name
-   *   The layout field name.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $plugin_id
@@ -222,15 +215,15 @@ class LayoutController extends ControllerBase {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The render array.
    */
-  public function addSection($entity_type, $entity, $field_name, $delta, $plugin_id) {
+  public function addSection($entity_type, $entity, $delta, $plugin_id) {
     /** @var FieldableEntityInterface $entity */
     $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
-    list($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+    list($collection, $id) = $this->generateTempstoreId($entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     if (!empty($tempstore['entity'])) {
       $entity = $tempstore['entity'];
     }
-    $values = $entity->$field_name->getValue();
+    $values = $entity->layout_builder__layout->getValue();
     if (isset($values[$delta])) {
       $start = array_slice($values, 0, $delta);
       $end = array_slice($values, $delta);
@@ -246,13 +239,13 @@ class LayoutController extends ControllerBase {
         'section' => []
       ];
     }
-    $entity->$field_name->setValue($values);
+    $entity->layout_builder__layout->setValue($values);
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    return $this->ajaxRebuildLayout($entity, $field_name);
+    return $this->ajaxRebuildLayout($entity);
   }
 
-  public function chooseBlock($entity_type, $entity, $field_name, $delta, $region) {
+  public function chooseBlock($entity_type, $entity, $delta, $region) {
     /** @var \Drupal\Core\Block\BlockManagerInterface $manager */
     $manager = \Drupal::service('plugin.manager.block');
     $build = [];
@@ -269,7 +262,6 @@ class LayoutController extends ControllerBase {
             [
               'entity_type' => $entity_type,
               'entity' => $entity,
-              'field_name' => $field_name,
               'delta' => $delta,
               'region' => $region,
               'plugin_id' => $block_id,
@@ -295,14 +287,12 @@ class LayoutController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
    *   The entity.
-   * @param string $layout_section_field_name
-   *   The field name.
    *
    * @return RedirectResponse
    *   A redirect response.
    */
-  public function saveLayout(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
-    list($collection, $id) = $this->generateTempstoreId($layout_section_entity, $layout_section_field_name);
+  public function saveLayout(FieldableEntityInterface $layout_section_entity) {
+    list($collection, $id) = $this->generateTempstoreId($layout_section_entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
       if (!empty($tempstore['entity'])) {
       $layout_section_entity = $tempstore['entity'];
@@ -320,23 +310,21 @@ class LayoutController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
    *   The entity.
-   * @param string $layout_section_field_name
-   *   The field name.
    *
    * @return RedirectResponse
    *   A redirect response.
    */
-  public function cancelLayout(FieldableEntityInterface $layout_section_entity, $layout_section_field_name) {
-    list($collection, $id) = $this->generateTempstoreId($layout_section_entity, $layout_section_field_name);
+  public function cancelLayout(FieldableEntityInterface $layout_section_entity) {
+    list($collection, $id) = $this->generateTempstoreId($layout_section_entity);
     $this->tempStoreFactory->get($collection)->delete($id);
     // @todo Make trusted redirect instead.
     return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }
 
-  public function moveBlock(Request $request, $entity_type, $entity, $field_name) {
+  public function moveBlock(Request $request, $entity_type, $entity) {
     /** @var FieldableEntityInterface $entity */
     $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
-    list($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+    list($collection, $id) = $this->generateTempstoreId($entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     if (!empty($tempstore['entity'])) {
       $entity = $tempstore['entity'];
@@ -344,7 +332,7 @@ class LayoutController extends ControllerBase {
     $data = $request->request->all();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $field = $entity->$field_name->get($data['delta_from']);
+    $field = $entity->layout_builder__layout->get($data['delta_from']);
     $values = $field->section ? $field->section : [];
 
     $region_from = $data['region_from'];
@@ -355,7 +343,7 @@ class LayoutController extends ControllerBase {
     $field->section = array_filter($values);
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $field = $entity->$field_name->get($data['delta_to']);
+    $field = $entity->layout_builder__layout->get($data['delta_to']);
     $values = $field->section ? $field->section : [];
     if ($data['preceding_block_uuid']) {
       $slice_id = array_search($data['preceding_block_uuid'], array_keys($values[$region_to]));
@@ -374,7 +362,7 @@ class LayoutController extends ControllerBase {
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
 
-    return $this->ajaxRebuildLayout($entity, $field_name);
+    return $this->ajaxRebuildLayout($entity);
   }
 
   /**
@@ -384,8 +372,6 @@ class LayoutController extends ControllerBase {
    *   The entity type.
    * @param string $entity
    *   The entity id.
-   * @param string $field_name
-   *   The layout field name.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $plugin_id
@@ -394,8 +380,8 @@ class LayoutController extends ControllerBase {
    * @return \Drupal\Core\Url
    *   The Url object of the add_section route.
    */
-  protected function generateSectionUrl($entity_type, $entity, $field_name, $delta, $plugin_id) {
-    return new Url('layout_builder.add_section', ['entity_type' => $entity_type, 'entity' => $entity, 'field_name' => $field_name, 'delta' => $delta, 'plugin_id' => $plugin_id]);
+  protected function generateSectionUrl($entity_type, $entity, $delta, $plugin_id) {
+    return new Url('layout_builder.add_section', ['entity_type' => $entity_type, 'entity' => $entity, 'delta' => $delta, 'plugin_id' => $plugin_id]);
   }
 
   /**
@@ -403,15 +389,13 @@ class LayoutController extends ControllerBase {
    *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
    *   The entity.
-   * @param string $field_name
-   *   The field name.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The ajax response to replace the layout and close the dialog.
    */
-  protected function ajaxRebuildLayout(FieldableEntityInterface $entity, $field_name) {
+  protected function ajaxRebuildLayout(FieldableEntityInterface $entity) {
     $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity, $field_name)));
+    $response->addCommand(new ReplaceCommand('#layout-builder', $this->layout($entity)));
     $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
     return $response;
   }
