@@ -47,7 +47,6 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
           '_controller' => '\Drupal\layout_builder\Controller\LayoutController::layout',
           '_title_callback' => '\Drupal\layout_builder\Controller\LayoutController::title',
           'layout_section_entity' => NULL,
-          'layout_section_field_name' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
         ->addRequirements([
@@ -68,7 +67,6 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutController::saveLayout',
           'layout_section_entity' => NULL,
-          'layout_section_field_name' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
         ->addRequirements([
@@ -89,7 +87,6 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutController::cancelLayout',
           'layout_section_entity' => NULL,
-          'layout_section_field_name' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
         ->addRequirements([
@@ -120,7 +117,6 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         $route->setOption('_layout_builder', TRUE);
         $route->addDefaults([
           'layout_section_entity' => NULL,
-          'layout_section_field_name' => NULL,
           'entity_type_id' => $entity_type->id(),
         ]);
       }

@@ -24,14 +24,6 @@ class LayoutBuilderRouteEnhancer implements RouteEnhancerInterface {
   public function enhance(array $defaults, Request $request) {
     // Copy the entity by reference so that any changes are reflected.
     $defaults['layout_section_entity'] = &$defaults[$defaults['entity_type_id']];
-
-    /** @var \Drupal\Core\Field\FieldItemListInterface $field */
-    foreach ($defaults['layout_section_entity'] as $field) {
-      if ($field->getFieldDefinition()->getType() == 'layout_section') {
-        $defaults['layout_section_field_name'] = $field->getFieldDefinition()->getName();
-        break;
-      }
-    }
     return $defaults;
   }
 

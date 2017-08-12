@@ -133,14 +133,14 @@ class ConfigureBlock extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $field_name = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
     $entity = $this->entityTypeManager->getStorage($entity_type)->loadRevision($entity);
-    list($collection, $id) = $this->generateTempstoreId($entity, $field_name);
+    list($collection, $id) = $this->generateTempstoreId($entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     if (!empty($tempstore['entity'])) {
       $entity = $tempstore['entity'];
     }
-    $values = $entity->$field_name->getValue();
+    $values = $entity->layout_builder__layout->getValue();
     $value = !empty($values[$delta]['section'][$region][$plugin_id]) ? $values[$delta]['section'][$region][$plugin_id] : [];
     $this->block = $this->prepareBlock($plugin_id, $value);
 
@@ -150,7 +150,6 @@ class ConfigureBlock extends FormBase {
     $form_state->set('machine_name', $id);
     $form_state->set('entity_type', $entity_type);
     $form_state->set('entity', $entity);
-    $form_state->set('field_name', $field_name);
     $form_state->set('delta', $delta);
     $form_state->set('region', $region);
     $form_state->set('block_id', $this->block->getConfiguration()['uuid']);
@@ -195,8 +194,7 @@ class ConfigureBlock extends FormBase {
     if (!$form_state->hasAnyErrors()) {
       $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutController::class);
       $entity = $form_state->get('entity');
-      $field = $form_state->get('field_name');
-      $layout = $layout_controller->layout($entity, $field);
+      $layout = $layout_controller->layout($entity);
       $command = new ReplaceCommand('#layout-builder', $layout);
       $response->addCommand($command);
     }
@@ -235,15 +233,14 @@ class ConfigureBlock extends FormBase {
     $collection = $form_state->get('collection');
     $id = $form_state->get('machine_name');
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    $field_name = $form_state->get('field_name');
     $delta = $form_state->get('delta');
     $region = $form_state->get('region');
     if (!empty($tempstore['entity'])) {
       $entity = $tempstore['entity'];
     }
-    $values = $entity->$field_name->getValue();
+    $values = $entity->layout_builder__layout->getValue();
     $values[$delta]['section'][$region][$configuration['uuid']] = $configuration;
-    $entity->$field_name->setValue($values);
+    $entity->layout_builder__layout->setValue($values);
 
     $tempstore['entity'] = $entity;
     $this->tempStoreFactory->get($collection)->set($id, $tempstore);
