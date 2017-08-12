@@ -127,21 +127,31 @@ class LayoutSectionBuilder {
     return $section;
   }
 
+  /**
+   *
+   */
   public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $delta) {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
-    //@todo load a layout, figure out its regions, add a block add link to all regions.
+    // @todo load a layout, figure out its regions, add a block add link to all regions.
     $layout = $this->layoutPluginManager->getDefinition($layout_id);
     foreach ($layout->getRegions() as $region => $info) {
       $url = new Url(
         'layout_builder.choose_block',
-        ['entity_type' => $entity_type, 'entity' => $entity_id, 'delta' => $delta, 'region' => $region],
-        ['attributes' => [
-          'class' => ['use-ajax'],
-          'data-dialog-type' => 'dialog',
-          'data-dialog-renderer' => 'off_canvas',
-        ]]
+        [
+          'entity_type' => $entity_type,
+          'entity' => $entity_id,
+          'delta' => $delta,
+          'region' => $region,
+        ],
+        [
+          'attributes' => [
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-renderer' => 'off_canvas',
+          ],
+        ]
       );
       $link = new Link($this->t('Add Block'), $url);
       $regions[$region]['layout_builder_add_block'] = $link->toRenderable();
@@ -155,7 +165,7 @@ class LayoutSectionBuilder {
         $access = $block->access($this->account, TRUE);
         $cacheability->addCacheableDependency($access);
 
-        //@todo Figure out how to handle blocks a user doesn't have access to
+        // @todo Figure out how to handle blocks a user doesn't have access to
         // during administration.
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = [
@@ -207,7 +217,7 @@ class LayoutSectionBuilder {
             ],
           ];
           $regions[$region][$uuid]['content'] = $content;
-          //@todo cacheability in the administration? is that a thing?
+          // @todo cacheability in the administration? is that a thing?
           $cacheability->addCacheableDependency($block);
         }
       }

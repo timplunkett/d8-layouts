@@ -1,11 +1,8 @@
 <?php
 
-
 namespace Drupal\layout_builder\Form;
 
 use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ClassResolver;
@@ -21,6 +18,9 @@ use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ *
+ */
 class ConfigureBlock extends FormBase {
   use ContextAwarePluginAssignmentTrait;
   use TempstoreIdHelper;
@@ -43,26 +43,26 @@ class ConfigureBlock extends FormBase {
   /**
    * The context repository.
    *
-   * @var ContextRepositoryInterface
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
    */
   protected $contextRepository;
 
   /**
    * The entity type manager.
    *
-   * @var EntityTypeManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
   /**
    * The block manager.
    *
-   * @var BlockManagerInterface
+   * @var \Drupal\Core\Block\BlockManagerInterface
    */
   protected $blockManager;
 
   /**
-   * @var UuidInterface
+   * @var \Drupal\Component\Uuid\UuidInterface
    */
   protected $uuid;
 
@@ -117,8 +117,9 @@ class ConfigureBlock extends FormBase {
    *
    * @param array $value
    *   The block configuration.
+   *
    * @return \Drupal\Core\Block\BlockPluginInterface The block plugin.
-   * The block plugin.
+   *   The block plugin.
    */
   protected function prepareBlock($block_id, array $value) {
     if ($value) {

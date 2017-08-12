@@ -100,8 +100,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $page->checkField('settings[label_display]');
 
     // Save the new block, and ensure it is displayed on the page.
-    $page->pressButton('Add Block');
-    $assert_session->assertWaitOnAjaxRequest();
+    $this->pressAjaxButton('Add Block');
     $assert_session->pageTextContains('Powered by Drupal');
     $assert_session->pageTextContains('This is the label');
 
@@ -168,6 +167,9 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     //$assert_session->pageTextNotContains('My Sections');
   }
 
+  /**
+   *
+   */
   protected function toggleContextualTriggerVisibility($selector) {
     // Hovering over the element itself with should be enough, but does not
     // work. Manually remove the visually-hidden class.

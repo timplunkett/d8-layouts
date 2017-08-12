@@ -162,6 +162,9 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, 'UNCACHEABLE');
   }
 
+  /**
+   *
+   */
   public function testLayoutSectionFormatterAccess() {
     $this->createSectionNode([
       [
@@ -190,6 +193,9 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection('.layout--onecol', 'Hello test world', '', '', 'UNCACHEABLE');
   }
 
+  /**
+   *
+   */
   public function testMultilingualLayoutSectionFormatter() {
     $this->container->get('module_installer')->install(['content_translation']);
     $this->rebuildContainer();
@@ -251,6 +257,9 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertEquals('Edit layout for The node title', $this->cssSelect('h1.page-title')[0]->getText());
   }
 
+  /**
+   *
+   */
   public function testLayoutUrlNoSectionField() {
     $this->createNode([
       'type' => 'bundle_without_section_field',
