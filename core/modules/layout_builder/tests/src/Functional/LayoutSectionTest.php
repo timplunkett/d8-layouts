@@ -2,14 +2,11 @@
 
 namespace Drupal\Tests\layout_builder\Functional;
 
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * @todo.
+ * Tests the rendering of a layout section field.
  *
  * @group layout_builder
  */
@@ -51,6 +48,7 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   /**
+   * Provides test data for ::testLayoutSectionFormatter().
    */
   public function providerTestLayoutSectionFormatter() {
     $data = [];
@@ -162,6 +160,9 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection($expected_selector, $expected_content, $expected_cache_contexts, $expected_cache_tags, 'UNCACHEABLE');
   }
 
+  /**
+   * Tests the access checking of the section formatter.
+   */
   public function testLayoutSectionFormatterAccess() {
     $this->createSectionNode([
       [
@@ -190,6 +191,9 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertLayoutSection('.layout--onecol', 'Hello test world', '', '', 'UNCACHEABLE');
   }
 
+  /**
+   * Tests the multilingual support of the section formatter.
+   */
   public function testMultilingualLayoutSectionFormatter() {
     $this->container->get('module_installer')->install(['content_translation']);
     $this->rebuildContainer();
@@ -251,6 +255,9 @@ class LayoutSectionTest extends BrowserTestBase {
     $this->assertEquals('Edit layout for The node title', $this->cssSelect('h1.page-title')[0]->getText());
   }
 
+  /**
+   * Tests that no Layout link shows without a section field.
+   */
   public function testLayoutUrlNoSectionField() {
     $this->createNode([
       'type' => 'bundle_without_section_field',

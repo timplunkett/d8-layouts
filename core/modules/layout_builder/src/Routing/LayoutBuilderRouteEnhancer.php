@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
 /**
- * @todo.
+ * Enhances routes to ensure the entity is available with a generic name.
  */
 class LayoutBuilderRouteEnhancer implements RouteEnhancerInterface {
 
