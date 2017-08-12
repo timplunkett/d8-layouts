@@ -20,7 +20,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'node', 'block_content', 'contextual'];
+  public static $modules = ['layout_builder', 'node', 'block_content', 'contextual', 'field_ui'];
 
   /**
    * {@inheritdoc}
@@ -46,30 +46,6 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     ])->save();
 
     $this->createContentType(['type' => 'bundle_with_section_field']);
-
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => 'field_my_sections',
-      'entity_type' => 'node',
-      'type' => 'layout_section',
-      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
-    ]);
-    $field_storage->setTranslatable(TRUE);
-    $field_storage->save();
-
-    $instance = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => 'bundle_with_section_field',
-      'label' => 'My Sections',
-    ]);
-    $instance->save();
-
-    $display = EntityViewDisplay::load('node.bundle_with_section_field.default');
-    $display->setComponent('field_my_sections', [
-      'type' => 'layout_section',
-      'settings' => [],
-    ]);
-    $display->save();
-
     $this->createNode([
       'type' => 'bundle_with_section_field',
       'title' => 'The node title',
@@ -83,6 +59,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $this->drupalLogin($this->drupalCreateUser([
       'access contextual links',
       'configure any layout',
+      'administer node display',
     ], 'foobar'));
   }
 
@@ -93,6 +70,11 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
   public function test() {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
+
+    // Enable layout support.
+    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
+    $page->checkField('layout[custom]');
+    $page->pressButton('Save');
 
     // Ensure the block is not displayed initially.
     $this->drupalGet('node/1');
@@ -136,7 +118,8 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->addressEquals('node/1');
     $assert_session->pageTextContains('Powered by Drupal');
     $assert_session->pageTextContains('This is the label');
-    $assert_session->pageTextContains('My Sections');
+    // @todo Assert that the layout is displayed?
+    //$assert_session->pageTextContains('My Sections');
 
     // Drag one block from one region to another.
     $this->drupalGet('node/1/layout');
@@ -162,7 +145,8 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
     $this->clickLink('Save Layout');
-    $assert_session->pageTextContains('My Sections');
+    // @todo Assert that the layout is displayed?
+    //$assert_session->pageTextContains('My Sections');
 
     // Test deriver-based blocks.
     $this->drupalGet('node/1/layout');
@@ -180,7 +164,8 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->pageTextNotContains('This is the block content');
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
-    $assert_session->pageTextNotContains('My Sections');
+    // @todo Assert that a layout with no sections has no markup.
+    //$assert_session->pageTextNotContains('My Sections');
   }
 
   protected function toggleContextualTriggerVisibility($selector) {
