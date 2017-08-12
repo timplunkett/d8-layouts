@@ -48,13 +48,6 @@ class RemoveBlockForm extends ConfirmFormBase {
   protected $entityId;
 
   /**
-   * The field machine name.
-   *
-   * @var string
-   */
-  protected $fieldName;
-
-  /**
    * The field delta.
    *
    * @var int
@@ -132,12 +125,11 @@ class RemoveBlockForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $field_name = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
     $form = parent::buildForm($form, $form_state);
 
     $this->entityTypeId = $entity_type;
     $this->entityId = $entity;
-    $this->fieldName = $field_name;
     $this->delta = $delta;
     $this->region = $region;
     $this->uuid = $uuid;
@@ -160,11 +152,11 @@ class RemoveBlockForm extends ConfirmFormBase {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     $entity_from_storage = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
 
-    list($collection, $id) = $this->generateTempstoreId($entity_from_storage, $this->fieldName);
+    list($collection, $id) = $this->generateTempstoreId($entity_from_storage);
     $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $field = $entity->{$this->fieldName}->get($this->delta);
+    $field = $entity->layout_builder__layout->get($this->delta);
     $values = $field->section;
     unset($values[$this->region][$this->uuid]);
     $field->section = $values;

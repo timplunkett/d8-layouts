@@ -17,7 +17,6 @@ class LayoutBuilderLocalTask extends LocalTaskDefault {
     $parameters = parent::getRouteParameters($route_match);
 
     $parameters['layout_section_entity'] = $route_match->getParameter('layout_section_entity');
-    $parameters['layout_section_field_name'] = $route_match->getParameter('layout_section_field_name');
     return $parameters;
   }
 
