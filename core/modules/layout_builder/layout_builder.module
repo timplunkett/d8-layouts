@@ -60,9 +60,12 @@ function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormSta
   $display = $form_object->getEntity();
   $entity_type = \Drupal::entityTypeManager()->getDefinition($display->getTargetEntityTypeId());
 
-  // @todo unset isn't ok, but #access => FALSE doesn't effectively remove it
-  // from table drag. Figure out what to do.
-  // unset($form['fields']['layout_builder__layout']);
+  // Remove layout_builder__layout both visually and from the #fields handling.
+  // This prevents \Drupal\field_ui\Form\EntityDisplayFormBase::copyFormValuesToEntity
+  // from setting or removing the component which we can do because we
+  // will manually alter this component during display.
+  unset($form['fields']['layout_builder__layout']);
+  unset($form['#fields'][array_search('layout_builder__layout', $form['#fields'])]);
 
   $form['layout'] = [
     '#type' => 'details',
