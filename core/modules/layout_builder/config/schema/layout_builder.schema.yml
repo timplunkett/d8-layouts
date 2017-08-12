@@ -1,0 +1,7 @@
+core.entity_view_display.*.*.*.third_party.layout_builder:
+  type: mapping
+  label: 'Per-view-mode Layout Builder settings'
+  mapping:
+    custom:
+      type: boolean
+      label: 'Customized layout'
