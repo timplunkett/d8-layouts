@@ -4,6 +4,8 @@
  * @file
  * Provides hook implementations for Layout Builder.
  */
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_help().
@@ -45,5 +47,109 @@ function layout_builder_contextual_links_view_alter(&$element, $items) {
 
   if ($attach_lib) {
     $element['#attached']['library'][] = 'outside_in/drupal.off_canvas';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display */
+  $display = $form_object->getEntity();
+  $entity_type = \Drupal::entityTypeManager()->getDefinition($display->getTargetEntityTypeId());
+
+  // Remove layout_builder__layout both visually and from the #fields handling.
+  // This prevents \Drupal\field_ui\Form\EntityDisplayFormBase::copyFormValuesToEntity
+  // from setting or removing the component which we can do because we
+  // will manually alter this component during display.
+  unset($form['fields']['layout_builder__layout']);
+  unset($form['#fields'][array_search('layout_builder__layout', $form['#fields'])]);
+
+  $form['layout'] = [
+    '#type' => 'details',
+    '#open' => TRUE,
+    '#title' => t('Layout options'),
+    '#tree' => TRUE,
+  ];
+  $form['layout']['custom'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow each @entity to have its layout customized', [
+      '@entity' => $entity_type->getSingularLabel(),
+    ]),
+    '#default_value' => $display->getThirdPartySetting('layout_builder', 'custom', FALSE),
+  ];
+
+  $form['actions']['submit']['#submit'][] = 'layout_builder_form_entity_view_display_edit_submit';
+}
+
+/**
+ * Form submission handler for layout options on the entity view display form.
+ *
+ * @see layout_builder_form_entity_view_display_edit_form_alter()
+ */
+function layout_builder_form_entity_view_display_edit_submit(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display */
+  $display = $form_object->getEntity();
+  $display->setThirdPartySetting('layout_builder', 'custom', $form_state->getValue(['layout', 'custom'], FALSE));
+  $display->save();
+
+  $entity_type_id = $display->getTargetEntityTypeId();
+  $bundle = $display->getTargetBundle();
+
+  // Generate the field and storage.
+  if ($display->getThirdPartySetting('layout_builder', 'custom', FALSE)) {
+    $field_storage = \Drupal::entityTypeManager()->getStorage('field_storage_config')->load($entity_type_id . '.layout_builder__layout');
+    if (!$field_storage) {
+      $field_storage = \Drupal\field\Entity\FieldStorageConfig::create(
+        [
+          'entity_type' => $entity_type_id,
+          'field_name' => 'layout_builder__layout',
+          'type' => 'layout_section',
+          'settings' => [],
+          'status' => TRUE,
+        ]
+      );
+      $field_storage->save();
+    }
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load($entity_type_id . '.' . $bundle . '.layout_builder__layout');
+    if (!$field) {
+      $field = \Drupal::entityTypeManager()->getStorage('field_config')->create([
+        'field_storage' => $field_storage,
+        'bundle' => $bundle,
+        'label' => t('Layout'),
+        'settings' => [],
+        'status' => TRUE,
+      ]);
+      $field->save();
+    }
+  }
+  else {
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load($entity_type_id . '.' . $bundle . '.layout_builder__layout');
+    if ($field) {
+      $field->delete();
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view_display_alter().
+ */
+function layout_builder_entity_view_display_alter(EntityViewDisplayInterface $display, array $context) {
+  if (!in_array($context['view_mode'], ['full', 'default'])) {
+    return;
+  }
+  if ($display->getThirdPartySetting('layout_builder', 'custom', FALSE)) {
+    $field_definitions = Drupal::service('entity_field.manager')
+      ->getFieldDefinitions($display->getTargetEntityTypeId(), $display->getTargetBundle());
+    foreach (array_keys($display->getComponents()) as $name) {
+      if (isset($field_definitions[$name]) && $field_definitions[$name]->isDisplayConfigurable('view')) {
+        $display->removeComponent($name);
+      }
+    }
+    $display->setComponent('layout_builder__layout', ['label' => 'hidden']);
   }
 }
