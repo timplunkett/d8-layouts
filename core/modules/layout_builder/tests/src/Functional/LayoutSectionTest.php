@@ -25,7 +25,7 @@ class LayoutSectionTest extends BrowserTestBase {
    *
    * @var string
    */
-  protected $fieldName;
+  protected $fieldName = 'layout_builder__layout';
 
   /**
    * {@inheritdoc}
@@ -40,33 +40,14 @@ class LayoutSectionTest extends BrowserTestBase {
       'type' => 'bundle_without_section_field',
     ]);
 
-    $this->fieldName = 'field_my_sections';
-
-    $field_storage = FieldStorageConfig::create([
-      'field_name' => $this->fieldName,
-      'entity_type' => 'node',
-      'type' => 'layout_section',
-      'cardinality' => FieldStorageConfig::CARDINALITY_UNLIMITED,
-    ]);
-    $field_storage->setTranslatable(TRUE);
-    $field_storage->save();
-
-    $instance = FieldConfig::create([
-      'field_storage' => $field_storage,
-      'bundle' => 'bundle_with_section_field',
-      'label' => 'My Sections',
-    ]);
-    $instance->save();
-
-    $display = EntityViewDisplay::load('node.bundle_with_section_field.default');
-    $display->setComponent($this->fieldName, [
-      'type' => 'layout_section',
-      'settings' => [],
-    ]);
-    $display->save();
     $this->drupalLogin($this->drupalCreateUser([
       'configure any layout',
+      'administer node display',
     ], 'foobar'));
+    $page = $this->getSession()->getPage();
+    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
+    $page->checkField('layout[custom]');
+    $page->pressButton('Save');
   }
 
   /**
