@@ -1,5 +1,5 @@
 layout_builder.choose_section:
-  path: '/layout_builder/choose/section/{entity_type}/{entity}/{delta}'
+  path: '/layout_builder/choose/section/{entity_type_id}/{entity_id}/{delta}'
   defaults:
    _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseSection'
   requirements:
@@ -8,7 +8,7 @@ layout_builder.choose_section:
     _admin_route: TRUE
 
 layout_builder.add_section:
-  path: '/layout_builder/add/section/{entity_type}/{entity}/{delta}/{plugin_id}'
+  path: '/layout_builder/add/section/{entity_type_id}/{entity_id}/{delta}/{plugin_id}'
   defaults:
     _controller: '\Drupal\layout_builder\Controller\LayoutController::addSection'
   requirements:
@@ -17,7 +17,7 @@ layout_builder.add_section:
     _admin_route: TRUE
 
 layout_builder.remove_section:
-  path: '/layout_builder/remove/section/{entity_type}/{entity}/{delta}'
+  path: '/layout_builder/remove/section/{entity_type_id}/{entity_id}/{delta}'
   defaults:
     _form: '\Drupal\layout_builder\Form\RemoveSectionForm'
   requirements:
@@ -26,7 +26,7 @@ layout_builder.remove_section:
     _admin_route: TRUE
 
 layout_builder.choose_block:
-  path: '/layout_builder/choose/block/{entity_type}/{entity}/{delta}/{region}'
+  path: '/layout_builder/choose/block/{entity_type_id}/{entity_id}/{delta}/{region}'
   defaults:
     _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseBlock'
   requirements:
@@ -35,7 +35,7 @@ layout_builder.choose_block:
     _admin_route: TRUE
 
 layout_builder.add_block:
-  path: '/layout_builder/add/block/{entity_type}/{entity}/{delta}/{region}/{plugin_id}'
+  path: '/layout_builder/add/block/{entity_type_id}/{entity_id}/{delta}/{region}/{plugin_id}'
   defaults:
     _form: '\Drupal\layout_builder\Form\ConfigureBlockForm'
   requirements:
@@ -44,7 +44,7 @@ layout_builder.add_block:
     _admin_route: TRUE
 
 layout_builder.remove_block:
-  path: '/layout_builder/remove/block/{entity_type}/{entity}/{delta}/{region}/{uuid}'
+  path: '/layout_builder/remove/block/{entity_type_id}/{entity_id}/{delta}/{region}/{uuid}'
   defaults:
     _form: '\Drupal\layout_builder\Form\RemoveBlockForm'
   requirements:
@@ -53,7 +53,7 @@ layout_builder.remove_block:
     _admin_route: TRUE
 
 layout_builder.move_block:
-  path: '/layout_builder/move/block/{entity_type}/{entity}'
+  path: '/layout_builder/move/block/{entity_type_id}/{entity_id}'
   defaults:
     _controller: '\Drupal\layout_builder\Controller\LayoutController::moveBlock'
   methods: [POST]
