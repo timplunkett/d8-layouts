@@ -135,7 +135,7 @@ class LayoutSectionBuilder {
    *   The ID of the layout.
    * @param array $section
    *   An array of configuration, keyed first by region and then by block UUID.
-   * @param string $entity_type
+   * @param string $entity_type_id
    *   The entity type.
    * @param string $entity_id
    *   The entity ID.
@@ -145,7 +145,7 @@ class LayoutSectionBuilder {
    * @return array
    *   The render array for a given section.
    */
-  public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $delta) {
+  public function buildAdministrativeSection($layout_id, array $section, $entity_type_id, $entity_id, $delta) {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
@@ -155,8 +155,8 @@ class LayoutSectionBuilder {
       $url = new Url(
         'layout_builder.choose_block',
         [
-          'entity_type' => $entity_type,
-          'entity' => $entity_id,
+          'entity_type_id' => $entity_type_id,
+          'entity_id' => $entity_id,
           'delta' => $delta,
           'region' => $region,
         ],
@@ -223,8 +223,8 @@ class LayoutSectionBuilder {
           $regions[$region][$uuid]['#contextual_links'] = [
             'layout_builder_block' => [
               'route_parameters' => [
-                'entity_type' => $entity_type,
-                'entity' => $entity_id,
+                'entity_type_id' => $entity_type_id,
+                'entity_id' => $entity_id,
                 'delta' => $delta,
                 'region' => $region,
                 'uuid' => $uuid,
@@ -246,8 +246,8 @@ class LayoutSectionBuilder {
     }
 
     $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
-      'entity_type' => $entity_type,
-      'entity' => $entity_id,
+      'entity_type_id' => $entity_type_id,
+      'entity_id' => $entity_id,
     ])->toString();
     $section['#attributes']['data-layout-delta'] = $delta;
 

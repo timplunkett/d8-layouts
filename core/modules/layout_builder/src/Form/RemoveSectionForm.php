@@ -111,11 +111,11 @@ class RemoveSectionForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $delta = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL) {
     $form = parent::buildForm($form, $form_state);
 
-    $this->entityTypeId = $entity_type;
-    $this->entityId = $entity;
+    $this->entityTypeId = $entity_type_id;
+    $this->entityId = $entity_id;
     $this->delta = $delta;
 
     // @todo Improve the cancel link of ConfirmFormBase to handle AJAX links.

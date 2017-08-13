@@ -93,8 +93,8 @@ class LayoutController extends ControllerBase {
     $url = new Url(
       'layout_builder.choose_section',
       [
-        'entity_type' => $layout_section_entity->getEntityTypeId(),
-        'entity' => $revision_id ?: $entity_id,
+        'entity_type_id' => $layout_section_entity->getEntityTypeId(),
+        'entity_id' => $revision_id ?: $entity_id,
       ],
       [
         'attributes' => [
@@ -127,8 +127,8 @@ class LayoutController extends ControllerBase {
           '#type' => 'link',
           '#title' => $this->t('Remove section'),
           '#url' => Url::fromRoute('layout_builder.remove_section', [
-            'entity_type' => $layout_section_entity->getEntityTypeId(),
-            'entity' => $revision_id ?: $entity_id,
+            'entity_type_id' => $layout_section_entity->getEntityTypeId(),
+            'entity_id' => $revision_id ?: $entity_id,
             'delta' => $count - 1,
           ]),
           '#attributes' => [
@@ -159,9 +159,9 @@ class LayoutController extends ControllerBase {
   /**
    * Choose a layout plugin to add as a section.
    *
-   * @param string $entity_type
-   *   The entity type.
-   * @param string $entity
+   * @param string $entity_type_id
+   *   The entity type ID.
+   * @param string $entity_id
    *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
@@ -169,7 +169,7 @@ class LayoutController extends ControllerBase {
    * @return array
    *   The render array.
    */
-  public function chooseSection($entity_type, $entity, $delta) {
+  public function chooseSection($entity_type_id, $entity_id, $delta) {
     $output = [];
     /** @var \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager */
     $layout_manager = \Drupal::service('plugin.manager.core.layout');
@@ -194,7 +194,7 @@ class LayoutController extends ControllerBase {
               '#children' => $definition->getLabel(),
             ],
           ],
-          '#url' => $this->generateSectionUrl($entity_type, $entity, $delta, $plugin_id),
+          '#url' => $this->generateSectionUrl($entity_type_id, $entity_id, $delta, $plugin_id),
           '#attributes' => [
             'class' => 'use-ajax',
           ],
@@ -227,9 +227,9 @@ class LayoutController extends ControllerBase {
   /**
    * Add the layout to the entity field in a tempstore.
    *
-   * @param string $entity_type
-   *   The entity type.
-   * @param string $entity
+   * @param string $entity_type_id
+   *   The entity type ID.
+   * @param string $entity_id
    *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
@@ -239,9 +239,9 @@ class LayoutController extends ControllerBase {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The render array.
    */
-  public function addSection($entity_type, $entity, $delta, $plugin_id) {
+  public function addSection($entity_type_id, $entity_id, $delta, $plugin_id) {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
+    $entity = $this->entityTypeManager()->getStorage($entity_type_id)->loadRevision($entity_id);
     list($collection, $id) = $this->generateTempstoreId($entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     if (!empty($tempstore['entity'])) {
@@ -272,9 +272,9 @@ class LayoutController extends ControllerBase {
   /**
    * Provides the UI for choosing a new block.
    *
-   * @param string $entity_type
-   *   The entity type.
-   * @param string $entity
+   * @param string $entity_type_id
+   *   The entity type ID.
+   * @param string $entity_id
    *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
@@ -284,7 +284,7 @@ class LayoutController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function chooseBlock($entity_type, $entity, $delta, $region) {
+  public function chooseBlock($entity_type_id, $entity_id, $delta, $region) {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
@@ -303,8 +303,8 @@ class LayoutController extends ControllerBase {
           '#title' => $block['admin_label'],
           '#url' => Url::fromRoute('layout_builder.add_block',
             [
-              'entity_type' => $entity_type,
-              'entity' => $entity,
+              'entity_type_id' => $entity_type_id,
+              'entity_id' => $entity_id,
               'delta' => $delta,
               'region' => $region,
               'plugin_id' => $block_id,
@@ -364,17 +364,17 @@ class LayoutController extends ControllerBase {
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request.
-   * @param string $entity_type
-   *   The entity type.
-   * @param string $entity
+   * @param string $entity_type_id
+   *   The entity type ID.
+   * @param string $entity_id
    *   The entity ID.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   An AJAX response.
    */
-  public function moveBlock(Request $request, $entity_type, $entity) {
+  public function moveBlock(Request $request, $entity_type_id, $entity_id) {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->entityTypeManager()->getStorage($entity_type)->loadRevision($entity);
+    $entity = $this->entityTypeManager()->getStorage($entity_type_id)->loadRevision($entity_id);
     list($collection, $id) = $this->generateTempstoreId($entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     if (!empty($tempstore['entity'])) {
@@ -419,9 +419,9 @@ class LayoutController extends ControllerBase {
   /**
    * A helper function for building Url object to add a section.
    *
-   * @param string $entity_type
+   * @param string $entity_type_id
    *   The entity type.
-   * @param string $entity
+   * @param string $entity_id
    *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
@@ -431,10 +431,10 @@ class LayoutController extends ControllerBase {
    * @return \Drupal\Core\Url
    *   The Url object of the add_section route.
    */
-  protected function generateSectionUrl($entity_type, $entity, $delta, $plugin_id) {
+  protected function generateSectionUrl($entity_type_id, $entity_id, $delta, $plugin_id) {
     return new Url('layout_builder.add_section', [
-      'entity_type' => $entity_type,
-      'entity' => $entity,
+      'entity_type_id' => $entity_type_id,
+      'entity_id' => $entity_id,
       'delta' => $delta,
       'plugin_id' => $plugin_id,
     ]);

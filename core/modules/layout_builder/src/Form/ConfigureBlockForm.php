@@ -146,8 +146,8 @@ class ConfigureBlockForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type = NULL, $entity = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
-    $entity = $this->entityTypeManager->getStorage($entity_type)->loadRevision($entity);
+  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
     list($collection, $id) = $this->generateTempstoreId($entity);
     $tempstore = $this->tempStoreFactory->get($collection)->get($id);
     if (!empty($tempstore['entity'])) {
@@ -161,11 +161,9 @@ class ConfigureBlockForm extends FormBase {
 
     $form_state->set('collection', $collection);
     $form_state->set('machine_name', $id);
-    $form_state->set('entity_type', $entity_type);
     $form_state->set('entity', $entity);
     $form_state->set('delta', $delta);
     $form_state->set('region', $region);
-    $form_state->set('block_id', $this->block->getConfiguration()['uuid']);
 
     // Some Block Plugins rely on the block_theme value to load theme settings.
     // @see \Drupal\system\Plugin\Block\SystemBrandingBlock::blockForm().
