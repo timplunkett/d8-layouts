@@ -188,13 +188,10 @@ class LayoutSectionBuilder {
           // If the block is empty, instead of trying to render the block
           // correctly return just #cache, so that the render system knows the
           // reasons (cache contexts & tags) why this block is empty.
-          if (Element::isEmpty($content)) {
-            $block_render_array = [];
-            $cacheable_metadata = CacheableMetadata::createFromObject($block_render_array);
-            $cacheable_metadata->applyTo($block_render_array);
-            if (isset($content['#cache'])) {
-              $regions[$region][$uuid]['#cache'] += $content['#cache'];
-            }
+          if ($content && Element::isEmpty($content)) {
+            $cacheable_metadata = CacheableMetadata::createFromRenderArray($regions[$region][$uuid]);
+            $cacheable_metadata->merge(CacheableMetadata::createFromRenderArray($content['#cache']));
+            $cacheable_metadata->applyTo($regions[$region][$uuid]);
           }
 
           $regions[$region][$uuid]['#contextual_links'] = [
