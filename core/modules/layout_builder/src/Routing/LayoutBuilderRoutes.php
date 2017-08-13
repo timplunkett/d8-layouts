@@ -110,15 +110,18 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
    * {@inheritdoc}
    */
   protected function alterRoutes(RouteCollection $collection) {
+    $templates = ['canonical', 'edit_form', 'delete_form'];
     foreach ($this->getEntityTypes() as $entity_type) {
-      if ($route = $collection->get('entity.' . $entity_type->id() . '.canonical')) {
+      foreach ($templates as $template) {
         // Mark this as a Layout Builder route so that links like local tasks
         // will be enhanced.
-        $route->setOption('_layout_builder', TRUE);
-        $route->addDefaults([
-          'layout_section_entity' => NULL,
-          'entity_type_id' => $entity_type->id(),
-        ]);
+        if ($route = $collection->get('entity.' . $entity_type->id() . '.' . $template)) {
+          $route->setOption('_layout_builder', TRUE);
+          $route->addDefaults([
+            'layout_section_entity' => NULL,
+            'entity_type_id' => $entity_type->id(),
+          ]);
+        }
       }
     }
   }
