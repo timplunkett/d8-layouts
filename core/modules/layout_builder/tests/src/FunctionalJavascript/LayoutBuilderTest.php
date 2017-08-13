@@ -76,7 +76,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
 
     // Enable layout support.
     $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
-    $page->checkField('layout[custom]');
+    $page->checkField('layout[allow_custom]');
     $page->pressButton('Save');
 
     // Ensure the block is not displayed initially.
