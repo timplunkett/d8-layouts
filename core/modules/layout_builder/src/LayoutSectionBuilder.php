@@ -6,14 +6,11 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
-use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Url;
 
 /**
  * Builds the UI for layout sections.
@@ -106,17 +103,13 @@ class LayoutSectionBuilder {
         if ($access->isAllowed()) {
           $regions[$region][$uuid] = [
             '#theme' => 'block',
-            '#attributes' => [
-              'class' => ['draggable'],
-            ],
-            '#contextual_links' => [],
             '#weight' => $weight++,
             '#configuration' => $block->getConfiguration(),
             '#plugin_id' => $block->getPluginId(),
             '#base_plugin_id' => $block->getBaseId(),
             '#derivative_plugin_id' => $block->getDerivativeId(),
+            'content' => $block->build(),
           ];
-          $regions[$region][$uuid]['content'] = $block->build();
           $cacheability->addCacheableDependency($block);
         }
       }
@@ -124,133 +117,6 @@ class LayoutSectionBuilder {
 
     $layout = $this->layoutPluginManager->createInstance($layout_id);
     $section = $layout->build($regions);
-    $cacheability->applyTo($section);
-    return $section;
-  }
-
-  /**
-   * Builds the render array for the layout section while editing.
-   *
-   * @param string $layout_id
-   *   The ID of the layout.
-   * @param array $section
-   *   An array of configuration, keyed first by region and then by block UUID.
-   * @param string $entity_type_id
-   *   The entity type.
-   * @param string $entity_id
-   *   The entity ID.
-   * @param int $delta
-   *   The delta of the section to splice.
-   *
-   * @return array
-   *   The render array for a given section.
-   */
-  public function buildAdministrativeSection($layout_id, array $section, $entity_type_id, $entity_id, $delta) {
-    $cacheability = CacheableMetadata::createFromRenderArray([]);
-
-    $regions = [];
-    // @todo load a layout, figure out its regions, add a block add link to all regions.
-    $layout = $this->layoutPluginManager->getDefinition($layout_id);
-    foreach ($layout->getRegions() as $region => $info) {
-      $url = new Url(
-        'layout_builder.choose_block',
-        [
-          'entity_type_id' => $entity_type_id,
-          'entity_id' => $entity_id,
-          'delta' => $delta,
-          'region' => $region,
-        ],
-        [
-          'attributes' => [
-            'class' => ['use-ajax'],
-            'data-dialog-type' => 'dialog',
-            'data-dialog-renderer' => 'off_canvas',
-          ],
-        ]
-      );
-      $link = Link::fromTextAndUrl($this->t('Add Block'), $url);
-      $regions[$region]['layout_builder_add_block']['link'] = $link->toRenderable();
-      $regions[$region]['layout_builder_add_block']['#attributes'] = [
-        'class' => ['add-block'],
-      ];
-    }
-    foreach ($section as $region => $blocks) {
-      $weight = 0;
-      foreach ($blocks as $uuid => $configuration) {
-        $block = $this->getBlock($uuid, $configuration);
-        $access = $block->access($this->account, TRUE);
-        $cacheability->addCacheableDependency($access);
-
-        // @todo Figure out how to handle blocks a user doesn't have access to
-        // during administration.
-        if ($access->isAllowed()) {
-          $regions[$region][$uuid] = [
-            '#theme' => 'block',
-            '#attributes' => [
-              'class' => ['draggable'],
-              'data-layout-block-uuid' => $uuid,
-            ],
-            '#contextual_links' => [],
-            '#weight' => $weight++,
-            '#configuration' => $block->getConfiguration(),
-            '#plugin_id' => $block->getPluginId(),
-            '#base_plugin_id' => $block->getBaseId(),
-            '#derivative_plugin_id' => $block->getDerivativeId(),
-          ];
-
-          // Build the block and bubble its attributes up if possible. This
-          // allows modules like Quickedit to function.
-          // See \Drupal\block\BlockViewBuilder::preRender() for reference.
-          $content = $block->build();
-          if ($content !== NULL && !Element::isEmpty($content)) {
-            foreach (['#attributes', '#contextual_links'] as $property) {
-              if (isset($content[$property])) {
-                $regions[$region][$uuid][$property] += $content[$property];
-                unset($content[$property]);
-              }
-            }
-          }
-
-          // If the block is empty, instead of trying to render the block
-          // correctly return just #cache, so that the render system knows the
-          // reasons (cache contexts & tags) why this block is empty.
-          if ($content && Element::isEmpty($content)) {
-            $cacheable_metadata = CacheableMetadata::createFromRenderArray($regions[$region][$uuid]);
-            $cacheable_metadata->merge(CacheableMetadata::createFromRenderArray($content['#cache']));
-            $cacheable_metadata->applyTo($regions[$region][$uuid]);
-          }
-
-          $regions[$region][$uuid]['#contextual_links'] = [
-            'layout_builder_block' => [
-              'route_parameters' => [
-                'entity_type_id' => $entity_type_id,
-                'entity_id' => $entity_id,
-                'delta' => $delta,
-                'region' => $region,
-                'uuid' => $uuid,
-                'plugin_id' => $uuid,
-              ],
-            ],
-          ];
-          $regions[$region][$uuid]['content'] = $content;
-          // @todo cacheability in the administration? is that a thing?
-          $cacheability->addCacheableDependency($block);
-        }
-      }
-    }
-
-    $layout = $this->layoutPluginManager->createInstance($layout_id);
-    $section = $layout->build($regions);
-    foreach (Element::children($section) as $name) {
-      $section[$name]['#attributes']['data-region'] = $name;
-    }
-
-    $section['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
-      'entity_type_id' => $entity_type_id,
-      'entity_id' => $entity_id,
-    ])->toString();
-    $section['#attributes']['data-layout-delta'] = $delta;
-
     $cacheability->applyTo($section);
     return $section;
   }

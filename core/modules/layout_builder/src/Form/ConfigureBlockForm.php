@@ -5,7 +5,7 @@ namespace Drupal\layout_builder\Form;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
-use Drupal\Core\DependencyInjection\ClassResolver;
+use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
@@ -13,7 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
-use Drupal\layout_builder\Controller\LayoutController;
+use Drupal\layout_builder\Controller\LayoutBuilderController;
 use Drupal\layout_builder\Traits\TempstoreIdHelper;
 use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -89,10 +89,10 @@ class ConfigureBlockForm extends FormBase {
    *   The block manager.
    * @param \Drupal\Component\Uuid\UuidInterface $uuid
    *   The UUID generator.
-   * @param \Drupal\Core\DependencyInjection\ClassResolver $class_resolver
+   * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   The class resolver.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolver $class_resolver) {
+  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver) {
     $this->tempStoreFactory = $tempstore;
     $this->contextRepository = $context_repository;
     $this->entityTypeManager = $entity_type_manager;
@@ -203,7 +203,7 @@ class ConfigureBlockForm extends FormBase {
   public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
     $response = $this->submitFormDialog($form, $form_state);
     if (!$form_state->hasAnyErrors()) {
-      $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutController::class);
+      $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutBuilderController::class);
       $entity = $form_state->get('entity');
       $layout = $layout_controller->layout($entity);
       $command = new ReplaceCommand('#layout-builder', $layout);
