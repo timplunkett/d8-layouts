@@ -6,12 +6,18 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 
 /**
- *
+ * Provides helper methods for tempstore.
  */
 trait TempstoreIdHelper {
 
   /**
+   * Generates a collection and ID for putting an entity in tempstore.
+   *
    * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   *   The entity being stored.
+   *
+   * @return array
+   *   An array containing the collection name and the tempstore ID.
    */
   protected function generateTempstoreId(FieldableEntityInterface $layout_section_entity) {
     // @todo Can we make the collection simply the entity type ID?

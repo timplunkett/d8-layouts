@@ -65,7 +65,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
   protected $layoutSectionBuilder;
 
   /**
-   * @todo.
+   * The layout plugin.
    *
    * @var \Drupal\Core\Layout\LayoutInterface
    */

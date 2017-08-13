@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @todo.
+ * Returns responses for Layout Builder routes.
  */
 class LayoutController extends ControllerBase {
 
@@ -94,7 +94,7 @@ class LayoutController extends ControllerBase {
       'layout_builder.choose_section',
       [
         'entity_type' => $layout_section_entity->getEntityTypeId(),
-        'entity' => $revision_id ? $revision_id : $entity_id,
+        'entity' => $revision_id ?: $entity_id,
       ],
       [
         'attributes' => [
@@ -137,7 +137,7 @@ class LayoutController extends ControllerBase {
             'data-dialog-renderer' => 'off_canvas',
           ],
         ],
-        'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ? $item->section : [], $layout_section_entity->getEntityTypeId(), $revision_id ? $revision_id : $entity_id, $count - 1),
+        'layout-section' => $this->builder->buildAdministrativeSection($item->layout, $item->section ?: [], $layout_section_entity->getEntityTypeId(), $revision_id ?: $entity_id, $count - 1),
       ];
       $output[] = [
         'link' => $link->toRenderable(),
@@ -162,7 +162,7 @@ class LayoutController extends ControllerBase {
    * @param string $entity_type
    *   The entity type.
    * @param string $entity
-   *   The entity id.
+   *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
    *
@@ -230,11 +230,11 @@ class LayoutController extends ControllerBase {
    * @param string $entity_type
    *   The entity type.
    * @param string $entity
-   *   The entity id.
+   *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $plugin_id
-   *   The plugin id of the layout to add.
+   *   The plugin ID of the layout to add.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The render array.
@@ -275,7 +275,7 @@ class LayoutController extends ControllerBase {
    * @param string $entity_type
    *   The entity type.
    * @param string $entity
-   *   The entity id.
+   *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $region
@@ -367,9 +367,10 @@ class LayoutController extends ControllerBase {
    * @param string $entity_type
    *   The entity type.
    * @param string $entity
-   *   The entity id.
+   *   The entity ID.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
+   *   An AJAX response.
    */
   public function moveBlock(Request $request, $entity_type, $entity) {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
@@ -383,7 +384,7 @@ class LayoutController extends ControllerBase {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($data['delta_from']);
-    $values = $field->section ? $field->section : [];
+    $values = $field->section ?: [];
 
     $region_from = $data['region_from'];
     $region_to = $data['region_to'];
@@ -394,7 +395,7 @@ class LayoutController extends ControllerBase {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($data['delta_to']);
-    $values = $field->section ? $field->section : [];
+    $values = $field->section ?: [];
     if ($data['preceding_block_uuid']) {
       $slice_id = array_search($data['preceding_block_uuid'], array_keys($values[$region_to]));
       $before = array_slice($values[$region_to], 0, $slice_id + 1);
@@ -421,11 +422,11 @@ class LayoutController extends ControllerBase {
    * @param string $entity_type
    *   The entity type.
    * @param string $entity
-   *   The entity id.
+   *   The entity ID.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $plugin_id
-   *   The plugin id of the layout to add.
+   *   The plugin ID of the layout to add.
    *
    * @return \Drupal\Core\Url
    *   The Url object of the add_section route.

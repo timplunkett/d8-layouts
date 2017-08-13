@@ -16,7 +16,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 
 /**
- * @todo.
+ * Builds the UI for layout sections.
  */
 class LayoutSectionBuilder {
 
@@ -129,7 +129,21 @@ class LayoutSectionBuilder {
   }
 
   /**
+   * Builds the render array for the layout section while editing.
    *
+   * @param string $layout_id
+   *   The ID of the layout.
+   * @param array $section
+   *   An array of configuration, keyed first by region and then by block UUID.
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $entity_id
+   *   The entity ID.
+   * @param int $delta
+   *   The delta of the section to splice.
+   *
+   * @return array
+   *   The render array for a given section.
    */
   public function buildAdministrativeSection($layout_id, array $section, $entity_type, $entity_id, $delta) {
     $cacheability = CacheableMetadata::createFromRenderArray([]);

@@ -19,9 +19,10 @@ use Drupal\user\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- *
+ * Provides a form to configure a block.
  */
-class ConfigureBlock extends FormBase {
+class ConfigureBlockForm extends FormBase {
+
   use ContextAwarePluginAssignmentTrait;
   use TempstoreIdHelper;
   use DialogFormTrait;
@@ -62,6 +63,8 @@ class ConfigureBlock extends FormBase {
   protected $blockManager;
 
   /**
+   * The UUID generator.
+   *
    * @var \Drupal\Component\Uuid\UuidInterface
    */
   protected $uuid;
@@ -74,10 +77,20 @@ class ConfigureBlock extends FormBase {
   protected $classResolver;
 
   /**
-   * Constructs a new ConfigureBlock.
+   * Constructs a new ConfigureBlockForm.
    *
    * @param \Drupal\user\SharedTempStoreFactory $tempstore
    *   The tempstore factory.
+   * @param \Drupal\Core\Plugin\Context\ContextRepositoryInterface $context_repository
+   *   The context repository.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
+   *   The block manager.
+   * @param \Drupal\Component\Uuid\UuidInterface $uuid
+   *   The UUID generator.
+   * @param \Drupal\Core\DependencyInjection\ClassResolver $class_resolver
+   *   The class resolver.
    */
   public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolver $class_resolver) {
     $this->tempStoreFactory = $tempstore;
@@ -114,11 +127,10 @@ class ConfigureBlock extends FormBase {
    *
    * @param string $block_id
    *   Either a block ID, or the plugin ID used to create a new block.
-   *
    * @param array $value
    *   The block configuration.
    *
-   * @return \Drupal\Core\Block\BlockPluginInterface The block plugin.
+   * @return \Drupal\Core\Block\BlockPluginInterface
    *   The block plugin.
    */
   protected function prepareBlock($block_id, array $value) {

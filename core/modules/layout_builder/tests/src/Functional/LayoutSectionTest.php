@@ -6,7 +6,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * @todo.
+ * Tests the rendering of a layout section field.
  *
  * @group layout_builder
  */
@@ -48,6 +48,7 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   /**
+   * Provides test data for ::testLayoutSectionFormatter().
    */
   public function providerTestLayoutSectionFormatter() {
     $data = [];
@@ -160,7 +161,7 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   /**
-   *
+   * Tests the access checking of the section formatter.
    */
   public function testLayoutSectionFormatterAccess() {
     $this->createSectionNode([
@@ -191,7 +192,7 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   /**
-   *
+   * Tests the multilingual support of the section formatter.
    */
   public function testMultilingualLayoutSectionFormatter() {
     $this->container->get('module_installer')->install(['content_translation']);
@@ -255,7 +256,7 @@ class LayoutSectionTest extends BrowserTestBase {
   }
 
   /**
-   *
+   * Tests that no Layout link shows without a section field.
    */
   public function testLayoutUrlNoSectionField() {
     $this->createNode([

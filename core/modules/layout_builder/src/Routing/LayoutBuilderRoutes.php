@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * @todo.
+ * Provides routes for the Layout Builder UI.
  */
 class LayoutBuilderRoutes extends RouteSubscriberBase {
 
