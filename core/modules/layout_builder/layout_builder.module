@@ -73,12 +73,12 @@ function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormSta
     '#title' => t('Layout options'),
     '#tree' => TRUE,
   ];
-  $form['layout']['custom'] = [
+  $form['layout']['allow_custom'] = [
     '#type' => 'checkbox',
     '#title' => t('Allow each @entity to have its layout customized.', [
       '@entity' => $entity_type->getSingularLabel(),
     ]),
-    '#default_value' => $display->getThirdPartySetting('layout_builder', 'custom', FALSE),
+    '#default_value' => $display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE),
   ];
 
   array_unshift($form['actions']['submit']['#submit'], 'layout_builder_form_entity_view_display_edit_submit');
@@ -90,19 +90,44 @@ function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormSta
  * @see layout_builder_form_entity_view_display_edit_form_alter()
  */
 function layout_builder_form_entity_view_display_edit_submit(&$form, FormStateInterface $form_state) {
-  $field_name = 'layout_builder__layout';
-
-  $customize = $form_state->getValue(['layout', 'custom'], FALSE);
-
   /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display */
   $display = $form_state->getFormObject()->getEntity();
-  $display->setThirdPartySetting('layout_builder', 'custom', $customize);
 
-  $entity_type_id = $display->getTargetEntityTypeId();
-  $bundle = $display->getTargetBundle();
+  $original_value = $display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE);
+  $allow_custom = $form_state->getValue(['layout', 'allow_custom'], FALSE);
 
-  // Generate the field and storage.
-  if ($customize) {
+  // Only continue if the value has changed.
+  if ($original_value !== $allow_custom) {
+    $display->setThirdPartySetting('layout_builder', 'allow_custom', $allow_custom);
+    $entity_type_id = $display->getTargetEntityTypeId();
+    $bundle = $display->getTargetBundle();
+
+    if ($allow_custom) {
+      layout_builder_add_layout_section_field($entity_type_id, $bundle);
+    }
+    elseif ($field = FieldConfig::loadByName($entity_type_id, $bundle, 'layout_builder__layout')) {
+      $field->delete();
+    }
+  }
+}
+
+/**
+ * Adds a layout section field to a given bundle.
+ *
+ * @param string $entity_type_id
+ *   The entity type ID.
+ * @param string $bundle
+ *   The bundle.
+ * @param string $field_name
+ *   (optional) The name for the layout section field. Defaults to
+ *   'layout_builder__layout'.
+ *
+ * @return \Drupal\field\FieldConfigInterface
+ *   A layout section field.
+ */
+function layout_builder_add_layout_section_field($entity_type_id, $bundle, $field_name = 'layout_builder__layout') {
+  $field = FieldConfig::loadByName($entity_type_id, $bundle, $field_name);
+  if (!$field) {
     $field_storage = FieldStorageConfig::loadByName($entity_type_id, $field_name);
     if (!$field_storage) {
       $field_storage = FieldStorageConfig::create([
@@ -113,21 +138,14 @@ function layout_builder_form_entity_view_display_edit_submit(&$form, FormStateIn
       $field_storage->save();
     }
 
-    $field = FieldConfig::loadByName($entity_type_id, $bundle, $field_name);
-    if (!$field) {
-      FieldConfig::create([
-        'field_storage' => $field_storage,
-        'bundle' => $bundle,
-        'label' => t('Layout'),
-      ])->save();
-    }
+    $field = FieldConfig::create([
+      'field_storage' => $field_storage,
+      'bundle' => $bundle,
+      'label' => t('Layout'),
+    ]);
+    $field->save();
   }
-  else {
-    $field = FieldConfig::load($entity_type_id . '.' . $bundle . '.layout_builder__layout');
-    if ($field) {
-      $field->delete();
-    }
-  }
+  return $field;
 }
 
 /**
@@ -139,7 +157,7 @@ function layout_builder_entity_view_display_alter(EntityViewDisplayInterface $di
     return;
   }
 
-  if ($display->getThirdPartySetting('layout_builder', 'custom', FALSE)) {
+  if ($display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE)) {
     /** @var \Drupal\Core\Field\FieldDefinitionInterface[] $field_definitions */
     $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions($display->getTargetEntityTypeId(), $display->getTargetBundle());
     // Remove all display-configurable fields.

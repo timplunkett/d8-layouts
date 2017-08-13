@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\layout_builder\Functional;
 
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Tests\BrowserTestBase;
 
@@ -15,7 +16,7 @@ class LayoutSectionTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'field_ui', 'node', 'block_test'];
+  public static $modules = ['layout_builder', 'node', 'block_test'];
 
   /**
    * The name of the layout section field.
@@ -37,14 +38,14 @@ class LayoutSectionTest extends BrowserTestBase {
       'type' => 'bundle_without_section_field',
     ]);
 
+    layout_builder_add_layout_section_field('node', 'bundle_with_section_field');
+    $display = EntityViewDisplay::load('node.bundle_with_section_field.default');
+    $display->setThirdPartySetting('layout_builder', 'allow_custom', TRUE);
+    $display->save();
+
     $this->drupalLogin($this->drupalCreateUser([
       'configure any layout',
-      'administer node display',
     ], 'foobar'));
-    $page = $this->getSession()->getPage();
-    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
-    $page->checkField('layout[custom]');
-    $page->pressButton('Save');
   }
 
   /**
