@@ -5,8 +5,10 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutSectionBuilder;
@@ -39,15 +41,35 @@ class LayoutController extends ControllerBase {
   protected $tempStoreFactory;
 
   /**
+   * The layout manager.
+   *
+   * @var \Drupal\Core\Layout\LayoutPluginManagerInterface
+   */
+  protected $layoutManager;
+
+  /**
+   * The block manager.
+   *
+   * @var \Drupal\Core\Block\BlockManagerInterface
+   */
+  protected $blockManager;
+
+  /**
    * LayoutController constructor.
    *
    * @param \Drupal\layout_builder\LayoutSectionBuilder $builder
    *   The layout section builder.
+   * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager
+   *   The layout manager.
+   * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
+   *   The block manager.
    * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
    *   The shared temp store factory.
    */
-  public function __construct(LayoutSectionBuilder $builder, SharedTempStoreFactory $temp_store_factory) {
+  public function __construct(LayoutSectionBuilder $builder, LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, SharedTempStoreFactory $temp_store_factory) {
     $this->builder = $builder;
+    $this->layoutManager = $layout_manager;
+    $this->blockManager = $block_manager;
     $this->tempStoreFactory = $temp_store_factory;
   }
 
@@ -57,6 +79,8 @@ class LayoutController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('layout_builder.builder'),
+      $container->get('plugin.manager.core.layout'),
+      $container->get('plugin.manager.block'),
       $container->get('user.shared_tempstore')
     );
   }
@@ -171,10 +195,8 @@ class LayoutController extends ControllerBase {
    */
   public function chooseSection($entity_type_id, $entity_id, $delta) {
     $output = [];
-    /** @var \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager */
-    $layout_manager = \Drupal::service('plugin.manager.core.layout');
     $items = [];
-    foreach ($layout_manager->getDefinitions() as $plugin_id => $definition) {
+    foreach ($this->layoutManager->getDefinitions() as $plugin_id => $definition) {
       $icon = $definition->getIconPath();
       if ($icon) {
         $icon = [
@@ -288,9 +310,7 @@ class LayoutController extends ControllerBase {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
-    /** @var \Drupal\Core\Block\BlockManagerInterface $manager */
-    $manager = \Drupal::service('plugin.manager.block');
-    foreach ($manager->getGroupedDefinitions() as $category => $blocks) {
+    foreach ($this->blockManager->getGroupedDefinitions() as $category => $blocks) {
       $build[$category]['#type'] = 'details';
       $build[$category]['#open'] = TRUE;
       $build[$category]['#title'] = $category;
