@@ -44,8 +44,8 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
       $template = $entity_type->getLinkTemplate('canonical');
       $route = (new Route("$template/layout"))
         ->setDefaults([
-          '_controller' => '\Drupal\layout_builder\Controller\LayoutController::layout',
-          '_title_callback' => '\Drupal\layout_builder\Controller\LayoutController::title',
+          '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderController::layout',
+          '_title_callback' => '\Drupal\layout_builder\Controller\LayoutBuilderController::title',
           'layout_section_entity' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
@@ -65,7 +65,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
 
       $route = (new Route("$template/layout/save"))
         ->setDefaults([
-          '_controller' => '\Drupal\layout_builder\Controller\LayoutController::saveLayout',
+          '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderController::saveLayout',
           'layout_section_entity' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
@@ -85,7 +85,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
 
       $route = (new Route("$template/layout/cancel"))
         ->setDefaults([
-          '_controller' => '\Drupal\layout_builder\Controller\LayoutController::cancelLayout',
+          '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderController::cancelLayout',
           'layout_section_entity' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
