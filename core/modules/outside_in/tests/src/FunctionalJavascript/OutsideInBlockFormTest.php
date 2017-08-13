@@ -243,6 +243,10 @@ class OutsideInBlockFormTest extends OutsideInJavascriptTestBase {
     $this->click($block_selector);
     $this->waitForOffCanvasToOpen();
     $this->assertOffCanvasBlockFormIsValid();
+    // Confirm the Contextual link container is also the active editable now.
+    $this->assertSession()->elementExists('css', "$contextual_link_container.outside-in-active-editable");
+    // Assert that no other element is set as active.
+    $this->assertEquals(1, count($this->getSession()->getPage()->findAll('css', '.outside-in-active-editable')));
   }
 
   /**
