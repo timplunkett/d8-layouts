@@ -3,6 +3,8 @@
 namespace Drupal\layout_builder\Form;
 
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\CloseDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
@@ -25,7 +27,6 @@ class ConfigureBlockForm extends FormBase {
 
   use ContextAwarePluginAssignmentTrait;
   use TempstoreIdHelper;
-  use DialogFormTrait;
 
   /**
    * Tempstore factory.
@@ -75,6 +76,34 @@ class ConfigureBlockForm extends FormBase {
    * @var \Drupal\Core\DependencyInjection\ClassResolver
    */
   protected $classResolver;
+
+  /**
+   * The entity type ID.
+   *
+   * @var string
+   */
+  protected $entityTypeId;
+
+  /**
+   * The entity ID.
+   *
+   * @var int
+   */
+  protected $entityId;
+
+  /**
+   * The field delta.
+   *
+   * @var int
+   */
+  protected $delta;
+
+  /**
+   * The current region.
+   *
+   * @var string
+   */
+  protected $region;
 
   /**
    * Constructs a new ConfigureBlockForm.
@@ -147,29 +176,26 @@ class ConfigureBlockForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
-    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
-    list($collection, $id) = $this->generateTempstoreId($entity);
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    if (!empty($tempstore['entity'])) {
-      $entity = $tempstore['entity'];
-    }
-    $values = $entity->layout_builder__layout->getValue();
-    $value = !empty($values[$delta]['section'][$region][$plugin_id]) ? $values[$delta]['section'][$region][$plugin_id] : [];
+    $this->entityTypeId = $entity_type_id;
+    $this->entityId = $entity_id;
+    $this->delta = $delta;
+    $this->region = $region;
+
+    $entity = $this->getEntity();
+
+    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
+    $field = $entity->layout_builder__layout->get($this->delta);
+    $value = !empty($field->section[$region][$plugin_id]) ? $field->section[$region][$plugin_id] : [];
     $this->block = $this->prepareBlock($plugin_id, $value);
 
     $form_state->setTemporaryValue('gathered_contexts', $this->contextRepository->getAvailableContexts());
-
-    $form_state->set('collection', $collection);
-    $form_state->set('machine_name', $id);
-    $form_state->set('entity', $entity);
-    $form_state->set('delta', $delta);
-    $form_state->set('region', $region);
 
     // Some Block Plugins rely on the block_theme value to load theme settings.
     // @see \Drupal\system\Plugin\Block\SystemBrandingBlock::blockForm().
     $form_state->set('block_theme', $this->config('system.theme')->get('default'));
 
     $form['#tree'] = TRUE;
+    // @todo Use SubformState.
     $form['settings'] = $this->block->buildConfigurationForm([], $form_state);
     $form['settings']['id'] = [
       '#type' => 'value',
@@ -180,12 +206,31 @@ class ConfigureBlockForm extends FormBase {
       '#type' => 'submit',
       '#value' => $value ? $this->t('Update') : $this->t('Add Block'),
       '#button_type' => 'primary',
+      '#ajax' => [
+        'callback' => '::ajaxSubmit',
+      ],
     ];
 
-    $this->buildFormDialog($form, $form_state, FALSE, '#drupal-off-canvas');
-    $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
+    $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
+    $form['#attributes']['id'] = 'dialog-form';
 
     return $form;
+  }
+
+  /**
+   * Gets the entity.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   The entity, from tempstore if it exists.
+   */
+  protected function getEntity() {
+    $entity = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
+    list($collection, $id) = $this->generateTempstoreId($entity);
+    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
+    if (!empty($tempstore['entity'])) {
+      $entity = $tempstore['entity'];
+    }
+    return $entity;
   }
 
   /**
@@ -201,13 +246,19 @@ class ConfigureBlockForm extends FormBase {
    *   to a URL
    */
   public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
-    $response = $this->submitFormDialog($form, $form_state);
-    if (!$form_state->hasAnyErrors()) {
+    $response = new AjaxResponse();
+    if ($form_state->hasAnyErrors()) {
+      $form['status_messages'] = [
+        '#type' => 'status_messages',
+        '#weight' => -1000,
+      ];
+      $response->addCommand(new ReplaceCommand('#dialog-form', $form));
+    }
+    else {
       $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutBuilderController::class);
-      $entity = $form_state->get('entity');
-      $layout = $layout_controller->layout($entity);
-      $command = new ReplaceCommand('#layout-builder', $layout);
-      $response->addCommand($command);
+      $layout = $layout_controller->layout($this->getEntity());
+      $response->addCommand(new ReplaceCommand('#layout-builder', $layout));
+      $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
     }
     return $response;
   }
@@ -216,6 +267,7 @@ class ConfigureBlockForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    // @todo Use SubformState.
     $settings = (new FormState())->setValues($form_state->getValue('settings'));
     // Call the plugin validate handler.
     $this->block->validateConfigurationForm($form, $settings);
@@ -227,6 +279,7 @@ class ConfigureBlockForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // @todo Use SubformState.
     $settings = (new FormState())->setValues($form_state->getValue('settings'));
 
     // Call the plugin submit handler.
@@ -240,22 +293,15 @@ class ConfigureBlockForm extends FormBase {
 
     $configuration = $this->block->getConfiguration();
 
-    $entity = $form_state->get('entity');
-    $collection = $form_state->get('collection');
-    $id = $form_state->get('machine_name');
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    $delta = $form_state->get('delta');
-    $region = $form_state->get('region');
-    if (!empty($tempstore['entity'])) {
-      $entity = $tempstore['entity'];
-    }
+    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
+    $entity = $this->getEntity();
     $values = $entity->layout_builder__layout->getValue();
-    $values[$delta]['section'][$region][$configuration['uuid']] = $configuration;
+    $values[$this->delta]['section'][$this->region][$configuration['uuid']] = $configuration;
     $entity->layout_builder__layout->setValue($values);
 
-    $tempstore['entity'] = $entity;
-    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-    $form_state->setRedirect("entity.{$entity->getEntityTypeId()}.layout", [$entity->getEntityTypeId() => $entity->id()]);
+    list($collection, $id) = $this->generateTempstoreId($entity);
+    $this->tempStoreFactory->get($collection)->set($id, ['entity' => $entity]);
+    $form_state->setRedirect("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
   }
 
 }
