@@ -96,4 +96,12 @@ class LayoutTempstoreRepository implements LayoutTempstoreRepositoryInterface {
     return [$collection, $id];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getFromId($entity_type_id, $entity_id) {
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
+    return $this->get($entity);
+  }
+
 }
