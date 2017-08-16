@@ -3,6 +3,7 @@
 namespace Drupal\layout_builder;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\user\SharedTempStoreFactory;
 
@@ -19,13 +20,23 @@ class LayoutTempstoreRepository implements LayoutTempstoreRepositoryInterface {
   protected $tempStoreFactory;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * LayoutTempstoreRepository constructor.
    *
    * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
    *   The shared tempstore factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
-  public function __construct(SharedTempStoreFactory $temp_store_factory) {
+  public function __construct(SharedTempStoreFactory $temp_store_factory, EntityTypeManagerInterface $entity_type_manager) {
     $this->tempStoreFactory = $temp_store_factory;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -38,6 +49,14 @@ class LayoutTempstoreRepository implements LayoutTempstoreRepositoryInterface {
       return $tempstore['entity'];
     }
     return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFromId($entity_type_id, $entity_id) {
+    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
+    return $this->get($entity);
   }
 
   /**

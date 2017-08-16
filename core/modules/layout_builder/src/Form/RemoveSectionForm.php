@@ -4,7 +4,6 @@ namespace Drupal\layout_builder\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -22,13 +21,6 @@ class RemoveSectionForm extends ConfirmFormBase {
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
    */
   protected $layoutTempstoreRepository;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
 
   /**
    * The entity type ID.
@@ -56,12 +48,9 @@ class RemoveSectionForm extends ConfirmFormBase {
    *
    * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
    *   The layout tempstore repository.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    */
-  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
-    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -69,8 +58,7 @@ class RemoveSectionForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('layout_builder.tempstore_repository'),
-      $container->get('entity_type.manager')
+      $container->get('layout_builder.tempstore_repository')
     );
   }
 
@@ -130,10 +118,7 @@ class RemoveSectionForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity_from_storage = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
-
-    $entity = $this->layoutTempstoreRepository->get($entity_from_storage);
+    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
 
     $entity->layout_builder__layout->removeItem($this->delta);
 
