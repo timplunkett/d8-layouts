@@ -2,6 +2,9 @@ services:
   layout_builder.builder:
     class: Drupal\layout_builder\LayoutSectionBuilder
     arguments: ['@current_user', '@plugin.manager.core.layout', '@plugin.manager.block', '@context.handler', '@context.repository']
+  layout_builder.tempstore_repository:
+    class: Drupal\layout_builder\LayoutTempstoreRepository
+    arguments: ['@user.shared_tempstore']
   access_check.entity.layout:
     class: Drupal\layout_builder\Access\LayoutSectionAccessCheck
     arguments: ['@entity_type.manager']
