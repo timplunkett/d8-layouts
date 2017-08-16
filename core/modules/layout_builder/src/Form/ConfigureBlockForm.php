@@ -179,7 +179,7 @@ class ConfigureBlockForm extends FormBase {
     $this->delta = $delta;
     $this->region = $region;
 
-    $entity = $this->getEntity();
+    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($this->delta);
@@ -216,17 +216,6 @@ class ConfigureBlockForm extends FormBase {
   }
 
   /**
-   * Gets the entity.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The entity, from tempstore if it exists.
-   */
-  protected function getEntity() {
-    $entity = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
-    return $this->layoutTempstoreRepository->get($entity);
-  }
-
-  /**
    * Submit form dialog #ajax callback.
    *
    * @param array $form
@@ -249,7 +238,8 @@ class ConfigureBlockForm extends FormBase {
     }
     else {
       $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutBuilderController::class);
-      $layout = $layout_controller->layout($this->getEntity());
+      $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
+      $layout = $layout_controller->layout($entity);
       $response->addCommand(new ReplaceCommand('#layout-builder', $layout));
       $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
     }
@@ -287,7 +277,7 @@ class ConfigureBlockForm extends FormBase {
     $configuration = $this->block->getConfiguration();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $entity = $this->getEntity();
+    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
     $values = $entity->layout_builder__layout->getValue();
     $values[$this->delta]['section'][$this->region][$configuration['uuid']] = $configuration;
     $entity->layout_builder__layout->setValue($values);

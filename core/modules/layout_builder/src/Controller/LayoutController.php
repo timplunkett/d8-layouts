@@ -8,7 +8,6 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -46,13 +45,6 @@ class LayoutController implements ContainerInjectionInterface {
   protected $classResolver;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The layout tempstore repository.
    *
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
@@ -66,17 +58,14 @@ class LayoutController implements ContainerInjectionInterface {
    *   The layout manager.
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   The class resolver.
    * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
    *   The layout tempstore repository.
    */
-  public function __construct(LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $class_resolver, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, ClassResolverInterface $class_resolver, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->layoutManager = $layout_manager;
     $this->blockManager = $block_manager;
-    $this->entityTypeManager = $entity_type_manager;
     $this->classResolver = $class_resolver;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
@@ -176,9 +165,7 @@ class LayoutController implements ContainerInjectionInterface {
    *   The render array.
    */
   public function addSection($entity_type_id, $entity_id, $delta, $plugin_id) {
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
-    $entity = $this->layoutTempstoreRepository->get($entity);
+    $entity = $this->layoutTempstoreRepository->getFromId($entity_type_id, $entity_id);
     $values = $entity->layout_builder__layout->getValue();
     if (isset($values[$delta])) {
       $start = array_slice($values, 0, $delta);
@@ -264,9 +251,7 @@ class LayoutController implements ContainerInjectionInterface {
    *   An AJAX response.
    */
   public function moveBlock(Request $request, $entity_type_id, $entity_id) {
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
-    $entity = $this->layoutTempstoreRepository->get($entity);
+    $entity = $this->layoutTempstoreRepository->getFromId($entity_type_id, $entity_id);
     $data = $request->request->all();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
