@@ -5,13 +5,13 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutSectionBuilder;
-use Drupal\layout_builder\Traits\TempstoreIdHelper;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,7 +22,6 @@ use Symfony\Component\HttpFoundation\Response;
 class LayoutBuilderController implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
-  use TempstoreIdHelper;
 
   /**
    * The layout builder.
@@ -30,13 +29,6 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    * @var \Drupal\layout_builder\LayoutSectionBuilder
    */
   protected $builder;
-
-  /**
-   * The Shared TempStore Factory.
-   *
-   * @var \Drupal\user\SharedTempStoreFactory
-   */
-  protected $tempStoreFactory;
 
   /**
    * The layout manager.
@@ -53,6 +45,13 @@ class LayoutBuilderController implements ContainerInjectionInterface {
   protected $blockManager;
 
   /**
+   * The layout tempstore repository.
+   *
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
+   */
+  protected $layoutTempstoreRepository;
+
+  /**
    * LayoutController constructor.
    *
    * @param \Drupal\layout_builder\LayoutSectionBuilder $builder
@@ -61,14 +60,14 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   The layout manager.
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
-   *   The shared temp store factory.
+   * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
+   *   The layout tempstore repository.
    */
-  public function __construct(LayoutSectionBuilder $builder, LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, SharedTempStoreFactory $temp_store_factory) {
+  public function __construct(LayoutSectionBuilder $builder, LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->builder = $builder;
     $this->layoutManager = $layout_manager;
     $this->blockManager = $block_manager;
-    $this->tempStoreFactory = $temp_store_factory;
+    $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
 
   /**
@@ -79,7 +78,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
       $container->get('layout_builder.builder'),
       $container->get('plugin.manager.core.layout'),
       $container->get('plugin.manager.block'),
-      $container->get('user.shared_tempstore')
+      $container->get('layout_builder.tempstore_repository')
     );
   }
 
@@ -106,14 +105,13 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   A render array.
    */
   public function layout(FieldableEntityInterface $layout_section_entity) {
-    list($collection, $id) = $this->generateTempstoreId($layout_section_entity);
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    list($entity_id, , $revision_id) = explode('.', $id);
-    if (!empty($tempstore['entity'])) {
-      $layout_section_entity = $tempstore['entity'];
+    $layout_section_entity = $this->layoutTempstoreRepository->get($layout_section_entity);
+    $entity_id = $layout_section_entity->id();
+    if ($layout_section_entity instanceof RevisionableInterface) {
+      $entity_id = $layout_section_entity->getRevisionId();
     }
+
     $entity_type_id = $layout_section_entity->getEntityTypeId();
-    $entity_id = $revision_id ?: $entity_id;
 
     $output = [];
     $count = 0;
@@ -274,14 +272,13 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   A redirect response.
    */
   public function saveLayout(FieldableEntityInterface $layout_section_entity) {
-    list($collection, $id) = $this->generateTempstoreId($layout_section_entity);
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    if (!empty($tempstore['entity'])) {
-      $layout_section_entity = $tempstore['entity'];
-    }
+    $layout_section_entity = $this->layoutTempstoreRepository->get($layout_section_entity);
+
     // @todo figure out if we should save a new revision.
     $layout_section_entity->save();
-    $this->tempStoreFactory->get($collection)->delete($id);
+
+    $this->layoutTempstoreRepository->delete($layout_section_entity);
+
     // @todo Make trusted redirect instead.
     return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }
@@ -296,8 +293,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   A redirect response.
    */
   public function cancelLayout(FieldableEntityInterface $layout_section_entity) {
-    list($collection, $id) = $this->generateTempstoreId($layout_section_entity);
-    $this->tempStoreFactory->get($collection)->delete($id);
+    $this->layoutTempstoreRepository->delete($layout_section_entity);
     // @todo Make trusted redirect instead.
     return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }

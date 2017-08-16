@@ -13,8 +13,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
-use Drupal\layout_builder\Traits\TempstoreIdHelper;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -24,14 +23,6 @@ use Symfony\Component\HttpFoundation\Request;
 class LayoutController implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
-  use TempstoreIdHelper;
-
-  /**
-   * The Shared TempStore Factory.
-   *
-   * @var \Drupal\user\SharedTempStoreFactory
-   */
-  protected $tempStoreFactory;
 
   /**
    * The layout manager.
@@ -62,6 +53,13 @@ class LayoutController implements ContainerInjectionInterface {
   protected $entityTypeManager;
 
   /**
+   * The layout tempstore repository.
+   *
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
+   */
+  protected $layoutTempstoreRepository;
+
+  /**
    * LayoutController constructor.
    *
    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager
@@ -70,17 +68,17 @@ class LayoutController implements ContainerInjectionInterface {
    *   The block manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\user\SharedTempStoreFactory $temp_store_factory
-   *   The shared temp store factory.
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   The class resolver.
+   * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
+   *   The layout tempstore repository.
    */
-  public function __construct(LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, EntityTypeManagerInterface $entity_type_manager, SharedTempStoreFactory $temp_store_factory, ClassResolverInterface $class_resolver) {
+  public function __construct(LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $class_resolver, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->layoutManager = $layout_manager;
     $this->blockManager = $block_manager;
     $this->entityTypeManager = $entity_type_manager;
-    $this->tempStoreFactory = $temp_store_factory;
     $this->classResolver = $class_resolver;
+    $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
 
   /**
@@ -91,8 +89,8 @@ class LayoutController implements ContainerInjectionInterface {
       $container->get('plugin.manager.core.layout'),
       $container->get('plugin.manager.block'),
       $container->get('entity_type.manager'),
-      $container->get('user.shared_tempstore'),
-      $container->get('class_resolver')
+      $container->get('class_resolver'),
+      $container->get('layout_builder.tempstore_repository')
     );
   }
 
@@ -180,11 +178,7 @@ class LayoutController implements ContainerInjectionInterface {
   public function addSection($entity_type_id, $entity_id, $delta, $plugin_id) {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
-    list($collection, $id) = $this->generateTempstoreId($entity);
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    if (!empty($tempstore['entity'])) {
-      $entity = $tempstore['entity'];
-    }
+    $entity = $this->layoutTempstoreRepository->get($entity);
     $values = $entity->layout_builder__layout->getValue();
     if (isset($values[$delta])) {
       $start = array_slice($values, 0, $delta);
@@ -202,8 +196,7 @@ class LayoutController implements ContainerInjectionInterface {
       ];
     }
     $entity->layout_builder__layout->setValue($values);
-    $tempstore['entity'] = $entity;
-    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
+    $this->layoutTempstoreRepository->set($entity);
     return $this->ajaxRebuildLayout($entity);
   }
 
@@ -273,11 +266,7 @@ class LayoutController implements ContainerInjectionInterface {
   public function moveBlock(Request $request, $entity_type_id, $entity_id) {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     $entity = $this->entityTypeManager->getStorage($entity_type_id)->loadRevision($entity_id);
-    list($collection, $id) = $this->generateTempstoreId($entity);
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    if (!empty($tempstore['entity'])) {
-      $entity = $tempstore['entity'];
-    }
+    $entity = $this->layoutTempstoreRepository->get($entity);
     $data = $request->request->all();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
@@ -308,9 +297,7 @@ class LayoutController implements ContainerInjectionInterface {
     }
     $field->section = array_filter($values);
 
-    $tempstore['entity'] = $entity;
-    $this->tempStoreFactory->get($collection)->set($id, $tempstore);
-
+    $this->layoutTempstoreRepository->set($entity);
     return $this->ajaxRebuildLayout($entity);
   }
 

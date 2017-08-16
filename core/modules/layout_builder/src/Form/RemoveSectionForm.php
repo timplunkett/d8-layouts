@@ -8,8 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\layout_builder\Traits\TempstoreIdHelper;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,14 +16,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class RemoveSectionForm extends ConfirmFormBase {
 
-  use TempstoreIdHelper;
-
   /**
-   * Tempstore factory.
+   * The layout tempstore repository.
    *
-   * @var \Drupal\user\SharedTempStoreFactory
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
    */
-  protected $tempStoreFactory;
+  protected $layoutTempstoreRepository;
 
   /**
    * The entity type manager.
@@ -57,13 +54,13 @@ class RemoveSectionForm extends ConfirmFormBase {
   /**
    * Constructs a new RemoveSectionForm.
    *
-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
-   *   The tempstore factory.
+   * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
+   *   The layout tempstore repository.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, EntityTypeManagerInterface $entity_type_manager) {
-    $this->tempStoreFactory = $tempstore;
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, EntityTypeManagerInterface $entity_type_manager) {
+    $this->layoutTempstoreRepository = $layout_tempstore_repository;
     $this->entityTypeManager = $entity_type_manager;
   }
 
@@ -72,7 +69,7 @@ class RemoveSectionForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('user.shared_tempstore'),
+      $container->get('layout_builder.tempstore_repository'),
       $container->get('entity_type.manager')
     );
   }
@@ -136,12 +133,11 @@ class RemoveSectionForm extends ConfirmFormBase {
     /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
     $entity_from_storage = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
 
-    list($collection, $id) = $this->generateTempstoreId($entity_from_storage);
-    $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;
+    $entity = $this->layoutTempstoreRepository->get($entity_from_storage);
 
     $entity->layout_builder__layout->removeItem($this->delta);
 
-    $this->tempStoreFactory->get($collection)->set($id, ['entity' => $entity]);
+    $this->layoutTempstoreRepository->set($entity);
 
     $form_state->setRedirect("entity.{$entity->getEntityTypeId()}.layout", [$entity->getEntityTypeId() => $entity->id()]);
   }
