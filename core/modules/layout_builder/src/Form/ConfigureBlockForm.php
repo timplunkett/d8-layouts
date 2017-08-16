@@ -16,8 +16,7 @@ use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\layout_builder\Controller\LayoutBuilderController;
-use Drupal\layout_builder\Traits\TempstoreIdHelper;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -26,14 +25,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfigureBlockForm extends FormBase {
 
   use ContextAwarePluginAssignmentTrait;
-  use TempstoreIdHelper;
-
-  /**
-   * Tempstore factory.
-   *
-   * @var \Drupal\user\SharedTempStoreFactory
-   */
-  protected $tempStoreFactory;
 
   /**
    * The plugin being configured.
@@ -48,6 +39,13 @@ class ConfigureBlockForm extends FormBase {
    * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
    */
   protected $contextRepository;
+
+  /**
+   * The layout tempstore repository.
+   *
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
+   */
+  protected $layoutTempstoreRepository;
 
   /**
    * The entity type manager.
@@ -108,8 +106,8 @@ class ConfigureBlockForm extends FormBase {
   /**
    * Constructs a new ConfigureBlockForm.
    *
-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
-   *   The tempstore factory.
+   * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
+   *   The layout tempstore repository.
    * @param \Drupal\Core\Plugin\Context\ContextRepositoryInterface $context_repository
    *   The context repository.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -121,8 +119,8 @@ class ConfigureBlockForm extends FormBase {
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   The class resolver.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver) {
-    $this->tempStoreFactory = $tempstore;
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver) {
+    $this->layoutTempstoreRepository = $layout_tempstore_repository;
     $this->contextRepository = $context_repository;
     $this->entityTypeManager = $entity_type_manager;
     $this->blockManager = $block_manager;
@@ -135,7 +133,7 @@ class ConfigureBlockForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('user.shared_tempstore'),
+      $container->get('layout_builder.tempstore_repository'),
       $container->get('context.repository'),
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.block'),
@@ -181,7 +179,7 @@ class ConfigureBlockForm extends FormBase {
     $this->delta = $delta;
     $this->region = $region;
 
-    $entity = $this->getEntity();
+    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($this->delta);
@@ -218,22 +216,6 @@ class ConfigureBlockForm extends FormBase {
   }
 
   /**
-   * Gets the entity.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   The entity, from tempstore if it exists.
-   */
-  protected function getEntity() {
-    $entity = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
-    list($collection, $id) = $this->generateTempstoreId($entity);
-    $tempstore = $this->tempStoreFactory->get($collection)->get($id);
-    if (!empty($tempstore['entity'])) {
-      $entity = $tempstore['entity'];
-    }
-    return $entity;
-  }
-
-  /**
    * Submit form dialog #ajax callback.
    *
    * @param array $form
@@ -256,7 +238,8 @@ class ConfigureBlockForm extends FormBase {
     }
     else {
       $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutBuilderController::class);
-      $layout = $layout_controller->layout($this->getEntity());
+      $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
+      $layout = $layout_controller->layout($entity);
       $response->addCommand(new ReplaceCommand('#layout-builder', $layout));
       $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
     }
@@ -294,13 +277,12 @@ class ConfigureBlockForm extends FormBase {
     $configuration = $this->block->getConfiguration();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $entity = $this->getEntity();
+    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
     $values = $entity->layout_builder__layout->getValue();
     $values[$this->delta]['section'][$this->region][$configuration['uuid']] = $configuration;
     $entity->layout_builder__layout->setValue($values);
 
-    list($collection, $id) = $this->generateTempstoreId($entity);
-    $this->tempStoreFactory->get($collection)->set($id, ['entity' => $entity]);
+    $this->layoutTempstoreRepository->set($entity);
     $form_state->setRedirect("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
   }
 

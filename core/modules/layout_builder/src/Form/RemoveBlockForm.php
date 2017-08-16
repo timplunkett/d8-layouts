@@ -4,12 +4,10 @@ namespace Drupal\layout_builder\Form;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\layout_builder\Traits\TempstoreIdHelper;
-use Drupal\user\SharedTempStoreFactory;
+use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,21 +15,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class RemoveBlockForm extends ConfirmFormBase {
 
-  use TempstoreIdHelper;
-
   /**
-   * Tempstore factory.
+   * The layout tempstore repository.
    *
-   * @var \Drupal\user\SharedTempStoreFactory
+   * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
    */
-  protected $tempStoreFactory;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
+  protected $layoutTempstoreRepository;
 
   /**
    * The entity type ID.
@@ -71,14 +60,11 @@ class RemoveBlockForm extends ConfirmFormBase {
   /**
    * Constructs a new RemoveBlockForm.
    *
-   * @param \Drupal\user\SharedTempStoreFactory $tempstore
-   *   The tempstore factory.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
+   * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
+   *   The layout tempstore repository.
    */
-  public function __construct(SharedTempStoreFactory $tempstore, EntityTypeManagerInterface $entity_type_manager) {
-    $this->tempStoreFactory = $tempstore;
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+    $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
 
   /**
@@ -86,8 +72,7 @@ class RemoveBlockForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('user.shared_tempstore'),
-      $container->get('entity_type.manager')
+      $container->get('layout_builder.tempstore_repository')
     );
   }
 
@@ -149,11 +134,7 @@ class RemoveBlockForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\Core\Entity\FieldableEntityInterface $entity */
-    $entity_from_storage = $this->entityTypeManager->getStorage($this->entityTypeId)->loadRevision($this->entityId);
-
-    list($collection, $id) = $this->generateTempstoreId($entity_from_storage);
-    $entity = $this->tempStoreFactory->get($collection)->get($id)['entity'] ?: $entity_from_storage;
+    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($this->delta);
@@ -161,7 +142,7 @@ class RemoveBlockForm extends ConfirmFormBase {
     unset($values[$this->region][$this->uuid]);
     $field->section = $values;
 
-    $this->tempStoreFactory->get($collection)->set($id, ['entity' => $entity]);
+    $this->layoutTempstoreRepository->set($entity);
 
     $form_state->setRedirect("entity.{$entity->getEntityTypeId()}.layout", [$entity->getEntityTypeId() => $entity->id()]);
   }
