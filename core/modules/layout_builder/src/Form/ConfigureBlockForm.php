@@ -168,20 +168,18 @@ class ConfigureBlockForm extends FormBase {
    *
    * @param string $block_id
    *   Either a block ID, or the plugin ID used to create a new block.
-   * @param array $value
+   * @param array $configuration
    *   The block configuration.
    *
    * @return \Drupal\Core\Block\BlockPluginInterface
    *   The block plugin.
    */
-  protected function prepareBlock($block_id, array $value) {
-    if ($value) {
-      return $this->blockManager->createInstance($value['id'], $value);
+  protected function prepareBlock($block_id, array $configuration) {
+    if (!isset($configuration['uuid'])) {
+      $configuration['uuid'] = $this->uuid->generate();
     }
-    /** @var \Drupal\Core\Block\BlockPluginInterface $block */
-    $block = $this->blockManager->createInstance($block_id);
-    $block->setConfigurationValue('uuid', $this->uuid->generate());
-    return $block;
+
+    return $this->blockManager->createInstance($block_id, $configuration);
   }
 
   /**
