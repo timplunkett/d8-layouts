@@ -4,17 +4,14 @@ namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\block_content\Entity\BlockContentType;
-use Drupal\Tests\outside_in\FunctionalJavascript\OutsideInJavascriptTestBase;
+use Drupal\FunctionalJavascriptTests\JavascriptTestBase;
 
 /**
  * Tests the Layout Builder UI.
  *
- * @todo Extending OutsideInJavascriptTestBase for now get OffCanvas related
- *   asserts. Move these asserts to a trait.
- *
  * @group layout_builder
  */
-class LayoutBuilderTest extends OutsideInJavascriptTestBase {
+class LayoutBuilderTest extends JavascriptTestBase {
 
   /**
    * {@inheritdoc}
@@ -130,8 +127,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->addressEquals('node/1');
     $assert_session->pageTextContains('Powered by Drupal');
     $assert_session->pageTextContains('This is the label');
-    // @todo Assert that the layout is displayed?
-    // $assert_session->pageTextContains('My Sections');
+    $assert_session->elementExists('css', '.layout');
 
     // Drag one block from one region to another.
     $this->drupalGet('node/1/layout');
@@ -142,13 +138,21 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->assertWaitOnAjaxRequest();
 
     $assert_session->elementNotExists('css', '.layout__region--second .block-system-powered-by-block');
-    // @todo Find out why the rewritten draggable code doesn't work with tests.
-    // $page->find('css', '.layout__region--content .block-system-powered-by-block')->dragTo($page->find('css', '.layout__region--second'));
-    // $assert_session->assertWaitOnAjaxRequest();
-    // $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
+    $assert_session->elementTextNotContains('css', '.layout__region--second', 'Powered by Drupal');
+    // Drag the block from one layout to another.
+    $page->find('css', '.layout__region--content .block-system-powered-by-block')->dragTo($page->find('css', '.layout__region--second'));
+    $assert_session->assertWaitOnAjaxRequest();
+    // Ensure the drag succeeded.
+    $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
+    $assert_session->elementTextContains('css', '.layout__region--second', 'Powered by Drupal');
+    // Ensure the drag persisted after reload.
+    $this->drupalGet('node/1/layout');
+    $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
+    $assert_session->elementTextContains('css', '.layout__region--second', 'Powered by Drupal');
+    // Ensure the drag persisted after save.
     $this->clickLink('Save Layout');
-    // @todo Dragging blocks does not persist, once it does switch from content to second.
-    $assert_session->elementTextContains('css', '.layout__region--content', 'Powered by Drupal');
+    $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
+    $assert_session->elementTextContains('css', '.layout__region--second', 'Powered by Drupal');
 
     // Remove a block.
     $this->drupalGet('node/1/layout');
@@ -165,8 +169,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
     $this->clickLink('Save Layout');
-    // @todo Assert that the layout is displayed?
-    // $assert_session->pageTextContains('My Sections');
+    $assert_session->elementExists('css', '.layout');
 
     // Test deriver-based blocks.
     $this->drupalGet('node/1/layout');
@@ -177,7 +180,7 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->assertWaitOnAjaxRequest();
 
     $page->pressButton('Add Block');
-    $this->waitForOffCanvasToClose();
+    $assert_session->assertWaitOnAjaxRequest();
     $assert_session->pageTextContains('This is the block content');
 
     // Remove both sections.
@@ -196,17 +199,21 @@ class LayoutBuilderTest extends OutsideInJavascriptTestBase {
     $assert_session->pageTextNotContains('This is the block content');
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
-    // @todo Assert that a layout with no sections has no markup.
-    // $assert_session->pageTextNotContains('My Sections');
+    $assert_session->elementNotExists('css', '.layout');
   }
 
   /**
-   * Toggles the visibility of a contextual link trigger.
+   * Toggles the visibility of a contextual trigger.
+   *
+   * @todo Remove this function when related trait added in
+   *   https://www.drupal.org/node/2821724.
+   *
+   * @param string $selector
+   *   The selector for the element that contains the contextual link.
    */
   protected function toggleContextualTriggerVisibility($selector) {
     // Hovering over the element itself with should be enough, but does not
     // work. Manually remove the visually-hidden class.
-    // @see https://www.drupal.org/node/2821724
     $this->getSession()->executeScript("jQuery('{$selector} .contextual .trigger').toggleClass('visually-hidden');");
   }
 
