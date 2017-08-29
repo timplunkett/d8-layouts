@@ -49,7 +49,7 @@ function layout_builder_contextual_links_view_alter(&$element, $items) {
   }
 
   if ($attach_lib) {
-    $element['#attached']['library'][] = 'outside_in/drupal.off_canvas';
+    $element['#attached']['library'][] = 'settings_tray/drupal.off_canvas';
   }
 }
 

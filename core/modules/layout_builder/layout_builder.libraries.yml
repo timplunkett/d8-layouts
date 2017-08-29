@@ -7,5 +7,4 @@ drupal.layout_builder:
     js/layout-builder.js: {}
   dependencies:
     - core/jquery.ui.sortable
-    - outside_in/drupal.off_canvas
-    - outside_in/drupal.outside_in
+    - settings_tray/drupal.off_canvas

@@ -157,7 +157,6 @@ class LayoutBuilderController implements ContainerInjectionInterface {
           'class' => ['use-ajax'],
           'data-dialog-type' => 'dialog',
           'data-dialog-renderer' => 'off_canvas',
-          'data-outside-in-edit' => TRUE,
         ],
       ]
     );

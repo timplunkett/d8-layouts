@@ -6,4 +6,4 @@ version: VERSION
 core: 8.x
 dependencies:
   - layout_discovery
-  - outside_in
+  - settings_tray
