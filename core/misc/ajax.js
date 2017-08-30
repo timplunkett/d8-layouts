@@ -242,11 +242,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       ajax.options.url += '&';
     }
 
-    var wrapper = 'drupal_' + (element_settings.dialogType || 'ajax');
-    if (element_settings.dialogRenderer) {
-      wrapper += '.' + element_settings.dialogRenderer;
+    if (ajax.options.url.indexOf('' + Drupal.ajax.WRAPPER_FORMAT) === -1) {
+      var wrapper = 'drupal_' + (element_settings.dialogType || 'ajax');
+      if (element_settings.dialogRenderer) {
+        wrapper += '.' + element_settings.dialogRenderer;
+      }
+      ajax.options.url += Drupal.ajax.WRAPPER_FORMAT + '=' + wrapper;
     }
-    ajax.options.url += Drupal.ajax.WRAPPER_FORMAT + '=' + wrapper;
 
     $(ajax.element).on(element_settings.event, function (event) {
       if (!drupalSettings.ajaxTrustedUrl[ajax.url] && !Drupal.url.isLocal(ajax.url)) {

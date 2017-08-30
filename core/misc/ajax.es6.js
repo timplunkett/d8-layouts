@@ -518,13 +518,15 @@
     else {
       ajax.options.url += '&';
     }
-    // If this element has a dialog type use if for the wrapper if not use 'ajax'.
-    let wrapper = `drupal_${(element_settings.dialogType || 'ajax')}`;
-    if (element_settings.dialogRenderer) {
-      wrapper += `.${element_settings.dialogRenderer}`;
+    // Add a wrapper format, if none exists.
+    if (ajax.options.url.indexOf(`${Drupal.ajax.WRAPPER_FORMAT}`) === -1) {
+      // If this element has a dialog type use if for the wrapper if not use 'ajax'.
+      let wrapper = `drupal_${(element_settings.dialogType || 'ajax')}`;
+      if (element_settings.dialogRenderer) {
+        wrapper += `.${element_settings.dialogRenderer}`;
+      }
+      ajax.options.url += `${Drupal.ajax.WRAPPER_FORMAT}=${wrapper}`;
     }
-    ajax.options.url += `${Drupal.ajax.WRAPPER_FORMAT}=${wrapper}`;
-
 
     // Bind the ajaxSubmit function to the element event.
     $(ajax.element).on(element_settings.event, function (event) {
