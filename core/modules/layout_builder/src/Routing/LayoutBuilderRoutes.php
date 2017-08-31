@@ -51,7 +51,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         ])
         ->addRequirements([
           $entity_type_id => '\d+',
-          '_has_layout_selection' => 'true',
+          '_has_layout_section' => 'true',
         ])
         ->addOptions([
           '_layout_builder' => TRUE,
@@ -71,7 +71,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         ])
         ->addRequirements([
           $entity_type_id => '\d+',
-          '_has_layout_selection' => 'true',
+          '_has_layout_section' => 'true',
         ])
         ->addOptions([
           '_layout_builder' => TRUE,
@@ -91,7 +91,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         ])
         ->addRequirements([
           $entity_type_id => '\d+',
-          '_has_layout_selection' => 'true',
+          '_has_layout_section' => 'true',
         ])
         ->addOptions([
           '_layout_builder' => TRUE,

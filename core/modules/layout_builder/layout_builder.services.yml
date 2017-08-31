@@ -9,7 +9,7 @@ services:
     class: Drupal\layout_builder\Access\LayoutSectionAccessCheck
     arguments: ['@entity_type.manager']
     tags:
-      - { name: access_check, applies_to: _has_layout_selection }
+      - { name: access_check, applies_to: _has_layout_section }
   layout_builder.routes:
     class: Drupal\layout_builder\Routing\LayoutBuilderRoutes
     arguments: ['@entity_type.manager']
