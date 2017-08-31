@@ -40,20 +40,20 @@
   background-image: url(../../../misc/icons/787878/ex.svg);
 }
 
-#drupal-off-canvas  details.layout-selection {
+#drupal-off-canvas details.layout-selection {
   background-color: transparent;
 }
 
-#drupal-off-canvas  details.layout-selection summary {
+#drupal-off-canvas details.layout-selection summary {
   margin-bottom: 1em;
 }
 
-#drupal-off-canvas  details.layout-selection li {
+#drupal-off-canvas details.layout-selection li {
   display: block;
   padding-bottom: 1em;
 }
 
-#drupal-off-canvas  details.layout-selection li a {
+#drupal-off-canvas details.layout-selection li a {
   display: block;
   padding-top: 0.55em;
 }
