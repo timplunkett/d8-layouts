@@ -6,4 +6,5 @@ version: VERSION
 core: 8.x
 dependencies:
   - layout_discovery
+  # @todo Remove dependency once https://www.drupal.org/node/2784443 is in.
   - settings_tray
