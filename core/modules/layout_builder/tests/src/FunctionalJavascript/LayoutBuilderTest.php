@@ -16,7 +16,12 @@ class LayoutBuilderTest extends JavascriptTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['layout_builder', 'node', 'block_content', 'contextual', 'field_ui'];
+  public static $modules = [
+    'layout_builder',
+    'node',
+    'block_content',
+    'field_ui',
+  ];
 
   /**
    * {@inheritdoc}
