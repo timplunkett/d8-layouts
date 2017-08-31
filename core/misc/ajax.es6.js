@@ -47,25 +47,7 @@
       }
 
       // Bind Ajax behaviors to all items showing the class.
-      $('.use-ajax').once('ajax').each(function () {
-        const element_settings = {};
-        // Clicked links look better with the throbber than the progress bar.
-        element_settings.progress = { type: 'throbber' };
-
-        // For anchor tags, these will go to the target of the anchor rather
-        // than the usual location.
-        const href = $(this).attr('href');
-        if (href) {
-          element_settings.url = href;
-          element_settings.event = 'click';
-        }
-        element_settings.dialogType = $(this).data('dialog-type');
-        element_settings.dialogRenderer = $(this).data('dialog-renderer');
-        element_settings.dialog = $(this).data('dialog-options');
-        element_settings.base = $(this).attr('id');
-        element_settings.element = this;
-        Drupal.ajax(element_settings);
-      });
+      Drupal.ajax.bindAjaxLinks($('body'));
 
       // This class means to submit the form to the action using Ajax.
       $('.use-ajax-submit').once('ajax').each(function () {
@@ -268,6 +250,27 @@
    */
   Drupal.ajax.expired = function () {
     return Drupal.ajax.instances.filter(instance => instance && instance.element !== false && !document.body.contains(instance.element));
+  };
+  Drupal.ajax.bindAjaxLinks = ($element) => {
+    $element.find('.use-ajax').once('ajax').each(function () {
+      const element_settings = {};
+      // Clicked links look better with the throbber than the progress bar.
+      element_settings.progress = { type: 'throbber' };
+
+      // For anchor tags, these will go to the target of the anchor rather
+      // than the usual location.
+      const href = $(this).attr('href');
+      if (href) {
+        element_settings.url = href;
+        element_settings.event = 'click';
+      }
+      element_settings.dialogType = $(this).data('dialog-type');
+      element_settings.dialogRenderer = $(this).data('dialog-renderer');
+      element_settings.dialog = $(this).data('dialog-options');
+      element_settings.base = $(this).attr('id');
+      element_settings.element = this;
+      Drupal.ajax(element_settings);
+    });
   };
 
   /**
@@ -1340,4 +1343,7 @@
       }
     },
   };
+  $(document).on('drupalContextualLinkAdded', (event, data) => {
+    Drupal.ajax.bindAjaxLinks($(data.$el[0]));
+  });
 }(jQuery, window, Drupal, drupalSettings));
