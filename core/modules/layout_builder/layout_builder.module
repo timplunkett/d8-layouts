@@ -24,23 +24,6 @@ function layout_builder_help($route_name) {
 }
 
 /**
- * Implements hook_contextual_links_view_alter().
- *
- * Change Configure Blocks into off_canvas links.
- */
-function layout_builder_contextual_links_view_alter(&$element, $items) {
-  // @todo Move this to system_contextual_links_view_alter().
-  // If any items use the off_canvas render, add the corresponding library.
-  foreach ($items as $item) {
-    if (isset($item['localized_options']['attributes']['data-dialog-renderer']) && $item['localized_options']['attributes']['data-dialog-renderer'] === 'off_canvas') {
-      $element['#attached']['library'][] = 'settings_tray/drupal.off_canvas';
-      // After finding one, stop.
-      break;
-    }
-  }
-}
-
-/**
  * Implements hook_form_FORM_ID_alter() for \Drupal\field_ui\Form\EntityViewDisplayEditForm.
  */
 function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormStateInterface $form_state) {
