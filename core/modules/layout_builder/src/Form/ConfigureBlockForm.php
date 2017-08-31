@@ -221,7 +221,6 @@ class ConfigureBlockForm extends FormBase {
     ];
 
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
-    $form['#attributes']['id'] = 'dialog-form';
 
     return $form;
   }
