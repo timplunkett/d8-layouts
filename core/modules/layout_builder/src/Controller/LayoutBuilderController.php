@@ -224,7 +224,6 @@ class LayoutBuilderController implements ContainerInjectionInterface {
                 'delta' => $delta,
                 'region' => $region,
                 'uuid' => $uuid,
-                'plugin_id' => $uuid,
               ],
             ],
           ];

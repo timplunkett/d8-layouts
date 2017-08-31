@@ -3,12 +3,8 @@
 namespace Drupal\layout_builder\Controller;
 
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
-use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -21,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class LayoutController implements ContainerInjectionInterface {
 
+  use LayoutRebuildTrait;
   use StringTranslationTrait;
 
   /**
@@ -38,13 +35,6 @@ class LayoutController implements ContainerInjectionInterface {
   protected $blockManager;
 
   /**
-   * The class resolver.
-   *
-   * @var \Drupal\Core\DependencyInjection\ClassResolver
-   */
-  protected $classResolver;
-
-  /**
    * The layout tempstore repository.
    *
    * @var \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
@@ -58,15 +48,12 @@ class LayoutController implements ContainerInjectionInterface {
    *   The layout manager.
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
-   * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
-   *   The class resolver.
    * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
    *   The layout tempstore repository.
    */
-  public function __construct(LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, ClassResolverInterface $class_resolver, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
+  public function __construct(LayoutPluginManagerInterface $layout_manager, BlockManagerInterface $block_manager, LayoutTempstoreRepositoryInterface $layout_tempstore_repository) {
     $this->layoutManager = $layout_manager;
     $this->blockManager = $block_manager;
-    $this->classResolver = $class_resolver;
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
   }
 
@@ -77,7 +64,6 @@ class LayoutController implements ContainerInjectionInterface {
     return new static(
       $container->get('plugin.manager.core.layout'),
       $container->get('plugin.manager.block'),
-      $container->get('class_resolver'),
       $container->get('layout_builder.tempstore_repository')
     );
   }
@@ -120,7 +106,9 @@ class LayoutController implements ContainerInjectionInterface {
           ],
           '#url' => $this->generateSectionUrl($entity_type_id, $entity_id, $delta, $plugin_id),
           '#attributes' => [
-            'class' => 'use-ajax',
+            'class' => ['use-ajax'],
+            'data-dialog-type' => 'dialog',
+            'data-dialog-renderer' => 'off_canvas',
           ],
         ],
       ];
@@ -183,7 +171,7 @@ class LayoutController implements ContainerInjectionInterface {
     }
     $entity->layout_builder__layout->setValue($values);
     $this->layoutTempstoreRepository->set($entity);
-    return $this->ajaxRebuildLayout($entity);
+    return $this->rebuildAndClose(new AjaxResponse(), $entity);
   }
 
   /**
@@ -267,7 +255,7 @@ class LayoutController implements ContainerInjectionInterface {
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($data['delta_to']);
     $values = $field->section ?: [];
-    if ($data['preceding_block_uuid']) {
+    if (isset($data['preceding_block_uuid'])) {
       $slice_id = array_search($data['preceding_block_uuid'], array_keys($values[$region_to]));
       $before = array_slice($values[$region_to], 0, $slice_id + 1);
       $after = array_slice($values[$region_to], $slice_id + 1);
@@ -282,7 +270,7 @@ class LayoutController implements ContainerInjectionInterface {
     $field->section = array_filter($values);
 
     $this->layoutTempstoreRepository->set($entity);
-    return $this->ajaxRebuildLayout($entity);
+    return $this->rebuildLayout(new AjaxResponse(), $entity);
   }
 
   /**
@@ -307,24 +295,6 @@ class LayoutController implements ContainerInjectionInterface {
       'delta' => $delta,
       'plugin_id' => $plugin_id,
     ]);
-  }
-
-  /**
-   * Rebuilds layout, add Ajax commands replace and close dialog.
-   *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
-   *   The entity.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   The ajax response to replace the layout and close the dialog.
-   */
-  protected function ajaxRebuildLayout(FieldableEntityInterface $entity) {
-    $response = new AjaxResponse();
-    $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutBuilderController::class);
-    $layout = $layout_controller->layout($entity);
-    $response->addCommand(new ReplaceCommand('#layout-builder', $layout));
-    $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
-    return $response;
   }
 
 }

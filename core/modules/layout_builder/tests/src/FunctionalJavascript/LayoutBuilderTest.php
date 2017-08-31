@@ -88,9 +88,11 @@ class LayoutBuilderTest extends JavascriptTestBase {
     // Add a new section.
     $this->clickLink('Add Section');
     $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '#drupal-off-canvas');
 
     $this->clickLink('One column');
     $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementNotExists('css', '#drupal-off-canvas');
 
     $assert_session->linkExists('Add Section');
     $assert_session->linkExists('Add Block');
@@ -103,6 +105,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
 
     $this->clickLink('Powered by Drupal');
     $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '#drupal-off-canvas');
 
     $page->fillField('settings[label]', 'This is the label');
     $page->checkField('settings[label_display]');
@@ -110,7 +113,9 @@ class LayoutBuilderTest extends JavascriptTestBase {
     // Save the new block, and ensure it is displayed on the page.
     $page->pressButton('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementNotExists('css', '#drupal-off-canvas');
 
+    $assert_session->addressEquals('node/1/layout');
     $assert_session->pageTextContains('Powered by Drupal');
     $assert_session->pageTextContains('This is the label');
 
@@ -154,6 +159,28 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->elementExists('css', '.layout__region--second .block-system-powered-by-block');
     $assert_session->elementTextContains('css', '.layout__region--second', 'Powered by Drupal');
 
+    // Configure a block.
+    $this->drupalGet('node/1/layout');
+    $assert_session->assertWaitOnAjaxRequest();
+    $this->toggleContextualTriggerVisibility('.block-system-powered-by-block');
+    $assert_session->assertWaitOnAjaxRequest();
+    $page->find('css', '.block-system-powered-by-block .contextual .trigger')->click();
+    $assert_session->assertWaitOnAjaxRequest();
+
+    $this->clickLink('Configure');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '#drupal-off-canvas');
+
+    $page->fillField('settings[label]', 'This is the new label');
+    $page->pressButton('Update');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementNotExists('css', '#drupal-off-canvas');
+
+    $assert_session->addressEquals('node/1/layout');
+    $assert_session->pageTextContains('Powered by Drupal');
+    $assert_session->pageTextContains('This is the new label');
+    $assert_session->pageTextNotContains('This is the label');
+
     // Remove a block.
     $this->drupalGet('node/1/layout');
 
@@ -161,13 +188,16 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $page->find('css', '.block-system-powered-by-block .contextual .trigger')->click();
     $this->clickLink('Remove block');
     $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '#drupal-off-canvas');
 
     $page->pressButton('Remove');
     $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementNotExists('css', '#drupal-off-canvas');
 
     $assert_session->pageTextNotContains('Powered by Drupal');
     $assert_session->linkExists('Add Block');
     $assert_session->addressEquals('node/1/layout');
+
     $this->clickLink('Save Layout');
     $assert_session->elementExists('css', '.layout');
 

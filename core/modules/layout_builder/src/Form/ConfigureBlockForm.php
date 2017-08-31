@@ -3,9 +3,6 @@
 namespace Drupal\layout_builder\Form;
 
 use Drupal\Component\Uuid\UuidInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\CloseDialogCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
@@ -18,7 +15,7 @@ use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Plugin\PluginFormFactoryInterface;
 use Drupal\Core\Plugin\PluginWithFormsInterface;
-use Drupal\layout_builder\Controller\LayoutBuilderController;
+use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -28,6 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfigureBlockForm extends FormBase {
 
   use ContextAwarePluginAssignmentTrait;
+  use LayoutRebuildTrait;
 
   /**
    * The plugin being configured.
@@ -185,18 +183,22 @@ class ConfigureBlockForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL, $uuid = NULL) {
     $this->entityTypeId = $entity_type_id;
     $this->entityId = $entity_id;
     $this->delta = $delta;
     $this->region = $region;
 
-    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
+    $configuration = [];
+    if ($uuid) {
+      $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
 
-    /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $field = $entity->layout_builder__layout->get($this->delta);
-    $value = !empty($field->section[$region][$plugin_id]) ? $field->section[$region][$plugin_id] : [];
-    $this->block = $this->prepareBlock($plugin_id, $value);
+      /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
+      $field = $entity->layout_builder__layout->get($this->delta);
+      $plugin_id = $field->section[$region][$uuid]['id'];
+      $configuration = $field->section[$region][$uuid];
+    }
+    $this->block = $this->prepareBlock($plugin_id, $configuration);
 
     $form_state->setTemporaryValue('gathered_contexts', $this->contextRepository->getAvailableContexts());
 
@@ -211,7 +213,7 @@ class ConfigureBlockForm extends FormBase {
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $value ? $this->t('Update') : $this->t('Add Block'),
+      '#value' => $uuid ? $this->t('Update') : $this->t('Add Block'),
       '#button_type' => 'primary',
       '#ajax' => [
         'callback' => '::ajaxSubmit',
@@ -222,37 +224,6 @@ class ConfigureBlockForm extends FormBase {
     $form['#attributes']['id'] = 'dialog-form';
 
     return $form;
-  }
-
-  /**
-   * Submit form dialog #ajax callback.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An AJAX response that display validation error messages or redirects
-   *   to a URL
-   */
-  public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
-    if ($form_state->hasAnyErrors()) {
-      $form['status_messages'] = [
-        '#type' => 'status_messages',
-        '#weight' => -1000,
-      ];
-      $response->addCommand(new ReplaceCommand('#dialog-form', $form));
-    }
-    else {
-      $layout_controller = $this->classResolver->getInstanceFromDefinition(LayoutBuilderController::class);
-      $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
-      $layout = $layout_controller->layout($entity);
-      $response->addCommand(new ReplaceCommand('#layout-builder', $layout));
-      $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
-    }
-    return $response;
   }
 
   /**

@@ -1,6 +1,6 @@
 layout_builder_block_configure:
   title: 'Configure'
-  route_name: 'layout_builder.add_block'
+  route_name: 'layout_builder.configure_block'
   group: 'layout_builder_block'
   options:
     attributes:
