@@ -75,6 +75,11 @@ class ConfigureSectionForm extends FormBase {
    */
   protected $delta;
 
+  /**
+   * Indicates whether the section is being added or updated.
+   *
+   * @var bool
+   */
   protected $isUpdate;
 
   /**
@@ -176,28 +181,19 @@ class ConfigureSectionForm extends FormBase {
 
     $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
 
+    /** @var \Drupal\layout_builder\Field\LayoutSectionItemListInterface $field_list */
+    $field_list = $entity->layout_builder__layout;
     if ($this->isUpdate) {
-      /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-      $field = $entity->layout_builder__layout->get($this->delta);
+      $field = $field_list->get($this->delta);
       $field->layout = $plugin_id;
       $field->layout_settings = $configuration;
     }
     else {
-      $values = $entity->layout_builder__layout->getValue();
-      $value = [
+      $field_list->addItem($this->delta, [
         'layout' => $plugin_id,
         'layout_settings' => $configuration,
         'section' => [],
-      ];
-      if (isset($values[$this->delta])) {
-        $start = array_slice($values, 0, $this->delta);
-        $end = array_slice($values, $this->delta);
-        $values = array_merge($start, [$value], $end);
-      }
-      else {
-        $values[] = $value;
-      }
-      $entity->layout_builder__layout->setValue($values);
+      ]);
     }
 
     $this->layoutTempstoreRepository->set($entity);

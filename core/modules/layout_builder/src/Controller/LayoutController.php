@@ -154,23 +154,15 @@ class LayoutController implements ContainerInjectionInterface {
    */
   public function addSection($entity_type_id, $entity_id, $delta, $plugin_id) {
     $entity = $this->layoutTempstoreRepository->getFromId($entity_type_id, $entity_id);
-    $values = $entity->layout_builder__layout->getValue();
-    if (isset($values[$delta])) {
-      $start = array_slice($values, 0, $delta);
-      $end = array_slice($values, $delta);
-      $value = [
-        'layout' => $plugin_id,
-        'section' => [],
-      ];
-      $values = array_merge($start, [$value], $end);
-    }
-    else {
-      $values[] = [
-        'layout' => $plugin_id,
-        'section' => [],
-      ];
-    }
-    $entity->layout_builder__layout->setValue($values);
+
+    /** @var \Drupal\layout_builder\Field\LayoutSectionItemListInterface $field_list */
+    $field_list = $entity->layout_builder__layout;
+    $field_list->addItem($delta, [
+      'layout' => $plugin_id,
+      'layout_settings' => [],
+      'section' => [],
+    ]);
+
     $this->layoutTempstoreRepository->set($entity);
     return $this->rebuildAndClose(new AjaxResponse(), $entity);
   }

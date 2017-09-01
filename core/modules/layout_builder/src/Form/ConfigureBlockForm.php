@@ -250,9 +250,10 @@ class ConfigureBlockForm extends FormBase {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
-    $values = $entity->layout_builder__layout->getValue();
-    $values[$this->delta]['section'][$this->region][$configuration['uuid']] = $configuration;
-    $entity->layout_builder__layout->setValue($values);
+    $field = $entity->layout_builder__layout->get($this->delta);
+    $section = $field->section;
+    $section[$this->region][$configuration['uuid']] = $configuration;
+    $field->section = $section;
 
     $this->layoutTempstoreRepository->set($entity);
     $form_state->setRedirect("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
