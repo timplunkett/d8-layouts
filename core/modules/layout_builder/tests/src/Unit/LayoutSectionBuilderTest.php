@@ -121,7 +121,9 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $section = [
       'content' => [
         'some_uuid' => [
-          'id' => 'block_plugin_id',
+          'block' => [
+            'id' => 'block_plugin_id',
+          ],
         ],
       ],
     ];
@@ -155,7 +157,9 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $section = [
       'content' => [
         'some_uuid' => [
-          'id' => 'block_plugin_id',
+          'block' => [
+            'id' => 'block_plugin_id',
+          ],
         ],
       ],
     ];
@@ -225,7 +229,9 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $section = [
       'content' => [
         'some_uuid' => [
-          'id' => 'block_plugin_id',
+          'block' => [
+            'id' => 'block_plugin_id',
+          ],
         ],
       ],
     ];
@@ -250,7 +256,9 @@ class LayoutSectionBuilderTest extends UnitTestCase {
   public function testBuildSectionMissingPluginId() {
     $section = [
       'content' => [
-        'some_uuid' => [],
+        'some_uuid' => [
+          'block' => [],
+        ],
       ],
     ];
     $this->setExpectedException(PluginException::class, 'No plugin ID specified for block with "some_uuid" UUID');

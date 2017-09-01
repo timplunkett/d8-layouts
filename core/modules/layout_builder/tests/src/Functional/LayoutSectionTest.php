@@ -60,9 +60,11 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'id' => 'test_context_aware',
-                'context_mapping' => [
-                  'user' => '@user.current_user_context:current_user',
+                'block' => [
+                  'id' => 'test_context_aware',
+                  'context_mapping' => [
+                    'user' => '@user.current_user_context:current_user',
+                  ],
                 ],
               ],
             ],
@@ -88,7 +90,9 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'id' => 'system_powered_by_block',
+                'block' => [
+                  'id' => 'system_powered_by_block',
+                ],
               ],
             ],
           ],
@@ -107,7 +111,9 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'content' => [
               'baz' => [
-                'id' => 'system_powered_by_block',
+                'block' => [
+                  'id' => 'system_powered_by_block',
+                ],
               ],
             ],
           ],
@@ -117,14 +123,18 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'first' => [
               'foo' => [
-                'id' => 'test_block_instantiation',
-                'display_message' => 'foo text',
+                'block' => [
+                  'id' => 'test_block_instantiation',
+                  'display_message' => 'foo text',
+                ],
               ],
             ],
             'second' => [
               'bar' => [
-                'id' => 'test_block_instantiation',
-                'display_message' => 'bar text',
+                'block' => [
+                  'id' => 'test_block_instantiation',
+                  'display_message' => 'bar text',
+                ],
               ],
             ],
           ],
@@ -171,7 +181,9 @@ class LayoutSectionTest extends BrowserTestBase {
         'section' => [
           'content' => [
             'baz' => [
-              'id' => 'test_access',
+              'block' => [
+                'id' => 'test_access',
+              ],
             ],
           ],
         ],
@@ -208,7 +220,9 @@ class LayoutSectionTest extends BrowserTestBase {
         'section' => [
           'content' => [
             'baz' => [
-              'id' => 'system_powered_by_block',
+              'block' => [
+                'id' => 'system_powered_by_block',
+              ],
             ],
           ],
         ],
@@ -222,14 +236,18 @@ class LayoutSectionTest extends BrowserTestBase {
           'section' => [
             'first' => [
               'foo' => [
-                'id' => 'test_block_instantiation',
-                'display_message' => 'foo text',
+                'block' => [
+                  'id' => 'test_block_instantiation',
+                  'display_message' => 'foo text',
+                ],
               ],
             ],
             'second' => [
               'bar' => [
-                'id' => 'test_block_instantiation',
-                'display_message' => 'bar text',
+                'block' => [
+                  'id' => 'test_block_instantiation',
+                  'display_message' => 'bar text',
+                ],
               ],
             ],
           ],

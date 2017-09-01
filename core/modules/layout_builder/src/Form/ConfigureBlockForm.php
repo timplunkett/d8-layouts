@@ -195,8 +195,8 @@ class ConfigureBlockForm extends FormBase {
 
       /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
       $field = $entity->layout_builder__layout->get($this->delta);
-      $plugin_id = $field->section[$region][$uuid]['id'];
-      $configuration = $field->section[$region][$uuid];
+      $plugin_id = $field->section[$region][$uuid]['block']['id'];
+      $configuration = $field->section[$region][$uuid]['block'];
     }
     $this->block = $this->prepareBlock($plugin_id, $configuration);
 
@@ -252,7 +252,7 @@ class ConfigureBlockForm extends FormBase {
     $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
     $field = $entity->layout_builder__layout->get($this->delta);
     $section = $field->section;
-    $section[$this->region][$configuration['uuid']] = $configuration;
+    $section[$this->region][$configuration['uuid']]['block'] = $configuration;
     $field->section = $section;
 
     $this->layoutTempstoreRepository->set($entity);
