@@ -11,9 +11,9 @@
 
   behaviors.layoutBuilder = {
     attach: function attach(context) {
-      $(context).find('.layout__region').sortable({
+      $(context).find('.layout-builder--layout__region').sortable({
         items: '> .draggable',
-        connectWith: '.layout__region',
+        connectWith: '.layout-builder--layout__region',
 
         update: function update(event, ui) {
           var data = {

@@ -213,6 +213,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
       $build[$region]['layout_builder_add_block']['#type'] = 'container';
       $build[$region]['layout_builder_add_block']['#attributes'] = ['class' => ['add-block']];
       $build[$region]['#attributes']['data-region'] = $region;
+      $build[$region]['#attributes']['class'][] = 'layout-builder--layout__region';
     }
     foreach ($section as $region => $blocks) {
       foreach ($blocks as $uuid => $configuration) {
@@ -239,6 +240,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
       'entity_id' => $entity_id,
     ])->toString();
     $build['#attributes']['data-layout-delta'] = $delta;
+    $build['#attributes']['class'][] = 'layout-builder--layout';
 
     $layout = $this->layoutManager->createInstance($layout_id, $layout_settings);
     return [

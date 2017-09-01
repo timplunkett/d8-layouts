@@ -1,9 +1,9 @@
 (($, { ajax, behaviors }) => {
   behaviors.layoutBuilder = {
     attach(context) {
-      $(context).find('.layout__region').sortable({
+      $(context).find('.layout-builder--layout__region').sortable({
         items: '> .draggable',
-        connectWith: '.layout__region',
+        connectWith: '.layout-builder--layout__region',
 
         /**
          * Updates the layout with the new position of the block.
