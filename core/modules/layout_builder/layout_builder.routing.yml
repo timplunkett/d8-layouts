@@ -16,6 +16,17 @@ layout_builder.add_section:
   options:
     _admin_route: TRUE
 
+layout_builder.configure_section:
+  path: '/layout_builder/configure/section/{entity_type_id}/{entity_id}/{delta}/{plugin_id}'
+  defaults:
+    _title: 'Configure section'
+    _form: '\Drupal\layout_builder\Form\ConfigureSectionForm'
+    plugin_id: null
+  requirements:
+    _permission: 'configure any layout'
+  options:
+    _admin_route: TRUE
+
 layout_builder.remove_section:
   path: '/layout_builder/remove/section/{entity_type_id}/{entity_id}/{delta}'
   defaults:

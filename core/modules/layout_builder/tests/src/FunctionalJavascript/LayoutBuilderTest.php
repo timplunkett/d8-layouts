@@ -21,6 +21,7 @@ class LayoutBuilderTest extends JavascriptTestBase {
     'node',
     'block_content',
     'field_ui',
+    'layout_test',
   ];
 
   /**
@@ -64,6 +65,12 @@ class LayoutBuilderTest extends JavascriptTestBase {
       'configure any layout',
       'administer node display',
     ], 'foobar'));
+
+    // Enable layout support.
+    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
+    $page = $this->getSession()->getPage();
+    $page->checkField('layout[allow_custom]');
+    $page->pressButton('Save');
   }
 
   /**
@@ -75,11 +82,6 @@ class LayoutBuilderTest extends JavascriptTestBase {
   public function test() {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
-
-    // Enable layout support.
-    $this->drupalGet('admin/structure/types/manage/bundle_with_section_field/display');
-    $page->checkField('layout[allow_custom]');
-    $page->pressButton('Save');
 
     // Ensure the block is not displayed initially.
     $this->drupalGet('node/1');
@@ -235,6 +237,46 @@ class LayoutBuilderTest extends JavascriptTestBase {
     $assert_session->linkNotExists('Add Block');
     $this->clickLink('Save Layout');
     $assert_session->elementNotExists('css', '.layout');
+  }
+
+  /**
+   * Tests configurable layouts.
+   */
+  public function testConfigurableLayouts() {
+    $assert_session = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    $this->drupalGet('node/1/layout');
+    $this->clickLink('Add Section');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '#drupal-off-canvas');
+
+    $this->clickLink('One column');
+    $assert_session->assertWaitOnAjaxRequest();
+
+    // Add another section.
+    $this->clickLink('Add Section');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementExists('css', '#drupal-off-canvas');
+
+    $this->clickLink('Layout plugin (with settings)');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->fieldExists('layout_settings[setting_1]');
+    $page->pressButton('Add section');
+    $assert_session->assertWaitOnAjaxRequest();
+
+    $assert_session->elementNotExists('css', '#drupal-off-canvas');
+    $assert_session->pageTextContains('Default');
+    $assert_session->linkExists('Add Block');
+
+    // Configure the existing section.
+    $this->clickLink('Configure section');
+    $assert_session->assertWaitOnAjaxRequest();
+    $page->fillField('layout_settings[setting_1]', 'Test setting value');
+    $page->pressButton('Update');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->elementNotExists('css', '#drupal-off-canvas');
+    $assert_session->pageTextContains('Test setting value');
   }
 
   /**

@@ -33,6 +33,9 @@ class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterf
       ->setLabel(new TranslatableMarkup('Layout'))
       ->setSetting('case_sensitive', FALSE)
       ->setRequired(TRUE);
+    $properties['layout_settings'] = MapDataDefinition::create('map')
+      ->setLabel(new TranslatableMarkup('Layout Settings'))
+      ->setRequired(FALSE);
     $properties['section'] = MapDataDefinition::create('map')
       ->setLabel(new TranslatableMarkup('Layout Section'))
       ->setRequired(FALSE);
@@ -58,6 +61,11 @@ class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterf
           'length' => '255',
           'binary' => FALSE,
         ],
+        'layout_settings' => [
+          'type' => 'blob',
+          'size' => 'normal',
+          'serialize' => TRUE,
+        ],
         'section' => [
           'type' => 'blob',
           'size' => 'normal',
@@ -74,6 +82,7 @@ class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterf
    */
   public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     $values['layout'] = 'layout_onecol';
+    $values['layout_settings'] = [];
     $values['section'] = [];
     return $values;
   }

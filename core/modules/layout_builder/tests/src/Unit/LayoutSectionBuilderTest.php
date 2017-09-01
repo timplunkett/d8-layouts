@@ -85,7 +85,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $this->layoutSectionBuilder = new LayoutSectionBuilder($this->account->reveal(), $this->layoutPluginManager->reveal(), $this->blockManager->reveal(), $this->contextHandler->reveal(), $this->contextRepository->reveal());
 
     $this->layout = $this->prophesize(LayoutInterface::class);
-    $this->layoutPluginManager->createInstance('layout_onecol')->willReturn($this->layout->reveal());
+    $this->layoutPluginManager->createInstance('layout_onecol', [])->willReturn($this->layout->reveal());
   }
 
   /**
@@ -135,7 +135,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
         'some_uuid' => $render_array,
       ],
     ];
-    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
     $this->assertEquals($expected, $result);
   }
 
@@ -166,7 +166,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
         'max-age' => -1,
       ],
     ];
-    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
     $this->assertEquals($expected, $result);
   }
 
@@ -184,7 +184,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
         'max-age' => -1,
       ],
     ];
-    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
     $this->assertEquals($expected, $result);
   }
 
@@ -239,7 +239,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
         'some_uuid' => $render_array,
       ],
     ];
-    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $result = $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
     $this->assertEquals($expected, $result);
   }
 
@@ -254,7 +254,7 @@ class LayoutSectionBuilderTest extends UnitTestCase {
       ],
     ];
     $this->setExpectedException(PluginException::class, 'No plugin ID specified for block with "some_uuid" UUID');
-    $this->layoutSectionBuilder->buildSection('layout_onecol', $section);
+    $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
   }
 
 }

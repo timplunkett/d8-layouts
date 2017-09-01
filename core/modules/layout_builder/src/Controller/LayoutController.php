@@ -6,6 +6,7 @@ use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
@@ -289,7 +290,9 @@ class LayoutController implements ContainerInjectionInterface {
    *   The Url object of the add_section route.
    */
   protected function generateSectionUrl($entity_type_id, $entity_id, $delta, $plugin_id) {
-    return new Url('layout_builder.add_section', [
+    $layout = $this->layoutManager->createInstance($plugin_id);
+    $route_name = $layout instanceof PluginFormInterface ? 'layout_builder.configure_section' : 'layout_builder.add_section';
+    return new Url($route_name, [
       'entity_type_id' => $entity_type_id,
       'entity_id' => $entity_id,
       'delta' => $delta,

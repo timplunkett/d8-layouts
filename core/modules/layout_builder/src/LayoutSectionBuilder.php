@@ -81,13 +81,15 @@ class LayoutSectionBuilder {
    *
    * @param string $layout_id
    *   The ID of the layout.
+   * @param array $layout_settings
+   *   The configuration for the layout.
    * @param array $section
    *   An array of configuration, keyed first by region and then by block UUID.
    *
    * @return array
    *   The render array for a given section.
    */
-  public function buildSection($layout_id, array $section) {
+  public function buildSection($layout_id, array $layout_settings, array $section) {
     $cacheability = CacheableMetadata::createFromRenderArray([]);
 
     $regions = [];
@@ -115,7 +117,7 @@ class LayoutSectionBuilder {
       }
     }
 
-    $layout = $this->layoutPluginManager->createInstance($layout_id);
+    $layout = $this->layoutPluginManager->createInstance($layout_id, $layout_settings);
     $section = $layout->build($regions);
     $cacheability->applyTo($section);
     return $section;

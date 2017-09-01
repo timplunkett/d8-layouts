@@ -8,6 +8,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutSectionBuilder;
@@ -119,7 +120,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
     $count++;
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $item */
     foreach ($layout_section_entity->layout_builder__layout as $item) {
-      $output[] = $this->buildAdministrativeSection($item->layout, $item->section ?: [], $entity_type_id, $entity_id, $count - 1);
+      $output[] = $this->buildAdministrativeSection($item->layout, $item->layout_settings ?: [], $item->section ?: [], $entity_type_id, $entity_id, $count - 1);
       $output[] = $this->buildAddSectionLink($entity_type_id, $entity_id, $count);
       $count++;
     }
@@ -174,6 +175,8 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *
    * @param string $layout_id
    *   The ID of the layout.
+   * @param array $layout_settings
+   *   The configuration for the layout.
    * @param array $section
    *   An array of configuration, keyed first by region and then by block UUID.
    * @param string $entity_type_id
@@ -186,10 +189,10 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    * @return array
    *   The render array for a given section.
    */
-  protected function buildAdministrativeSection($layout_id, array $section, $entity_type_id, $entity_id, $delta) {
-    $build = $this->builder->buildSection($layout_id, $section);
-    $layout = $this->layoutManager->getDefinition($layout_id);
-    foreach ($layout->getRegions() as $region => $info) {
+  protected function buildAdministrativeSection($layout_id, array $layout_settings, array $section, $entity_type_id, $entity_id, $delta) {
+    $build = $this->builder->buildSection($layout_id, $layout_settings, $section);
+    $layout_definition = $this->layoutManager->getDefinition($layout_id);
+    foreach ($layout_definition->getRegions() as $region => $info) {
       $link = Link::createFromRoute($this->t('Add Block'),
         'layout_builder.choose_block',
         [
@@ -237,10 +240,26 @@ class LayoutBuilderController implements ContainerInjectionInterface {
     ])->toString();
     $build['#attributes']['data-layout-delta'] = $delta;
 
+    $layout = $this->layoutManager->createInstance($layout_id, $layout_settings);
     return [
       '#type' => 'container',
       '#attributes' => [
         'class' => ['layout-section'],
+      ],
+      'configure' => [
+        '#type' => 'link',
+        '#title' => $this->t('Configure section'),
+        '#access' => $layout instanceof PluginFormInterface,
+        '#url' => Url::fromRoute('layout_builder.configure_section', [
+          'entity_type_id' => $entity_type_id,
+          'entity_id' => $entity_id,
+          'delta' => $delta,
+        ]),
+        '#attributes' => [
+          'class' => ['use-ajax', 'configure-section'],
+          'data-dialog-type' => 'dialog',
+          'data-dialog-renderer' => 'off_canvas',
+        ],
       ],
       'remove' => [
         '#type' => 'link',
