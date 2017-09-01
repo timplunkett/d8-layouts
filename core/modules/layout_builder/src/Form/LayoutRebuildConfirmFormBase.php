@@ -69,10 +69,7 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    $parameters = [
-      $this->entityTypeId => $this->entityId,
-    ];
-    return new Url("entity.{$this->entityTypeId}.layout", $parameters);
+    return Url::fromRoute("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
   }
 
   /**
@@ -109,7 +106,7 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
 
     $this->layoutTempstoreRepository->set($entity);
 
-    $form_state->setRedirect("entity.{$entity->getEntityTypeId()}.layout", [$entity->getEntityTypeId() => $entity->id()]);
+    $form_state->setRedirectUrl($this->getCancelUrl());
   }
 
   /**
