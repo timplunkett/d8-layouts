@@ -5,13 +5,13 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutSectionBuilder;
+use Drupal\layout_builder\LayoutSectionItemInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -107,22 +107,18 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    */
   public function layout(EntityInterface $entity) {
     $entity_id = $entity->id();
-    if ($entity instanceof RevisionableInterface) {
-      $entity_id = $entity->getRevisionId();
-    }
 
     $entity_type_id = $entity->getEntityTypeId();
 
     $output = [];
     $count = 0;
-    $output[] = $this->buildAddSectionLink($entity_type_id, $entity_id, $count);
-    $count++;
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $item */
     foreach ($entity->layout_builder__layout as $item) {
-      $output[] = $this->buildAdministrativeSection($item->layout, $item->layout_settings ?: [], $item->section ?: [], $entity_type_id, $entity_id, $count - 1);
       $output[] = $this->buildAddSectionLink($entity_type_id, $entity_id, $count);
+      $output[] = $this->buildAdministrativeSection($item, $entity, $count);
       $count++;
     }
+    $output[] = $this->buildAddSectionLink($entity_type_id, $entity_id, $count);
     $output['#attached']['library'][] = 'layout_builder/drupal.layout_builder';
     $output['#type'] = 'container';
     $output['#attributes']['id'] = 'layout-builder';
@@ -172,24 +168,25 @@ class LayoutBuilderController implements ContainerInjectionInterface {
   /**
    * Builds the render array for the layout section while editing.
    *
-   * @param string $layout_id
-   *   The ID of the layout.
-   * @param array $layout_settings
-   *   The configuration for the layout.
-   * @param array $section
-   *   An array of configuration, keyed first by region and then by block UUID.
-   * @param string $entity_type_id
-   *   The entity type.
-   * @param string $entity_id
-   *   The entity ID.
+   * @param \Drupal\layout_builder\LayoutSectionItemInterface $item
+   *   The layout section item.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param int $delta
-   *   The delta of the section to splice.
+   *   The delta of the section.
    *
    * @return array
    *   The render array for a given section.
    */
-  protected function buildAdministrativeSection($layout_id, array $layout_settings, array $section, $entity_type_id, $entity_id, $delta) {
+  protected function buildAdministrativeSection(LayoutSectionItemInterface $item, EntityInterface $entity, $delta) {
+    $layout_id = $item->layout;
+    $layout_settings = $item->layout_settings ?: [];
+    $section = $item->section ?: [];
+    $entity_type_id = $entity->getEntityTypeId();
+    $entity_id = $entity->id();
+
     $build = $this->builder->buildSection($layout_id, $layout_settings, $section);
+
     $layout_definition = $this->layoutManager->getDefinition($layout_id);
     foreach ($layout_definition->getRegions() as $region => $info) {
       $link = Link::createFromRoute($this->t('Add Block'),
