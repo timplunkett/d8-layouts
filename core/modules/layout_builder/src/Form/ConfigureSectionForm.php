@@ -3,6 +3,7 @@
 namespace Drupal\layout_builder\Form;
 
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
@@ -10,7 +11,6 @@ use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
  * Provides a form for configuring a layout section.
@@ -34,13 +34,6 @@ class ConfigureSectionForm extends FormBase {
   protected $layout;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The class resolver.
    *
    * @var \Drupal\Core\DependencyInjection\ClassResolverInterface
@@ -55,18 +48,11 @@ class ConfigureSectionForm extends FormBase {
   protected $layoutManager;
 
   /**
-   * The entity type ID.
+   * The entity.
    *
-   * @var string
+   * @var \Drupal\Core\Entity\EntityInterface
    */
-  protected $entityTypeId;
-
-  /**
-   * The entity ID.
-   *
-   * @var int
-   */
-  protected $entityId;
+  protected $entity;
 
   /**
    * The field delta.
@@ -89,15 +75,12 @@ class ConfigureSectionForm extends FormBase {
    *   The layout tempstore repository.
    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager
    *   The layout manager.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\Core\DependencyInjection\ClassResolverInterface $class_resolver
    *   The class resolver.
    */
-  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, LayoutPluginManagerInterface $layout_manager, EntityTypeManagerInterface $entity_type_manager, ClassResolverInterface $class_resolver) {
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, LayoutPluginManagerInterface $layout_manager, ClassResolverInterface $class_resolver) {
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
     $this->layoutManager = $layout_manager;
-    $this->entityTypeManager = $entity_type_manager;
     $this->classResolver = $class_resolver;
   }
 
@@ -108,7 +91,6 @@ class ConfigureSectionForm extends FormBase {
     return new static(
       $container->get('layout_builder.tempstore_repository'),
       $container->get('plugin.manager.core.layout'),
-      $container->get('entity_type.manager'),
       $container->get('class_resolver')
     );
   }
@@ -123,19 +105,15 @@ class ConfigureSectionForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $plugin_id = NULL) {
-    $this->entityTypeId = $entity_type_id;
-    $this->entityId = $entity_id;
+  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, $delta = NULL, $plugin_id = NULL) {
+    $this->entity = $entity;
     $this->delta = $delta;
-
     $this->isUpdate = is_null($plugin_id);
 
     $configuration = [];
     if ($this->isUpdate) {
-      $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
-
       /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-      $field = $entity->layout_builder__layout->get($this->delta);
+      $field = $this->entity->layout_builder__layout->get($this->delta);
       $plugin_id = $field->layout;
       $configuration = $field->layout_settings;
     }
@@ -179,10 +157,8 @@ class ConfigureSectionForm extends FormBase {
     $plugin_id = $this->layout->getPluginId();
     $configuration = $this->layout->getConfiguration();
 
-    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
-
     /** @var \Drupal\layout_builder\Field\LayoutSectionItemListInterface $field_list */
-    $field_list = $entity->layout_builder__layout;
+    $field_list = $this->entity->layout_builder__layout;
     if ($this->isUpdate) {
       $field = $field_list->get($this->delta);
       $field->layout = $plugin_id;
@@ -196,8 +172,8 @@ class ConfigureSectionForm extends FormBase {
       ]);
     }
 
-    $this->layoutTempstoreRepository->set($entity);
-    $form_state->setRedirect("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
+    $this->layoutTempstoreRepository->set($this->entity);
+    $form_state->setRedirect("entity.{$this->entity->getEntityTypeId()}.layout", [$this->entity->getEntityTypeId() => $this->entity->id()]);
   }
 
 }

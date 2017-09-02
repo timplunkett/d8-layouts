@@ -5,6 +5,7 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -72,17 +73,15 @@ class LayoutController implements ContainerInjectionInterface {
   /**
    * Choose a layout plugin to add as a section.
    *
-   * @param string $entity_type_id
-   *   The entity type ID.
-   * @param string $entity_id
-   *   The entity ID.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param int $delta
    *   The delta of the section to splice.
    *
    * @return array
    *   The render array.
    */
-  public function chooseSection($entity_type_id, $entity_id, $delta) {
+  public function chooseSection(EntityInterface $entity, $delta) {
     $output = [];
     $items = [];
     foreach ($this->layoutManager->getDefinitions() as $plugin_id => $definition) {
@@ -105,7 +104,7 @@ class LayoutController implements ContainerInjectionInterface {
               '#children' => $definition->getLabel(),
             ],
           ],
-          '#url' => $this->generateSectionUrl($entity_type_id, $entity_id, $delta, $plugin_id),
+          '#url' => $this->generateSectionUrl($entity, $delta, $plugin_id),
           '#attributes' => [
             'class' => ['use-ajax'],
             'data-dialog-type' => 'dialog',
@@ -140,10 +139,8 @@ class LayoutController implements ContainerInjectionInterface {
   /**
    * Add the layout to the entity field in a tempstore.
    *
-   * @param string $entity_type_id
-   *   The entity type ID.
-   * @param string $entity_id
-   *   The entity ID.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $plugin_id
@@ -152,8 +149,7 @@ class LayoutController implements ContainerInjectionInterface {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The render array.
    */
-  public function addSection($entity_type_id, $entity_id, $delta, $plugin_id) {
-    $entity = $this->layoutTempstoreRepository->getFromId($entity_type_id, $entity_id);
+  public function addSection(EntityInterface $entity, $delta, $plugin_id) {
 
     /** @var \Drupal\layout_builder\Field\LayoutSectionItemListInterface $field_list */
     $field_list = $entity->layout_builder__layout;
@@ -170,10 +166,8 @@ class LayoutController implements ContainerInjectionInterface {
   /**
    * Provides the UI for choosing a new block.
    *
-   * @param string $entity_type_id
-   *   The entity type ID.
-   * @param string $entity_id
-   *   The entity ID.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $region
@@ -182,7 +176,7 @@ class LayoutController implements ContainerInjectionInterface {
    * @return array
    *   A render array.
    */
-  public function chooseBlock($entity_type_id, $entity_id, $delta, $region) {
+  public function chooseBlock(EntityInterface $entity, $delta, $region) {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
@@ -199,8 +193,8 @@ class LayoutController implements ContainerInjectionInterface {
           '#title' => $block['admin_label'],
           '#url' => Url::fromRoute('layout_builder.add_block',
             [
-              'entity_type_id' => $entity_type_id,
-              'entity_id' => $entity_id,
+              'entity_type_id' => $entity->getEntityTypeId(),
+              'entity' => $entity->id(),
               'delta' => $delta,
               'region' => $region,
               'plugin_id' => $block_id,
@@ -220,18 +214,15 @@ class LayoutController implements ContainerInjectionInterface {
   /**
    * Moves a block to another region.
    *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request.
-   * @param string $entity_type_id
-   *   The entity type ID.
-   * @param string $entity_id
-   *   The entity ID.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   An AJAX response.
    */
-  public function moveBlock(Request $request, $entity_type_id, $entity_id) {
-    $entity = $this->layoutTempstoreRepository->getFromId($entity_type_id, $entity_id);
+  public function moveBlock(EntityInterface $entity, Request $request) {
     $data = $request->request->all();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
@@ -269,10 +260,8 @@ class LayoutController implements ContainerInjectionInterface {
   /**
    * A helper function for building Url object to add a section.
    *
-   * @param string $entity_type_id
-   *   The entity type.
-   * @param string $entity_id
-   *   The entity ID.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    * @param int $delta
    *   The delta of the section to splice.
    * @param string $plugin_id
@@ -281,12 +270,12 @@ class LayoutController implements ContainerInjectionInterface {
    * @return \Drupal\Core\Url
    *   The Url object of the add_section route.
    */
-  protected function generateSectionUrl($entity_type_id, $entity_id, $delta, $plugin_id) {
+  protected function generateSectionUrl(EntityInterface $entity, $delta, $plugin_id) {
     $layout = $this->layoutManager->createInstance($plugin_id);
     $route_name = $layout instanceof PluginFormInterface ? 'layout_builder.configure_section' : 'layout_builder.add_section';
     return new Url($route_name, [
-      'entity_type_id' => $entity_type_id,
-      'entity_id' => $entity_id,
+      'entity_type_id' => $entity->getEntityTypeId(),
+      'entity' => $entity->id(),
       'delta' => $delta,
       'plugin_id' => $plugin_id,
     ]);

@@ -20,3 +20,8 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: route_enhancer }
+  layout_builder.param_converter:
+    class: Drupal\layout_builder\Routing\LayoutTempstoreParamConverter
+    arguments: ['@entity.manager', '@layout_builder.tempstore_repository']
+    tags:
+      - { name: paramconverter, priority: 10 }

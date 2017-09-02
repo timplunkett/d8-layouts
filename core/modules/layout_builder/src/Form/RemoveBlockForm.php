@@ -48,10 +48,10 @@ class RemoveBlockForm extends LayoutRebuildConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, $delta = NULL, $region = NULL, $uuid = NULL) {
     $this->region = $region;
     $this->uuid = $uuid;
-    return parent::buildForm($form, $form_state, $entity_type_id, $entity_id, $delta);
+    return parent::buildForm($form, $form_state, $entity, $delta);
   }
 
   /**

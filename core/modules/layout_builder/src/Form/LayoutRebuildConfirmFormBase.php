@@ -26,18 +26,11 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
   protected $layoutTempstoreRepository;
 
   /**
-   * The entity type ID.
+   * The entity.
    *
-   * @var string
+   * @var \Drupal\Core\Entity\EntityInterface
    */
-  protected $entityTypeId;
-
-  /**
-   * The entity ID.
-   *
-   * @var int
-   */
-  protected $entityId;
+  protected $entity;
 
   /**
    * The field delta.
@@ -69,18 +62,17 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return Url::fromRoute("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
+    return Url::fromRoute("entity.{$this->entity->getEntityTypeId()}.layout", [$this->entity->getEntityTypeId() => $this->entity->id()]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL) {
-    $form = parent::buildForm($form, $form_state);
-
-    $this->entityTypeId = $entity_type_id;
-    $this->entityId = $entity_id;
+  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, $delta = NULL) {
+    $this->entity = $entity;
     $this->delta = $delta;
+
+    $form = parent::buildForm($form, $form_state);
 
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
     $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
@@ -100,11 +92,9 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
+    $this->handleEntity($this->entity, $form_state);
 
-    $this->handleEntity($entity, $form_state);
-
-    $this->layoutTempstoreRepository->set($entity);
+    $this->layoutTempstoreRepository->set($this->entity);
 
     $form_state->setRedirectUrl($this->getCancelUrl());
   }

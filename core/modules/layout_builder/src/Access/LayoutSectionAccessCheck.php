@@ -43,7 +43,7 @@ class LayoutSectionAccessCheck implements AccessInterface {
    *   The access result.
    */
   public function access(RouteMatchInterface $route_match, AccountInterface $account) {
-    $entity = $route_match->getParameter('layout_section_entity');
+    $entity = $route_match->getParameter('entity');
     // If we don't have an entity, forbid access.
     if (empty($entity)) {
       return AccessResult::forbidden()->addCacheContexts(['route']);

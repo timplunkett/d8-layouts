@@ -4,7 +4,7 @@ namespace Drupal\layout_builder\Controller;
 
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Link;
@@ -86,40 +86,39 @@ class LayoutBuilderController implements ContainerInjectionInterface {
   /**
    * Provides a title callback.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity.
    *
    * @return string
    *   The title for the layout page.
    */
-  public function title(FieldableEntityInterface $layout_section_entity) {
-    return $this->t('Edit layout for %label', ['%label' => $layout_section_entity->label()]);
+  public function title(EntityInterface $entity) {
+    return $this->t('Edit layout for %label', ['%label' => $entity->label()]);
   }
 
   /**
    * Renders the Layout UI.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity.
    *
    * @return array
    *   A render array.
    */
-  public function layout(FieldableEntityInterface $layout_section_entity) {
-    $layout_section_entity = $this->layoutTempstoreRepository->get($layout_section_entity);
-    $entity_id = $layout_section_entity->id();
-    if ($layout_section_entity instanceof RevisionableInterface) {
-      $entity_id = $layout_section_entity->getRevisionId();
+  public function layout(EntityInterface $entity) {
+    $entity_id = $entity->id();
+    if ($entity instanceof RevisionableInterface) {
+      $entity_id = $entity->getRevisionId();
     }
 
-    $entity_type_id = $layout_section_entity->getEntityTypeId();
+    $entity_type_id = $entity->getEntityTypeId();
 
     $output = [];
     $count = 0;
     $output[] = $this->buildAddSectionLink($entity_type_id, $entity_id, $count);
     $count++;
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $item */
-    foreach ($layout_section_entity->layout_builder__layout as $item) {
+    foreach ($entity->layout_builder__layout as $item) {
       $output[] = $this->buildAdministrativeSection($item->layout, $item->layout_settings ?: [], $item->section ?: [], $entity_type_id, $entity_id, $count - 1);
       $output[] = $this->buildAddSectionLink($entity_type_id, $entity_id, $count);
       $count++;
@@ -150,7 +149,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
       'layout_builder.choose_section',
       [
         'entity_type_id' => $entity_type_id,
-        'entity_id' => $entity_id,
+        'entity' => $entity_id,
         'delta' => $delta,
       ],
       [
@@ -197,7 +196,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
         'layout_builder.choose_block',
         [
           'entity_type_id' => $entity_type_id,
-          'entity_id' => $entity_id,
+          'entity' => $entity_id,
           'delta' => $delta,
           'region' => $region,
         ],
@@ -224,7 +223,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
             'layout_builder_block' => [
               'route_parameters' => [
                 'entity_type_id' => $entity_type_id,
-                'entity_id' => $entity_id,
+                'entity' => $entity_id,
                 'delta' => $delta,
                 'region' => $region,
                 'uuid' => $uuid,
@@ -237,7 +236,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
 
     $build['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
       'entity_type_id' => $entity_type_id,
-      'entity_id' => $entity_id,
+      'entity' => $entity_id,
     ])->toString();
     $build['#attributes']['data-layout-delta'] = $delta;
     $build['#attributes']['class'][] = 'layout-builder--layout';
@@ -254,7 +253,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
         '#access' => $layout instanceof PluginFormInterface,
         '#url' => Url::fromRoute('layout_builder.configure_section', [
           'entity_type_id' => $entity_type_id,
-          'entity_id' => $entity_id,
+          'entity' => $entity_id,
           'delta' => $delta,
         ]),
         '#attributes' => [
@@ -268,7 +267,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
         '#title' => $this->t('Remove section'),
         '#url' => Url::fromRoute('layout_builder.remove_section', [
           'entity_type_id' => $entity_type_id,
-          'entity_id' => $entity_id,
+          'entity' => $entity_id,
           'delta' => $delta,
         ]),
         '#attributes' => [
@@ -284,37 +283,35 @@ class LayoutBuilderController implements ContainerInjectionInterface {
   /**
    * Saves the layout.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
    *   A redirect response.
    */
-  public function saveLayout(FieldableEntityInterface $layout_section_entity) {
-    $layout_section_entity = $this->layoutTempstoreRepository->get($layout_section_entity);
-
+  public function saveLayout(EntityInterface $entity) {
     // @todo figure out if we should save a new revision.
-    $layout_section_entity->save();
+    $entity->save();
 
-    $this->layoutTempstoreRepository->delete($layout_section_entity);
+    $this->layoutTempstoreRepository->delete($entity);
 
     // @todo Make trusted redirect instead.
-    return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
+    return new RedirectResponse($entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }
 
   /**
    * Cancels the layout.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $layout_section_entity
+   * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
    *   A redirect response.
    */
-  public function cancelLayout(FieldableEntityInterface $layout_section_entity) {
-    $this->layoutTempstoreRepository->delete($layout_section_entity);
+  public function cancelLayout(EntityInterface $entity) {
+    $this->layoutTempstoreRepository->delete($entity);
     // @todo Make trusted redirect instead.
-    return new RedirectResponse($layout_section_entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
+    return new RedirectResponse($entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
   }
 
 }

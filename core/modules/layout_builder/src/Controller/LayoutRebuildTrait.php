@@ -38,23 +38,9 @@ trait LayoutRebuildTrait {
       $response->addCommand(new ReplaceCommand('[data-drupal-selector="' . $form['#attributes']['data-drupal-selector'] . '"]', $form));
     }
     else {
-      $entity = $this->getLayoutTempstoreRepository()->getFromId($this->entityTypeId, $this->entityId);
-      $response = $this->rebuildAndClose(new AjaxResponse(), $entity);
+      $response = $this->rebuildAndClose(new AjaxResponse(), $this->entity);
     }
     return $response;
-  }
-
-  /**
-   * Gets the layout tempstore repository.
-   *
-   * @return \Drupal\layout_builder\LayoutTempstoreRepositoryInterface
-   *   The layout tempstore repository.
-   */
-  protected function getLayoutTempstoreRepository() {
-    if (!$this->layoutTempstoreRepository) {
-      $this->layoutTempstoreRepository = \Drupal::service('layout_builder.tempstore_repository');
-    }
-    return $this->layoutTempstoreRepository;
   }
 
   /**

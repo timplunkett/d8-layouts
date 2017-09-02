@@ -1,23 +1,31 @@
 layout_builder.choose_section:
-  path: '/layout_builder/choose/section/{entity_type_id}/{entity_id}/{delta}'
+  path: '/layout_builder/choose/section/{entity_type_id}/{entity}/{delta}'
   defaults:
    _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseSection'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.add_section:
-  path: '/layout_builder/add/section/{entity_type_id}/{entity_id}/{delta}/{plugin_id}'
+  path: '/layout_builder/add/section/{entity_type_id}/{entity}/{delta}/{plugin_id}'
   defaults:
     _controller: '\Drupal\layout_builder\Controller\LayoutController::addSection'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.configure_section:
-  path: '/layout_builder/configure/section/{entity_type_id}/{entity_id}/{delta}/{plugin_id}'
+  path: '/layout_builder/configure/section/{entity_type_id}/{entity}/{delta}/{plugin_id}'
   defaults:
     _title: 'Configure section'
     _form: '\Drupal\layout_builder\Form\ConfigureSectionForm'
@@ -26,54 +34,78 @@ layout_builder.configure_section:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.remove_section:
-  path: '/layout_builder/remove/section/{entity_type_id}/{entity_id}/{delta}'
+  path: '/layout_builder/remove/section/{entity_type_id}/{entity}/{delta}'
   defaults:
     _form: '\Drupal\layout_builder\Form\RemoveSectionForm'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.choose_block:
-  path: '/layout_builder/choose/block/{entity_type_id}/{entity_id}/{delta}/{region}'
+  path: '/layout_builder/choose/block/{entity_type_id}/{entity}/{delta}/{region}'
   defaults:
     _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseBlock'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.add_block:
-  path: '/layout_builder/add/block/{entity_type_id}/{entity_id}/{delta}/{region}/{plugin_id}'
+  path: '/layout_builder/add/block/{entity_type_id}/{entity}/{delta}/{region}/{plugin_id}'
   defaults:
     _form: '\Drupal\layout_builder\Form\ConfigureBlockForm'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.configure_block:
-  path: '/layout_builder/configure/block/{entity_type_id}/{entity_id}/{delta}/{region}/{uuid}'
+  path: '/layout_builder/configure/block/{entity_type_id}/{entity}/{delta}/{region}/{uuid}'
   defaults:
     _form: '\Drupal\layout_builder\Form\ConfigureBlockForm'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.remove_block:
-  path: '/layout_builder/remove/block/{entity_type_id}/{entity_id}/{delta}/{region}/{uuid}'
+  path: '/layout_builder/remove/block/{entity_type_id}/{entity}/{delta}/{region}/{uuid}'
   defaults:
     _form: '\Drupal\layout_builder\Form\RemoveBlockForm'
   requirements:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 layout_builder.move_block:
-  path: '/layout_builder/move/block/{entity_type_id}/{entity_id}'
+  path: '/layout_builder/move/block/{entity_type_id}/{entity}'
   defaults:
     _controller: '\Drupal\layout_builder\Controller\LayoutController::moveBlock'
   methods: [POST]
@@ -81,6 +113,10 @@ layout_builder.move_block:
     _permission: 'configure any layout'
   options:
     _admin_route: TRUE
+    parameters:
+      entity:
+        type: entity:{entity_type_id}
+        layout_builder_tempstore: TRUE
 
 route_callbacks:
   - 'layout_builder.routes:getRoutes'

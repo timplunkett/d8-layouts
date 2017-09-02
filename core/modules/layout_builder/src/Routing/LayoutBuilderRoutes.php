@@ -46,7 +46,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderController::layout',
           '_title_callback' => '\Drupal\layout_builder\Controller\LayoutBuilderController::title',
-          'layout_section_entity' => NULL,
+          'entity' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
         ->addRequirements([
@@ -57,7 +57,8 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
           '_layout_builder' => TRUE,
           'parameters' => [
             $entity_type_id => [
-              'type' => "entity:$entity_type_id",
+              'type' => 'entity:{entity_type_id}',
+              'layout_builder_tempstore' => TRUE,
             ],
           ],
         ]);
@@ -66,7 +67,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
       $route = (new Route("$template/layout/save"))
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderController::saveLayout',
-          'layout_section_entity' => NULL,
+          'entity' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
         ->addRequirements([
@@ -77,7 +78,8 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
           '_layout_builder' => TRUE,
           'parameters' => [
             $entity_type_id => [
-              'type' => "entity:$entity_type_id",
+              'type' => 'entity:{entity_type_id}',
+              'layout_builder_tempstore' => TRUE,
             ],
           ],
         ]);
@@ -86,7 +88,7 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
       $route = (new Route("$template/layout/cancel"))
         ->setDefaults([
           '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderController::cancelLayout',
-          'layout_section_entity' => NULL,
+          'entity' => NULL,
           'entity_type_id' => $entity_type_id,
         ])
         ->addRequirements([
@@ -97,7 +99,8 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
           '_layout_builder' => TRUE,
           'parameters' => [
             $entity_type_id => [
-              'type' => "entity:$entity_type_id",
+              'type' => 'entity:{entity_type_id}',
+              'layout_builder_tempstore' => TRUE,
             ],
           ],
         ]);
@@ -116,9 +119,13 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
         // Mark this as a Layout Builder route so that links like local tasks
         // will be enhanced.
         if ($route = $collection->get('entity.' . $entity_type->id() . '.' . $template)) {
+          $parameters = $route->getOption('parameters');
+          $parameters[$entity_type->id()]['type'] = 'entity:{entity_type_id}';
+          $parameters[$entity_type->id()]['layout_builder_tempstore'] = TRUE;
+          $route->setOption('parameters', $parameters);
           $route->setOption('_layout_builder', TRUE);
           $route->addDefaults([
-            'layout_section_entity' => NULL,
+            'entity' => NULL,
             'entity_type_id' => $entity_type->id(),
           ]);
         }

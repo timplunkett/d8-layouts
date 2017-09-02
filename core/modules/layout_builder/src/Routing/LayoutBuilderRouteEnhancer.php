@@ -15,6 +15,7 @@ class LayoutBuilderRouteEnhancer implements RouteEnhancerInterface {
    * {@inheritdoc}
    */
   public function applies(Route $route) {
+    // Find layout builder routes that override existing paths.
     return $route->hasOption('_layout_builder');
   }
 
@@ -23,7 +24,7 @@ class LayoutBuilderRouteEnhancer implements RouteEnhancerInterface {
    */
   public function enhance(array $defaults, Request $request) {
     // Copy the entity by reference so that any changes are reflected.
-    $defaults['layout_section_entity'] = &$defaults[$defaults['entity_type_id']];
+    $defaults['entity'] = &$defaults[$defaults['entity_type_id']];
     return $defaults;
   }
 

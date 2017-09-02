@@ -6,7 +6,7 @@ use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
@@ -49,13 +49,6 @@ class ConfigureBlockForm extends FormBase {
   protected $layoutTempstoreRepository;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The block manager.
    *
    * @var \Drupal\Core\Block\BlockManagerInterface
@@ -84,20 +77,6 @@ class ConfigureBlockForm extends FormBase {
   protected $pluginFormFactory;
 
   /**
-   * The entity type ID.
-   *
-   * @var string
-   */
-  protected $entityTypeId;
-
-  /**
-   * The entity ID.
-   *
-   * @var int
-   */
-  protected $entityId;
-
-  /**
    * The field delta.
    *
    * @var int
@@ -112,14 +91,19 @@ class ConfigureBlockForm extends FormBase {
   protected $region;
 
   /**
+   * The entity.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface
+   */
+  protected $entity;
+
+  /**
    * Constructs a new ConfigureBlockForm.
    *
    * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
    *   The layout tempstore repository.
    * @param \Drupal\Core\Plugin\Context\ContextRepositoryInterface $context_repository
    *   The context repository.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
    * @param \Drupal\Component\Uuid\UuidInterface $uuid
@@ -129,10 +113,9 @@ class ConfigureBlockForm extends FormBase {
    * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_manager
    *   The plugin form manager.
    */
-  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, ContextRepositoryInterface $context_repository, EntityTypeManagerInterface $entity_type_manager, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver, PluginFormFactoryInterface $plugin_form_manager) {
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, ContextRepositoryInterface $context_repository, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver, PluginFormFactoryInterface $plugin_form_manager) {
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
     $this->contextRepository = $context_repository;
-    $this->entityTypeManager = $entity_type_manager;
     $this->blockManager = $block_manager;
     $this->uuid = $uuid;
     $this->classResolver = $class_resolver;
@@ -146,7 +129,6 @@ class ConfigureBlockForm extends FormBase {
     return new static(
       $container->get('layout_builder.tempstore_repository'),
       $container->get('context.repository'),
-      $container->get('entity_type.manager'),
       $container->get('plugin.manager.block'),
       $container->get('uuid'),
       $container->get('class_resolver'),
@@ -183,18 +165,15 @@ class ConfigureBlockForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $entity_type_id = NULL, $entity_id = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL, $uuid = NULL) {
-    $this->entityTypeId = $entity_type_id;
-    $this->entityId = $entity_id;
+  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, $delta = NULL, $region = NULL, $plugin_id = NULL, $uuid = NULL) {
+    $this->entity = $entity;
     $this->delta = $delta;
     $this->region = $region;
 
     $configuration = [];
     if ($uuid) {
-      $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
-
       /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-      $field = $entity->layout_builder__layout->get($this->delta);
+      $field = $this->entity->layout_builder__layout->get($this->delta);
       $plugin_id = $field->section[$region][$uuid]['block']['id'];
       $configuration = $field->section[$region][$uuid]['block'];
     }
@@ -249,14 +228,13 @@ class ConfigureBlockForm extends FormBase {
     $configuration = $this->block->getConfiguration();
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
-    $entity = $this->layoutTempstoreRepository->getFromId($this->entityTypeId, $this->entityId);
-    $field = $entity->layout_builder__layout->get($this->delta);
+    $field = $this->entity->layout_builder__layout->get($this->delta);
     $section = $field->section;
     $section[$this->region][$configuration['uuid']]['block'] = $configuration;
     $field->section = $section;
 
-    $this->layoutTempstoreRepository->set($entity);
-    $form_state->setRedirect("entity.{$this->entityTypeId}.layout", [$this->entityTypeId => $this->entityId]);
+    $this->layoutTempstoreRepository->set($this->entity);
+    $form_state->setRedirect("entity.{$this->entity->getEntityTypeId()}.layout", [$this->entity->getEntityTypeId() => $this->entity->id()]);
   }
 
   /**
