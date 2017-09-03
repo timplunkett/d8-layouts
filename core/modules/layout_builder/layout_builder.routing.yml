@@ -1,7 +1,7 @@
 layout_builder.choose_section:
   path: '/layout_builder/choose/section/{entity_type_id}/{entity}/{delta}'
   defaults:
-   _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseSection'
+   _controller: '\Drupal\layout_builder\Controller\ChooseSectionController::build'
   requirements:
     _permission: 'configure any layout'
   options:
@@ -14,7 +14,7 @@ layout_builder.choose_section:
 layout_builder.add_section:
   path: '/layout_builder/add/section/{entity_type_id}/{entity}/{delta}/{plugin_id}'
   defaults:
-    _controller: '\Drupal\layout_builder\Controller\LayoutController::addSection'
+    _controller: '\Drupal\layout_builder\Controller\AddSectionController::build'
   requirements:
     _permission: 'configure any layout'
   options:
@@ -55,7 +55,7 @@ layout_builder.remove_section:
 layout_builder.choose_block:
   path: '/layout_builder/choose/block/{entity_type_id}/{entity}/{delta}/{region}'
   defaults:
-    _controller: '\Drupal\layout_builder\Controller\LayoutController::chooseBlock'
+    _controller: '\Drupal\layout_builder\Controller\ChooseBlockController::build'
   requirements:
     _permission: 'configure any layout'
   options:
@@ -107,7 +107,7 @@ layout_builder.remove_block:
 layout_builder.move_block:
   path: '/layout_builder/move/block/{entity_type_id}/{entity}'
   defaults:
-    _controller: '\Drupal\layout_builder\Controller\LayoutController::moveBlock'
+    _controller: '\Drupal\layout_builder\Controller\MoveBlockController::build'
   methods: [POST]
   requirements:
     _permission: 'configure any layout'
