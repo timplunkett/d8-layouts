@@ -372,6 +372,52 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
   }
 
   /**
+   * Builds a render array for an icon representing the layout.
+   *
+   * @param int $width
+   *   (optional) The width of the icon. Defaults to 250.
+   * @param int $height
+   *   (optional) The height of the icon. Defaults to 300.
+   * @param int $stroke_width
+   *   (optional) If a generated SVG is used, the width of region borders.
+   *   Defaults to 2.
+   * @param int $padding
+   *   (optional) If a generated SVG is used, the padding between regions. Any
+   *   value above 0 is valid. Defaults to 5.
+   * @param string $fill
+   *   (optional) If a generated SVG is used, the fill color of regions.
+   *   Defaults to 'lightgray'.
+   * @param string $stroke
+   *   (optional) If a generated SVG is used, the color of region borders.
+   *   Defaults to 'black'.
+   *
+   * @return array
+   *   A render array for the icon.
+   */
+  public function getIcon($width = 250, $height = 300, $stroke_width = 2, $padding = 5, $fill = 'lightgray', $stroke = 'black') {
+    $icon = [];
+    if ($icon_path = $this->getIconPath()) {
+      $icon = [
+        '#theme' => 'image',
+        '#uri' => $icon_path,
+        '#width' => $width,
+        '#height' => $height,
+      ];
+    }
+    elseif ($icon_map = $this->get('icon_map')) {
+      $icon = $this->getIconGenerator()->generateSvgFromIconMap($icon_map, $width, $height, $stroke_width, $padding, $fill, $stroke);
+    }
+    return $icon;
+  }
+
+  /**
+   * @return \Drupal\Core\Layout\IconGenerator
+   */
+  protected function getIconGenerator() {
+    return \Drupal::service('layout.icon_generator');
+  }
+
+  /**
    * Gets the regions for this layout definition.
    *
    * @return array[]
