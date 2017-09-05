@@ -287,13 +287,9 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   A redirect response.
    */
   public function saveLayout(EntityInterface $entity) {
-    // @todo figure out if we should save a new revision.
     $entity->save();
-
     $this->layoutTempstoreRepository->delete($entity);
-
-    // @todo Make trusted redirect instead.
-    return new RedirectResponse($entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
+    return new RedirectResponse($entity->toUrl()->setAbsolute()->toString());
   }
 
   /**
@@ -307,8 +303,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    */
   public function cancelLayout(EntityInterface $entity) {
     $this->layoutTempstoreRepository->delete($entity);
-    // @todo Make trusted redirect instead.
-    return new RedirectResponse($entity->toUrl()->setAbsolute()->toString(), Response::HTTP_SEE_OTHER);
+    return new RedirectResponse($entity->toUrl()->setAbsolute()->toString());
   }
 
 }

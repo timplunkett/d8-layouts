@@ -58,7 +58,13 @@ trait LayoutRebuildTrait {
   protected function rebuildAndClose(AjaxResponse $response, EntityInterface $entity) {
     $response = $this->rebuildLayout($response, $entity);
     $url = Url::fromRoute("entity.{$entity->getEntityTypeId()}.layout", [$entity->getEntityTypeId() => $entity->id()]);
-    return $this->closeLayout($response, $url);
+    if ($this->isDialog()) {
+      $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
+    }
+    else {
+      $response->addCommand(new RedirectCommand($url->setAbsolute()->toString()));
+    }
+    return $response;
   }
 
   /**
@@ -77,28 +83,6 @@ trait LayoutRebuildTrait {
     $layout_controller = $this->getClassResolver()->getInstanceFromDefinition(LayoutBuilderController::class);
     $layout = $layout_controller->layout($entity);
     $response->addCommand(new ReplaceCommand('#layout-builder', $layout));
-    return $response;
-  }
-
-  /**
-   * Returns to the layout builder.
-   *
-   * @param \Drupal\Core\Ajax\AjaxResponse $response
-   *   The AJAX response.
-   * @param \Drupal\Core\Url $url
-   *   The URL to redirect to if not using a dialog.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   An AJAX response to either rebuild the layout and close the dialog, or
-   *   reload the page.
-   */
-  protected function closeLayout(AjaxResponse $response, Url $url) {
-    if ($this->isDialog()) {
-      $response->addCommand(new CloseDialogCommand('#drupal-off-canvas'));
-    }
-    else {
-      $response->addCommand(new RedirectCommand($url->setAbsolute()->toString()));
-    }
     return $response;
   }
 

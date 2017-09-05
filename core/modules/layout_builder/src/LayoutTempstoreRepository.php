@@ -87,7 +87,6 @@ class LayoutTempstoreRepository implements LayoutTempstoreRepositoryInterface {
    *   An array containing the collection name and the tempstore ID.
    */
   protected function generateTempstoreId(EntityInterface $entity) {
-    // @todo Can we make the collection simply the entity type ID?
     $collection = $entity->getEntityTypeId() . '.layout_builder__layout';
     $id = "{$entity->id()}.{$entity->language()->getId()}";
     if ($entity instanceof RevisionableInterface) {

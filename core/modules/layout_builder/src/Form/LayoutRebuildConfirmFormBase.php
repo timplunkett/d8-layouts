@@ -2,7 +2,6 @@
 
 namespace Drupal\layout_builder\Form;
 
-use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -77,14 +76,7 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
     $form['#attached']['library'][] = 'core/drupal.dialog.ajax';
     $form['actions']['submit']['#ajax']['callback'] = '::ajaxSubmit';
 
-    // @todo Improve the cancel link of ConfirmFormBase to handle AJAX links.
-    $form['actions']['cancel'] = [
-      '#type' => 'button',
-      '#value' => $this->getCancelText(),
-      '#ajax' => [
-        'callback' => '::ajaxCancel',
-      ],
-    ];
+    $form['actions']['cancel']['#attributes']['class'][] = 'dialog-cancel';
     return $form;
   }
 
@@ -108,12 +100,5 @@ abstract class LayoutRebuildConfirmFormBase extends ConfirmFormBase {
    *   The current state of the form.
    */
   abstract protected function handleEntity(EntityInterface $entity, FormStateInterface $form_state);
-
-  /**
-   * Ajax callback to close the modal.
-   */
-  public function ajaxCancel(array &$form, FormStateInterface $form_state) {
-    return $this->closeLayout(new AjaxResponse(), $this->getCancelUrl());
-  }
 
 }
