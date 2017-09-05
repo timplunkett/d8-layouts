@@ -21,16 +21,10 @@
             preceding_block_uuid: ui.item.prev('[data-layout-block-uuid]').data('layout-block-uuid'),
           };
 
-          // @todo What does this condition guard against?
-          if (this === ui.item.parent()[0]) {
-            if (ui.sender) {
-              data.region_from = ui.sender.data('region');
-              data.delta_from = ui.sender.closest('[data-layout-delta]').data('layout-delta');
-            }
-            else {
-              data.region_from = data.region_to;
-              data.delta_from = data.delta_to;
-            }
+          // Only process if the item was moved from one region to another.
+          if (ui.sender) {
+            data.region_from = ui.sender.data('region');
+            data.delta_from = ui.sender.closest('[data-layout-delta]').data('layout-delta');
 
             ajax({
               url: ui.item.closest('[data-layout-update-url]').data('layout-update-url'),
