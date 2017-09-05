@@ -59,20 +59,11 @@ class ChooseSectionController implements ContainerInjectionInterface {
     $items = [];
     foreach ($this->layoutManager->getDefinitions() as $plugin_id => $definition) {
       $layout = $this->layoutManager->createInstance($plugin_id);
-      $icon = $definition->getIconPath();
-      if ($icon) {
-        $icon = [
-          '#theme' => 'image',
-          '#uri' => $icon,
-          '#alt' => $definition->getLabel(),
-        ];
-      }
-
       $items[] = [
         'label' => [
           '#type' => 'link',
           '#title' => [
-            $icon ?: [],
+            $definition->getIcon(60, 80, 1, 3),
             [
               '#type' => 'container',
               '#children' => $definition->getLabel(),

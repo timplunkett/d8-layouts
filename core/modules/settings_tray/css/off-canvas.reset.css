@@ -12,7 +12,8 @@
 #drupal-off-canvas *:not(div),
 #drupal-off-canvas *:after,
 #drupal-off-canvas *:before {
-  all: initial;
+  /* @todo This breaks SVGs. */
+  /*all: initial;*/
   box-sizing: border-box;
   text-shadow: none;
   -webkit-font-smoothing: antialiased;
