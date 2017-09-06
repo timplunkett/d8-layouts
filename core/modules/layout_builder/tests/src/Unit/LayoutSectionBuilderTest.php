@@ -15,6 +15,7 @@ use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\layout_builder\LayoutSectionBuilder;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\Argument;
 
 /**
  * @coversDefaultClass \Drupal\layout_builder\LayoutSectionBuilder
@@ -263,6 +264,37 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     ];
     $this->setExpectedException(PluginException::class, 'No plugin ID specified for block with "some_uuid" UUID');
     $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
+  }
+
+  /**
+   * @covers ::buildSection
+   *
+   * @dataProvider providerTestBuildSectionMalformedData
+   */
+  public function testBuildSectionMalformedData($section, $message) {
+    $this->layout->build(Argument::type('array'))->willReturnArgument(0);
+    $this->setExpectedException(\InvalidArgumentException::class, $message);
+    $this->layoutSectionBuilder->buildSection('layout_onecol', [], $section);
+  }
+
+  /**
+   * Provides test data for ::testBuildSectionMalformedData().
+   */
+  public function providerTestBuildSectionMalformedData() {
+    $data = [];
+    $data['invalid_region'] = [
+      ['content' => 'bar'],
+      'The "content" region in the "layout_onecol" layout has invalid configuration',
+    ];
+    $data['invalid_configuration'] = [
+      ['content' => ['some_uuid' => 'bar']],
+      'The block with UUID of "some_uuid" has invalid configuration',
+    ];
+    $data['invalid_blocks'] = [
+      ['content' => ['some_uuid' => []]],
+      'The block with UUID of "some_uuid" has invalid configuration',
+    ];
+    return $data;
   }
 
 }

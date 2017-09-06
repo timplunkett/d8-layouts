@@ -95,8 +95,15 @@ class LayoutSectionBuilder {
     $regions = [];
     $weight = 0;
     foreach ($section as $region => $blocks) {
-      // @todo determine if config should at least always be an empty array.
+      if (!is_array($blocks)) {
+        throw new \InvalidArgumentException(sprintf('The "%s" region in the "%s" layout has invalid configuration', $region, $layout_id));
+      }
+
       foreach ($blocks as $uuid => $configuration) {
+        if (!is_array($configuration) || !isset($configuration['block'])) {
+          throw new \InvalidArgumentException(sprintf('The block with UUID of "%s" has invalid configuration', $uuid));
+        }
+
         $block = $this->getBlock($uuid, $configuration['block']);
 
         $access = $block->access($this->account, TRUE);
@@ -118,9 +125,9 @@ class LayoutSectionBuilder {
     }
 
     $layout = $this->layoutPluginManager->createInstance($layout_id, $layout_settings);
-    $section = $layout->build($regions);
-    $cacheability->applyTo($section);
-    return $section;
+    $result = $layout->build($regions);
+    $cacheability->applyTo($result);
+    return $result;
   }
 
   /**
