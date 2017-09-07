@@ -118,7 +118,7 @@ class LayoutBuilderJsonController implements ContainerInjectionInterface {
     if ($include_layout) {
       $layout_definition = $this->layoutManager->getDefinition($item->layout);
       $reflection = new \ReflectionClass($layout_definition);
-      $result['layout_definition'] = [];
+      $result['layout_definition']['region_names'] = $layout_definition->getRegionNames();
       foreach ($reflection->getProperties() as $property) {
         $property->setAccessible(TRUE);
         $result['layout_definition'][$property->getName()] = $property->getValue($layout_definition);
