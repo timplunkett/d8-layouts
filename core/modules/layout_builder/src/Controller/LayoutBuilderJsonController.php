@@ -2,7 +2,6 @@
 
 namespace Drupal\layout_builder\Controller;
 
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
@@ -10,8 +9,10 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\layout_builder\LayoutSectionBuilder;
+use Drupal\layout_builder\LayoutSectionItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @todo.
@@ -75,45 +76,64 @@ class LayoutBuilderJsonController implements ContainerInjectionInterface {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   The JSON response.
    */
-  public function build(EntityInterface $entity) {
-    /** @var \Drupal\layout_builder\Field\LayoutSectionItemListInterface $field_list */
-    $field_list = $entity->layout_builder__layout;
-    $result = $field_list->getValue();
-    $cacheability = new CacheableMetadata();
+  public function build(EntityInterface $entity, Request $request) {
+    $include_layout = $request->query->get('layout');
+    if ($delta = $request->query->get('delta')) {
+      $build = $this->buildSection($entity->layout_builder__layout->get($delta), $include_layout);
+      if ($region = $request->query->get('region')) {
+        if (!isset($build['section'][$region])) {
+          throw new \InvalidArgumentException($region);
+        }
 
-    foreach ($field_list as $delta => $item) {
-      /** @var \Drupal\layout_builder\LayoutSectionItemInterface $item */
-      $layout_definition = $this->layoutManager->getDefinition($item->layout);
-      $result[$delta]['layout_definition'] = [
-        'label' => $layout_definition->getLabel(),
-        'category' => $layout_definition->getCategory(),
-        'description' => $layout_definition->getDescription(),
-        'path' => $layout_definition->getPath(),
-        'template_path' => $layout_definition->getTemplatePath(),
-        'template' => $layout_definition->getTemplate(),
-        'theme_hook' => $layout_definition->getThemeHook(),
-        'icon_path' => $layout_definition->getIconPath(),
-        'library' => $layout_definition->getLibrary(),
-        'default_region' => $layout_definition->getDefaultRegion(),
-        'regions' => $layout_definition->getRegions(),
-      ];
+        $build['section'] = $build['section'][$region];
 
-      $build = $this->builder->buildSection($item->layout, $item->layout_settings, $item->section);
-      foreach (Element::children($build) as $region) {
-        foreach ($build[$region] as $uuid => $block) {
-          $context = new RenderContext();
-          $html = $this->renderer->executeInRenderContext($context, function () use ($block) {
-            return $this->renderer->render($block);
-          });
-          if (!$context->isEmpty()) {
-            $cacheability->merge($context->pop());
+        if ($block_uuid = $request->query->get('uuid')) {
+          if (!isset($build['section'][$block_uuid])) {
+            throw new \InvalidArgumentException($block_uuid);
           }
-          $result[$delta]['section'][$region][$uuid]['html'] = $html;
+
+          $build['section'] = $build['section'][$block_uuid];
         }
       }
     }
-    $cacheability->applyTo($result);
-    return new JsonResponse($result);
+    else {
+      $build = [];
+      foreach ($entity->layout_builder__layout as $delta => $item) {
+        $build[$delta] = $this->buildSection($item, $include_layout);
+      }
+    }
+    return new JsonResponse($build);
+  }
+
+  /**
+   * @todo.
+   *
+   * @param \Drupal\layout_builder\LayoutSectionItemInterface $item
+   *
+   * @return array[]
+   */
+  protected function buildSection(LayoutSectionItemInterface $item, $include_layout = FALSE) {
+    $result = $item->getValue();
+
+    if ($include_layout) {
+      $layout_definition = $this->layoutManager->getDefinition($item->layout);
+      $reflection = new \ReflectionClass($layout_definition);
+      $result['layout_definition'] = [];
+      foreach ($reflection->getProperties() as $property) {
+        $property->setAccessible(TRUE);
+        $result['layout_definition'][$property->getName()] = $property->getValue($layout_definition);
+      }
+    }
+
+    $build = $this->builder->buildSection($item->layout, $item->layout_settings, $item->section);
+    foreach (Element::children($build) as $region) {
+      foreach ($build[$region] as $uuid => $block) {
+        $result['section'][$region][$uuid]['html'] = $this->renderer->executeInRenderContext(new RenderContext(), function () use ($block) {
+          return $this->renderer->render($block);
+        });
+      }
+    }
+    return $result;
   }
 
 }
