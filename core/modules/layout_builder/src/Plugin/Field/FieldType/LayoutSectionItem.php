@@ -47,6 +47,17 @@ class LayoutSectionItem extends FieldItemBase implements LayoutSectionItemInterf
   /**
    * {@inheritdoc}
    */
+  public function __get($name) {
+    // @todo parent::__get() does not return default values unless
+    //   $this->properties has been initialized.
+    $this->getProperties();
+
+    return parent::__get($name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function mainPropertyName() {
     return 'section';
   }

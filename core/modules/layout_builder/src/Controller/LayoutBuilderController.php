@@ -6,7 +6,6 @@ use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
-use Drupal\Core\Link;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -15,7 +14,6 @@ use Drupal\layout_builder\LayoutSectionItemInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Returns responses for Layout Builder routes.
@@ -107,7 +105,6 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    */
   public function layout(EntityInterface $entity) {
     $entity_id = $entity->id();
-
     $entity_type_id = $entity->getEntityTypeId();
 
     $output = [];
@@ -141,23 +138,25 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   A render array for a link.
    */
   protected function buildAddSectionLink($entity_type_id, $entity_id, $delta) {
-    $link = Link::createFromRoute($this->t('Add Section'),
-      'layout_builder.choose_section',
-      [
-        'entity_type_id' => $entity_type_id,
-        'entity' => $entity_id,
-        'delta' => $delta,
-      ],
-      [
-        'attributes' => [
-          'class' => ['use-ajax'],
-          'data-dialog-type' => 'dialog',
-          'data-dialog-renderer' => 'off_canvas',
-        ],
-      ]
-    );
     return [
-      'link' => $link->toRenderable(),
+      'link' => [
+        '#type' => 'link',
+        '#title' => $this->t('Add Section'),
+        '#url' => Url::fromRoute('layout_builder.choose_section',
+          [
+            'entity_type_id' => $entity_type_id,
+            'entity' => $entity_id,
+            'delta' => $delta,
+          ],
+          [
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'dialog',
+              'data-dialog-renderer' => 'off_canvas',
+            ],
+          ]
+        ),
+      ],
       '#type' => 'container',
       '#attributes' => [
         'class' => ['add-section'],
@@ -179,41 +178,16 @@ class LayoutBuilderController implements ContainerInjectionInterface {
    *   The render array for a given section.
    */
   protected function buildAdministrativeSection(LayoutSectionItemInterface $item, EntityInterface $entity, $delta) {
-    $layout_id = $item->layout;
-    $layout_settings = $item->layout_settings ?: [];
-    $section = $item->section ?: [];
     $entity_type_id = $entity->getEntityTypeId();
     $entity_id = $entity->id();
 
-    $build = $this->builder->buildSection($layout_id, $layout_settings, $section);
+    $layout = $this->layoutManager->createInstance($item->layout, $item->layout_settings);
+    $build = $this->builder->buildSectionFromLayout($layout, $item->section);
+    $layout_definition = $layout->getPluginDefinition();
 
-    $layout_definition = $this->layoutManager->getDefinition($layout_id);
     foreach ($layout_definition->getRegions() as $region => $info) {
-      $link = Link::createFromRoute($this->t('Add Block'),
-        'layout_builder.choose_block',
-        [
-          'entity_type_id' => $entity_type_id,
-          'entity' => $entity_id,
-          'delta' => $delta,
-          'region' => $region,
-        ],
-        [
-          'attributes' => [
-            'class' => ['use-ajax'],
-            'data-dialog-type' => 'dialog',
-            'data-dialog-renderer' => 'off_canvas',
-          ],
-        ]
-      );
-      $build[$region]['layout_builder_add_block']['link'] = $link->toRenderable();
-      $build[$region]['layout_builder_add_block']['#type'] = 'container';
-      $build[$region]['layout_builder_add_block']['#attributes'] = ['class' => ['add-block']];
-      $build[$region]['#attributes']['data-region'] = $region;
-      $build[$region]['#attributes']['class'][] = 'layout-builder--layout__region';
-    }
-    foreach ($section as $region => $blocks) {
-      foreach ($blocks as $uuid => $configuration) {
-        if (isset($build[$region][$uuid])) {
+      if (!empty($build[$region])) {
+        foreach ($build[$region] as $uuid => $block) {
           $build[$region][$uuid]['#attributes']['class'][] = 'draggable';
           $build[$region][$uuid]['#attributes']['data-layout-block-uuid'] = $uuid;
           $build[$region][$uuid]['#contextual_links'] = [
@@ -229,6 +203,30 @@ class LayoutBuilderController implements ContainerInjectionInterface {
           ];
         }
       }
+
+      $build[$region]['layout_builder_add_block']['link'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Add Block'),
+        '#url' => Url::fromRoute('layout_builder.choose_block',
+          [
+            'entity_type_id' => $entity_type_id,
+            'entity' => $entity_id,
+            'delta' => $delta,
+            'region' => $region,
+          ],
+          [
+            'attributes' => [
+              'class' => ['use-ajax'],
+              'data-dialog-type' => 'dialog',
+              'data-dialog-renderer' => 'off_canvas',
+            ],
+          ]
+        ),
+      ];
+      $build[$region]['layout_builder_add_block']['#type'] = 'container';
+      $build[$region]['layout_builder_add_block']['#attributes'] = ['class' => ['add-block']];
+      $build[$region]['#attributes']['data-region'] = $region;
+      $build[$region]['#attributes']['class'][] = 'layout-builder--layout__region';
     }
 
     $build['#attributes']['data-layout-update-url'] = Url::fromRoute('layout_builder.move_block', [
@@ -238,7 +236,6 @@ class LayoutBuilderController implements ContainerInjectionInterface {
     $build['#attributes']['data-layout-delta'] = $delta;
     $build['#attributes']['class'][] = 'layout-builder--layout';
 
-    $layout = $this->layoutManager->createInstance($layout_id, $layout_settings);
     return [
       '#type' => 'container',
       '#attributes' => [

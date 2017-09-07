@@ -96,7 +96,6 @@ class LayoutSectionBuilderTest extends UnitTestCase {
     $block_content = ['#markup' => 'The block content.'];
     $render_array = [
       '#theme' => 'block',
-      '#weight' => 0,
       '#configuration' => [],
       '#plugin_id' => 'block_plugin_id',
       '#base_plugin_id' => 'block_plugin_id',
@@ -200,7 +199,6 @@ class LayoutSectionBuilderTest extends UnitTestCase {
   public function testContextAwareBlock() {
     $render_array = [
       '#theme' => 'block',
-      '#weight' => 0,
       '#configuration' => [],
       '#plugin_id' => 'block_plugin_id',
       '#base_plugin_id' => 'block_plugin_id',

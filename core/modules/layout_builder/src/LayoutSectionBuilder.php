@@ -5,6 +5,7 @@ namespace Drupal\layout_builder;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Layout\LayoutInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
@@ -79,6 +80,42 @@ class LayoutSectionBuilder {
   /**
    * Builds the render array for the layout section.
    *
+   * @param \Drupal\Core\Layout\LayoutInterface $layout
+   *   The ID of the layout.
+   * @param array $section
+   *   An array of configuration, keyed first by region and then by block UUID.
+   *
+   * @return array
+   *   The render array for a given section.
+   */
+  public function buildSectionFromLayout(LayoutInterface $layout, array $section) {
+    $cacheability = CacheableMetadata::createFromRenderArray([]);
+
+    $regions = [];
+    foreach ($section as $region => $blocks) {
+      if (!is_array($blocks)) {
+        throw new \InvalidArgumentException(sprintf('The "%s" region in the "%s" layout has invalid configuration', $region, $layout->getPluginId()));
+      }
+
+      foreach ($blocks as $uuid => $configuration) {
+        if (!is_array($configuration) || !isset($configuration['block'])) {
+          throw new \InvalidArgumentException(sprintf('The block with UUID of "%s" has invalid configuration', $uuid));
+        }
+
+        if ($block_output = $this->buildBlock($uuid, $configuration['block'], $cacheability)) {
+          $regions[$region][$uuid] = $block_output;
+        }
+      }
+    }
+
+    $result = $layout->build($regions);
+    $cacheability->applyTo($result);
+    return $result;
+  }
+
+  /**
+   * Builds the render array for the layout section.
+   *
    * @param string $layout_id
    *   The ID of the layout.
    * @param array $layout_settings
@@ -90,44 +127,43 @@ class LayoutSectionBuilder {
    *   The render array for a given section.
    */
   public function buildSection($layout_id, array $layout_settings, array $section) {
-    $cacheability = CacheableMetadata::createFromRenderArray([]);
-
-    $regions = [];
-    $weight = 0;
-    foreach ($section as $region => $blocks) {
-      if (!is_array($blocks)) {
-        throw new \InvalidArgumentException(sprintf('The "%s" region in the "%s" layout has invalid configuration', $region, $layout_id));
-      }
-
-      foreach ($blocks as $uuid => $configuration) {
-        if (!is_array($configuration) || !isset($configuration['block'])) {
-          throw new \InvalidArgumentException(sprintf('The block with UUID of "%s" has invalid configuration', $uuid));
-        }
-
-        $block = $this->getBlock($uuid, $configuration['block']);
-
-        $access = $block->access($this->account, TRUE);
-        $cacheability->addCacheableDependency($access);
-
-        if ($access->isAllowed()) {
-          $regions[$region][$uuid] = [
-            '#theme' => 'block',
-            '#weight' => $weight++,
-            '#configuration' => $block->getConfiguration(),
-            '#plugin_id' => $block->getPluginId(),
-            '#base_plugin_id' => $block->getBaseId(),
-            '#derivative_plugin_id' => $block->getDerivativeId(),
-            'content' => $block->build(),
-          ];
-          $cacheability->addCacheableDependency($block);
-        }
-      }
-    }
-
     $layout = $this->layoutPluginManager->createInstance($layout_id, $layout_settings);
-    $result = $layout->build($regions);
-    $cacheability->applyTo($result);
-    return $result;
+    return $this->buildSectionFromLayout($layout, $section);
+  }
+
+  /**
+   * Builds the render array for a given block.
+   *
+   * @param string $uuid
+   *   The UUID of this block instance.
+   * @param array $configuration
+   *   An array of configuration relevant to the block instance. Must contain
+   *   the plugin ID with the key 'id'.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cacheability
+   *   The cacheability metadata.
+   *
+   * @return array|null
+   *   The render array representing this block, if accessible. NULL otherwise.
+   */
+  protected function buildBlock($uuid, array $configuration, CacheableMetadata $cacheability) {
+    $block = $this->getBlock($uuid, $configuration);
+
+    $access = $block->access($this->account, TRUE);
+    $cacheability->addCacheableDependency($access);
+
+    $block_output = NULL;
+    if ($access->isAllowed()) {
+      $block_output = [
+        '#theme' => 'block',
+        '#configuration' => $block->getConfiguration(),
+        '#plugin_id' => $block->getPluginId(),
+        '#base_plugin_id' => $block->getBaseId(),
+        '#derivative_plugin_id' => $block->getDerivativeId(),
+        'content' => $block->build(),
+      ];
+      $cacheability->addCacheableDependency($block);
+    }
+    return $block_output;
   }
 
   /**

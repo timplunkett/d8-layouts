@@ -78,7 +78,7 @@ class LayoutSectionFormatter extends FormatterBase implements ContainerFactoryPl
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface[] $items */
     foreach ($items as $delta => $item) {
-      $elements[$delta] = $this->builder->buildSection($item->layout, $item->layout_settings ?: [], $item->section ?: []);
+      $elements[$delta] = $this->builder->buildSection($item->layout, $item->layout_settings, $item->section);
     }
 
     return $elements;

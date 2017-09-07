@@ -58,7 +58,7 @@ class MoveBlockController implements ContainerInjectionInterface {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($data['delta_from']);
-    $values = $field->section ?: [];
+    $values = $field->section;
 
     $region_from = $data['region_from'];
     $region_to = $data['region_to'];
@@ -69,7 +69,7 @@ class MoveBlockController implements ContainerInjectionInterface {
 
     /** @var \Drupal\layout_builder\LayoutSectionItemInterface $field */
     $field = $entity->layout_builder__layout->get($data['delta_to']);
-    $values = $field->section ?: [];
+    $values = $field->section;
     if (isset($data['preceding_block_uuid'])) {
       $slice_id = array_search($data['preceding_block_uuid'], array_keys($values[$region_to]));
       $before = array_slice($values[$region_to], 0, $slice_id + 1);
