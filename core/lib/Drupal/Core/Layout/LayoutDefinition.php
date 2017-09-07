@@ -86,6 +86,13 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
   protected $icon;
 
   /**
+   * @todo.
+   *
+   * @var array[]
+   */
+  protected $icon_map;
+
+  /**
    * An associative array of regions in this layout.
    *
    * The key of the array is the machine name of the region, and the value is
@@ -372,6 +379,13 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
   }
 
   /**
+   * @todo.
+   */
+  public function getIconMap() {
+    return $this->icon_map;
+  }
+
+  /**
    * Builds a render array for an icon representing the layout.
    *
    * @param int $width
@@ -404,7 +418,7 @@ class LayoutDefinition extends PluginDefinition implements PluginDefinitionInter
         '#height' => $height,
       ];
     }
-    elseif ($icon_map = $this->get('icon_map')) {
+    elseif ($icon_map = $this->getIconMap()) {
       $icon = $this->getIconGenerator()->generateSvgFromIconMap($icon_map, $width, $height, $stroke_width, $padding, $fill, $stroke);
     }
     return $icon;

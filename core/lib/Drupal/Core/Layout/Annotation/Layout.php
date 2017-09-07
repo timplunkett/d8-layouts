@@ -112,6 +112,13 @@ class Layout extends Plugin {
   public $icon;
 
   /**
+   * @todo.
+   *
+   * @var array[] optional
+   */
+  public $icon_map;
+
+  /**
    * An associative array of regions in this layout.
    *
    * The key of the array is the machine name of the region, and the value is
