@@ -63,6 +63,27 @@ class LayoutBuilderRoutes extends RouteSubscriberBase {
           ],
         ]);
       $routes["entity.$entity_type_id.layout"] = $route;
+      $route = (new Route("$template/layout"))
+        ->setDefaults([
+          '_controller' => '\Drupal\layout_builder\Controller\LayoutBuilderJsonController::build',
+          'entity' => NULL,
+          'entity_type_id' => $entity_type_id,
+        ])
+        ->addRequirements([
+          $entity_type_id => '\d+',
+          '_has_layout_section' => 'true',
+          '_format' => 'json',
+        ])
+        ->addOptions([
+          '_layout_builder' => TRUE,
+          'parameters' => [
+            $entity_type_id => [
+              'type' => 'entity:{entity_type_id}',
+              'layout_builder_tempstore' => TRUE,
+            ],
+          ],
+        ]);
+      $routes["entity.$entity_type_id.layout.json"] = $route;
 
       $route = (new Route("$template/layout/save"))
         ->setDefaults([
