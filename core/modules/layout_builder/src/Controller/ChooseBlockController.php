@@ -4,6 +4,7 @@ namespace Drupal\layout_builder\Controller;
 
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Url;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,13 +26,23 @@ class ChooseBlockController implements ContainerInjectionInterface {
   protected $blockManager;
 
   /**
+   * The context repository.
+   *
+   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   */
+  protected $contextRepository;
+
+  /**
    * ChooseBlockController constructor.
    *
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
+   * @param \Drupal\Core\Plugin\Context\ContextRepositoryInterface $context_repository
+   *   The context repository.
    */
-  public function __construct(BlockManagerInterface $block_manager) {
+  public function __construct(BlockManagerInterface $block_manager, ContextRepositoryInterface $context_repository) {
     $this->blockManager = $block_manager;
+    $this->contextRepository = $context_repository;
   }
 
   /**
@@ -39,7 +50,8 @@ class ChooseBlockController implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.block')
+      $container->get('plugin.manager.block'),
+      $container->get('context.repository')
     );
   }
 
@@ -60,7 +72,9 @@ class ChooseBlockController implements ContainerInjectionInterface {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
-    foreach ($this->blockManager->getGroupedDefinitions() as $category => $blocks) {
+    $contexts = $this->contextRepository->getAvailableContexts();
+    $definitions = $this->blockManager->getDefinitionsForContexts($contexts);
+    foreach ($this->blockManager->getGroupedDefinitions($definitions) as $category => $blocks) {
       $build[$category]['#type'] = 'details';
       $build[$category]['#open'] = TRUE;
       $build[$category]['#title'] = $category;
