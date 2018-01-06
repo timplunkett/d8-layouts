@@ -4,6 +4,7 @@ namespace Drupal\layout_builder\Field;
 
 use Drupal\Core\Field\FieldItemList;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\SectionStorageEntityContextTrait;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -16,6 +17,8 @@ use Drupal\layout_builder\SectionStorageInterface;
  * @see \Drupal\layout_builder\Plugin\Field\FieldType\LayoutSectionItem
  */
 class LayoutSectionItemList extends FieldItemList implements SectionStorageInterface, OverridesSectionStorageInterface {
+
+  use SectionStorageEntityContextTrait;
 
   /**
    * {@inheritdoc}
@@ -74,6 +77,13 @@ class LayoutSectionItemList extends FieldItemList implements SectionStorageInter
   public function removeSection($delta) {
     $this->removeItem($delta);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAvailableContexts() {
+    return $this->getEntityContexts($this->getEntity());
   }
 
   /**

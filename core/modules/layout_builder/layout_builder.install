@@ -36,6 +36,7 @@ function layout_builder_install() {
         $configuration['formatter']['label'] = $component['label'];
         $configuration['formatter']['settings'] = $component['settings'];
         $configuration['formatter']['third_party_settings'] = $component['third_party_settings'];
+        $configuration['context_mapping']['entity'] = 'layout_builder.entity';
         $components[] = (new SectionComponent($uuid, $component['region'], $configuration))->setWeight($component['weight']);
       }
     }

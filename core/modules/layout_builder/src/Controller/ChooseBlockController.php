@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Url;
+use Drupal\layout_builder\LayoutBuilderContextTrait;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,6 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ChooseBlockController implements ContainerInjectionInterface {
 
   use AjaxHelperTrait;
+  use LayoutBuilderContextTrait;
 
   /**
    * The block manager.
@@ -72,7 +74,7 @@ class ChooseBlockController implements ContainerInjectionInterface {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
-    $contexts = $this->contextRepository->getAvailableContexts();
+    $contexts = $this->getAvailableContexts($section_storage);
     $definitions = $this->blockManager->getDefinitionsForContexts($contexts);
     foreach ($this->blockManager->getGroupedDefinitions($definitions) as $category => $blocks) {
       $build[$category]['#type'] = 'details';

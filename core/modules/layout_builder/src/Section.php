@@ -66,10 +66,13 @@ class Section {
   /**
    * Returns the renderable array for this section.
    *
+   * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
+   *   An array of available contexts.
+   *
    * @return array
    *   A renderable array representing the content of the section.
    */
-  public function toRenderArray() {
+  public function toRenderArray(array $contexts = []) {
     $layout = $this->getLayout();
 
     // @todo Add the regions to the $build in the correct order. This is done
@@ -78,7 +81,7 @@ class Section {
     $regions = array_fill_keys($layout->getPluginDefinition()->getRegionNames(), []);
 
     foreach ($this->getComponents() as $component) {
-      if ($output = $component->toRenderArray()) {
+      if ($output = $component->toRenderArray($contexts)) {
         $regions[$component->getRegion()][$component->getUuid()] = $output;
       }
     }

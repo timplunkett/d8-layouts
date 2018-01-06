@@ -9,12 +9,12 @@ use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\SubformState;
-use Drupal\Core\Plugin\Context\ContextRepositoryInterface;
 use Drupal\Core\Plugin\ContextAwarePluginAssignmentTrait;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Plugin\PluginFormFactoryInterface;
 use Drupal\Core\Plugin\PluginWithFormsInterface;
 use Drupal\layout_builder\Controller\LayoutRebuildTrait;
+use Drupal\layout_builder\LayoutBuilderContextTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -29,6 +29,7 @@ abstract class ConfigureBlockFormBase extends FormBase {
 
   use AjaxFormHelperTrait;
   use ContextAwarePluginAssignmentTrait;
+  use LayoutBuilderContextTrait;
   use LayoutRebuildTrait;
 
   /**
@@ -37,13 +38,6 @@ abstract class ConfigureBlockFormBase extends FormBase {
    * @var \Drupal\Core\Block\BlockPluginInterface
    */
   protected $block;
-
-  /**
-   * The context repository.
-   *
-   * @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface
-   */
-  protected $contextRepository;
 
   /**
    * The layout tempstore repository.
@@ -99,8 +93,6 @@ abstract class ConfigureBlockFormBase extends FormBase {
    *
    * @param \Drupal\layout_builder\LayoutTempstoreRepositoryInterface $layout_tempstore_repository
    *   The layout tempstore repository.
-   * @param \Drupal\Core\Plugin\Context\ContextRepositoryInterface $context_repository
-   *   The context repository.
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
    * @param \Drupal\Component\Uuid\UuidInterface $uuid
@@ -110,9 +102,8 @@ abstract class ConfigureBlockFormBase extends FormBase {
    * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_manager
    *   The plugin form manager.
    */
-  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, ContextRepositoryInterface $context_repository, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver, PluginFormFactoryInterface $plugin_form_manager) {
+  public function __construct(LayoutTempstoreRepositoryInterface $layout_tempstore_repository, BlockManagerInterface $block_manager, UuidInterface $uuid, ClassResolverInterface $class_resolver, PluginFormFactoryInterface $plugin_form_manager) {
     $this->layoutTempstoreRepository = $layout_tempstore_repository;
-    $this->contextRepository = $context_repository;
     $this->blockManager = $block_manager;
     $this->uuid = $uuid;
     $this->classResolver = $class_resolver;
@@ -125,7 +116,6 @@ abstract class ConfigureBlockFormBase extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('layout_builder.tempstore_repository'),
-      $container->get('context.repository'),
       $container->get('plugin.manager.block'),
       $container->get('uuid'),
       $container->get('class_resolver'),
@@ -179,7 +169,7 @@ abstract class ConfigureBlockFormBase extends FormBase {
     $this->region = $region;
     $this->block = $this->prepareBlock($plugin_id, $configuration);
 
-    $form_state->setTemporaryValue('gathered_contexts', $this->contextRepository->getAvailableContexts());
+    $form_state->setTemporaryValue('gathered_contexts', $this->getAvailableContexts($section_storage));
 
     // @todo Remove once https://www.drupal.org/node/2268787 is resolved.
     $form_state->set('block_theme', $this->config('system.theme')->get('default'));

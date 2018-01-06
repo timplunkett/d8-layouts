@@ -6,6 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\layout_builder\LayoutBuilderContextTrait;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Section;
@@ -20,6 +21,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 class LayoutBuilderController implements ContainerInjectionInterface {
 
+  use LayoutBuilderContextTrait;
   use StringTranslationTrait;
 
   /**
@@ -178,7 +180,7 @@ class LayoutBuilderController implements ContainerInjectionInterface {
     $section = $section_storage->getSection($delta);
 
     $layout = $section->getLayout();
-    $build = $section->toRenderArray();
+    $build = $section->toRenderArray($this->getAvailableContexts($section_storage));
     $layout_definition = $layout->getPluginDefinition();
 
     foreach ($layout_definition->getRegions() as $region => $info) {

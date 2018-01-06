@@ -2,9 +2,11 @@
 
 namespace Drupal\layout_builder\Entity;
 
+use Drupal\Core\Entity\ContentEntityStorageInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay as BaseEntityViewDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\layout_builder\SectionStorageEntityContextTrait;
 use Drupal\layout_builder\Section;
 
 /**
@@ -13,6 +15,8 @@ use Drupal\layout_builder\Section;
  * @internal
  */
 class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements LayoutEntityDisplayInterface {
+
+  use SectionStorageEntityContextTrait;
 
   /**
    * {@inheritdoc}
@@ -208,6 +212,16 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
   }
 
   /**
+   * Wraps the context repository service.
+   *
+   * @return \Drupal\Core\Plugin\Context\ContextRepositoryInterface
+   *   The context repository service.
+   */
+  protected function contextRepository() {
+    return \Drupal::service('context.repository');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildMultiple(array $entities) {
@@ -223,13 +237,30 @@ class LayoutBuilderEntityViewDisplay extends BaseEntityViewDisplay implements La
           }
         }
 
+        // Bypass ::getActiveContexts() in order to use the runtime entity, not
+        // a sample entity.
+        $contexts = $this->contextRepository()->getAvailableContexts();
+        $contexts += $this->getEntityContexts($entity);
         foreach ($sections as $delta => $section) {
-          $build_list[$id]['_layout_builder'][$delta] = $section->toRenderArray();
+          $build_list[$id]['_layout_builder'][$delta] = $section->toRenderArray($contexts);
         }
       }
     }
 
     return $build_list;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAvailableContexts() {
+    $contexts = [];
+    $entity_storage = $this->entityTypeManager()->getStorage($this->getTargetEntityTypeId());
+    if ($entity_storage instanceof ContentEntityStorageInterface) {
+      $entity = $entity_storage->createWithSampleValues($this->getTargetBundle());
+      $contexts = $this->getEntityContexts($entity);
+    }
+    return $contexts;
   }
 
   /**
