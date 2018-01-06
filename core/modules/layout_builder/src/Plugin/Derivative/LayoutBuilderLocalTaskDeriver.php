@@ -48,7 +48,7 @@ class LayoutBuilderLocalTaskDeriver extends DeriverBase implements ContainerDeri
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    foreach (array_keys($this->getEntityTypes()) as $entity_type_id) {
+    foreach ($this->getEntityTypes() as $entity_type_id => $entity_type) {
       $this->derivatives["entity.$entity_type_id.layout_builder"] = $base_plugin_definition + [
         'route_name' => "entity.$entity_type_id.layout_builder",
         'weight' => 15,
@@ -72,6 +72,28 @@ class LayoutBuilderLocalTaskDeriver extends DeriverBase implements ContainerDeri
         'weight' => 5,
         'cache_contexts' => ['layout_builder_is_active:' . $entity_type_id],
       ];
+      if ($route_name = $entity_type->get('field_ui_base_route')) {
+        $this->derivatives["entity.entity_view_display.$entity_type_id.layout_builder"] = $base_plugin_definition + [
+          'route_name' => "entity.entity_view_display.$entity_type_id.layout_builder",
+          'weight' => 4,
+          'title' => $this->t('Manage layout'),
+          'base_route' => $route_name,
+          'entity_type_id' => $entity_type_id,
+        ];
+        $this->derivatives["entity.entity_view_display.$entity_type_id.layout_builder_save"] = $base_plugin_definition + [
+          'route_name' => "entity.entity_view_display.$entity_type_id.layout_builder_save",
+          'title' => $this->t('Save Layout'),
+          'parent_id' => "layout_builder_ui:entity.entity_view_display.$entity_type_id.layout_builder",
+          'entity_type_id' => $entity_type_id,
+        ];
+        $this->derivatives["entity.entity_view_display.$entity_type_id.layout_builder_cancel"] = $base_plugin_definition + [
+          'route_name' => "entity.entity_view_display.$entity_type_id.layout_builder_cancel",
+          'title' => $this->t('Cancel Layout'),
+          'weight' => 5,
+          'parent_id' => "layout_builder_ui:entity.entity_view_display.$entity_type_id.layout_builder",
+          'entity_type_id' => $entity_type_id,
+        ];
+      }
     }
 
     return $this->derivatives;

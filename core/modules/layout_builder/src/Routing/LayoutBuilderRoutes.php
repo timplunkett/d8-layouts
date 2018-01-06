@@ -5,6 +5,9 @@ namespace Drupal\layout_builder\Routing;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\RouteBuildEvent;
+use Drupal\Core\Routing\RoutingEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -12,7 +15,7 @@ use Symfony\Component\Routing\Route;
  *
  * @internal
  */
-class LayoutBuilderRoutes {
+class LayoutBuilderRoutes implements EventSubscriberInterface {
 
   /**
    * The entity type manager.
@@ -70,6 +73,55 @@ class LayoutBuilderRoutes {
       $routes += $this->buildRoute('entity.' . $entity_type_id, $template, $defaults, $requirements, $options);
     }
     return $routes;
+  }
+
+  /**
+   * Alters existing routes for a specific collection.
+   *
+   * @param \Drupal\Core\Routing\RouteBuildEvent $event
+   *   The route build event.
+   */
+  public function onAlterRoutes(RouteBuildEvent $event) {
+    $collection = $event->getRouteCollection();
+    foreach ($this->getEntityTypes() as $entity_type_id => $entity_type) {
+      if ($route_name = $entity_type->get('field_ui_base_route')) {
+        // Try to get the route from the current collection.
+        if (!$entity_route = $collection->get($route_name)) {
+          continue;
+        }
+        $path = $entity_route->getPath() . '/display-layout';
+
+        $defaults = [];
+        $defaults['entity_type_id'] = $entity_type_id;
+        $defaults['view_mode_name'] = 'default';
+
+        $defaults['section_storage_type'] = 'defaults';
+        // Provide an empty value to allow the section storage to be upcast.
+        $defaults['section_storage'] = '';
+
+        // If the entity type has no bundles and it doesn't use {bundle} in its
+        // admin path, use the entity type.
+        if (strpos($path, '{bundle}') === FALSE) {
+          if (!$entity_type->hasKey('bundle')) {
+            $defaults['bundle'] = $entity_type_id;
+          }
+          else {
+            $defaults['bundle_key'] = $entity_type->getBundleEntityType();
+          }
+        }
+
+        $requirements = [];
+        $requirements['_field_ui_view_mode_access'] = 'administer ' . $entity_type_id . ' display';
+
+        $options = $entity_route->getOptions();
+        $options['parameters']['section_storage']['layout_builder_tempstore'] = TRUE;
+
+        $routes = $this->buildRoute('entity.entity_view_display.' . $entity_type_id, $path, $defaults, $requirements, $options);
+        foreach ($routes as $name => $route) {
+          $collection->add($name, $route);
+        }
+      }
+    }
   }
 
   /**
@@ -148,6 +200,15 @@ class LayoutBuilderRoutes {
     return array_filter($this->entityTypeManager->getDefinitions(), function (EntityTypeInterface $entity_type) {
       return $entity_type->hasLinkTemplate('layout-builder');
     });
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSubscribedEvents() {
+    // Run after \Drupal\field_ui\Routing\RouteSubscriber.
+    $events[RoutingEvents::ALTER] = ['onAlterRoutes', -110];
+    return $events;
   }
 
 }
