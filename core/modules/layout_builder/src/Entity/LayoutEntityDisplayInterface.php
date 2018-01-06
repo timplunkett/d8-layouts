@@ -3,13 +3,14 @@
 namespace Drupal\layout_builder\Entity;
 
 use Drupal\Core\Entity\Display\EntityDisplayInterface;
+use Drupal\layout_builder\SectionStorageInterface;
 
 /**
  * Provides an interface for entity displays that have layout.
  *
  * @internal
  */
-interface LayoutEntityDisplayInterface extends EntityDisplayInterface {
+interface LayoutEntityDisplayInterface extends EntityDisplayInterface, SectionStorageInterface {
 
   /**
    * Determines if the display allows custom overrides.

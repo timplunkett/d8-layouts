@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for Layout Builder.
+ */
+
+use Drupal\Core\Cache\Cache;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\Section;
+use Drupal\layout_builder\SectionComponent;
+
+/**
+ * Implements hook_install().
+ */
+function layout_builder_install() {
+  $uuid_generator = \Drupal::service('uuid');
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+
+  $displays = LayoutBuilderEntityViewDisplay::loadMultiple();
+  /** @var \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface[] $displays */
+  foreach ($displays as $display) {
+    // Create the first section from any existing Field Layout settings.
+    $field_layout = $display->getThirdPartySettings('field_layout') + [
+      'id' => 'layout_onecol',
+      'settings' => [],
+    ];
+    $components = [];
+    $field_definitions = $entity_field_manager->getFieldDefinitions($display->getTargetEntityTypeId(), $display->getTargetBundle());
+    foreach ($display->getComponents() as $name => $component) {
+      if (isset($field_definitions[$name]) && $field_definitions[$name]->isDisplayConfigurable('view')) {
+        $uuid = $uuid_generator->generate();
+        $configuration = [];
+        $configuration['id'] = 'field_block:' . $display->getTargetEntityTypeId() . ':' . $name;
+        $configuration['formatter']['type'] = $component['type'];
+        $configuration['formatter']['label'] = $component['label'];
+        $configuration['formatter']['settings'] = $component['settings'];
+        $configuration['formatter']['third_party_settings'] = $component['third_party_settings'];
+        $components[] = (new SectionComponent($uuid, $component['region'], $configuration))->setWeight($component['weight']);
+      }
+    }
+    $display
+      ->appendSection(new Section($field_layout['id'], $field_layout['settings'], $components))
+      ->save();
+  }
+  Cache::invalidateTags(['rendered']);
+}

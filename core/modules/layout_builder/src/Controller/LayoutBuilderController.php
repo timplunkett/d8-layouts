@@ -7,6 +7,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
+use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -102,6 +103,13 @@ class LayoutBuilderController implements ContainerInjectionInterface {
     // For a new layout, begin with a single section of one column.
     if (!$is_rebuilding && $section_storage->count() === 0) {
       $sections = [];
+      // If this is an empty override, copy the sections from the corresponding
+      // default.
+      if ($section_storage instanceof OverridesSectionStorageInterface) {
+        $display = $section_storage->getDefaultSectionStorage();
+        $sections = $display->getSections();
+      }
+
       if (!$sections) {
         $sections[] = new Section('layout_onecol');
       }

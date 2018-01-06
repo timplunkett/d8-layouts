@@ -11,6 +11,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field_ui\Form\EntityViewDisplayEditForm;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplayStorage;
 use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 
 /**
@@ -37,7 +38,8 @@ function layout_builder_entity_type_alter(array &$entity_types) {
     }
   }
   $entity_types['entity_view_display']
-    ->setClass(LayoutBuilderEntityViewDisplay::class);
+    ->setClass(LayoutBuilderEntityViewDisplay::class)
+    ->setStorageClass(LayoutBuilderEntityViewDisplayStorage::class);
   if (\Drupal::moduleHandler()->moduleExists('field_ui')) {
     // @todo Replace this with a custom UI.
     $entity_types['entity_view_display']->setFormClass('edit', EntityViewDisplayEditForm::class);

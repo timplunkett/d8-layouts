@@ -70,14 +70,20 @@ class Section {
    *   A renderable array representing the content of the section.
    */
   public function toRenderArray() {
-    $regions = [];
+    $layout = $this->getLayout();
+
+    // @todo Add the regions to the $build in the correct order. This is done
+    //   for parity with \Drupal\field_layout\FieldLayoutBuilder::buildView(),
+    //   which incorrectly adds all regions to the build.
+    $regions = array_fill_keys($layout->getPluginDefinition()->getRegionNames(), []);
+
     foreach ($this->getComponents() as $component) {
       if ($output = $component->toRenderArray()) {
         $regions[$component->getRegion()][$component->getUuid()] = $output;
       }
     }
 
-    return $this->getLayout()->build($regions);
+    return $layout->build($regions);
   }
 
   /**
