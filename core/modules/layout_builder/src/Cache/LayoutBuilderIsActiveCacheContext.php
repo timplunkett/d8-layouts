@@ -49,7 +49,7 @@ class LayoutBuilderIsActiveCacheContext implements CalculatedCacheContextInterfa
     }
 
     $display = $this->getDisplay($entity_type_id);
-    return ($display && $display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE)) ? '1' : '0';
+    return ($display && $display->isOverridable()) ? '1' : '0';
   }
 
   /**
@@ -73,7 +73,7 @@ class LayoutBuilderIsActiveCacheContext implements CalculatedCacheContextInterfa
    * @param string $entity_type_id
    *   The entity type ID.
    *
-   * @return \Drupal\Core\Entity\Display\EntityViewDisplayInterface|null
+   * @return \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface|null
    *   The entity view display, if it exists.
    */
   protected function getDisplay($entity_type_id) {

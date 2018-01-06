@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\layout_builder\Functional;
 
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\BrowserTestBase;
@@ -41,8 +41,8 @@ class LayoutSectionTest extends BrowserTestBase {
     ]);
 
     layout_builder_add_layout_section_field('node', 'bundle_with_section_field');
-    $display = EntityViewDisplay::load('node.bundle_with_section_field.default');
-    $display->setThirdPartySetting('layout_builder', 'allow_custom', TRUE);
+    $display = LayoutBuilderEntityViewDisplay::load('node.bundle_with_section_field.default');
+    $display->setOverridable();
     $display->save();
 
     $this->drupalLogin($this->drupalCreateUser([

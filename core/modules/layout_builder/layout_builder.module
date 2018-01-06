@@ -5,12 +5,13 @@
  * Provides hook implementations for Layout Builder.
  */
 
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field_ui\Form\EntityViewDisplayEditForm;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 
 /**
  * Implements hook_help().
@@ -35,13 +36,19 @@ function layout_builder_entity_type_alter(array &$entity_types) {
       $entity_type->setLinkTemplate('layout-builder', $entity_type->getLinkTemplate('canonical') . '/layout');
     }
   }
+  $entity_types['entity_view_display']
+    ->setClass(LayoutBuilderEntityViewDisplay::class);
+  if (\Drupal::moduleHandler()->moduleExists('field_ui')) {
+    // @todo Replace this with a custom UI.
+    $entity_types['entity_view_display']->setFormClass('edit', EntityViewDisplayEditForm::class);
+  }
 }
 
 /**
  * Removes the Layout Builder field both visually and from the #fields handling.
  *
- * This prevents any interaction with this field. It is rendered directly
- * in layout_builder_entity_view_alter().
+ * This prevents any interaction with this field. It is rendered directly in
+ * \Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay::buildMultiple().
  *
  * @internal
  */
@@ -64,7 +71,7 @@ function layout_builder_form_entity_form_display_edit_form_alter(&$form, FormSta
  * Implements hook_form_FORM_ID_alter() for \Drupal\field_ui\Form\EntityViewDisplayEditForm.
  */
 function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormStateInterface $form_state) {
-  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display */
+  /** @var \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface $display */
   $display = $form_state->getFormObject()->getEntity();
   $entity_type = \Drupal::entityTypeManager()->getDefinition($display->getTargetEntityTypeId());
 
@@ -89,7 +96,7 @@ function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormSta
     '#title' => t('Allow each @entity to have its layout customized.', [
       '@entity' => $entity_type->getSingularLabel(),
     ]),
-    '#default_value' => $display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE),
+    '#default_value' => $display->isOverridable(),
   ];
 
   $form['#entity_builders'][] = 'layout_builder_form_entity_view_display_edit_entity_builder';
@@ -100,17 +107,17 @@ function layout_builder_form_entity_view_display_edit_form_alter(&$form, FormSta
  *
  * @see layout_builder_form_entity_view_display_edit_form_alter()
  */
-function layout_builder_form_entity_view_display_edit_entity_builder($entity_type_id, EntityViewDisplayInterface $display, &$form, FormStateInterface &$form_state) {
+function layout_builder_form_entity_view_display_edit_entity_builder($entity_type_id, LayoutEntityDisplayInterface $display, &$form, FormStateInterface &$form_state) {
   $new_value = (bool) $form_state->getValue(['layout', 'allow_custom'], FALSE);
-  $display->setThirdPartySetting('layout_builder', 'allow_custom', $new_value);
+  $display->setOverridable($new_value);
 }
 
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */
-function layout_builder_entity_view_display_presave(EntityViewDisplayInterface $display) {
-  $original_value = isset($display->original) ? $display->original->getThirdPartySetting('layout_builder', 'allow_custom', FALSE) : FALSE;
-  $new_value = $display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE);
+function layout_builder_entity_view_display_presave(LayoutEntityDisplayInterface $display) {
+  $original_value = isset($display->original) ? $display->original->isOverridable() : FALSE;
+  $new_value = $display->isOverridable();
   if ($original_value !== $new_value) {
     $entity_type_id = $display->getTargetEntityTypeId();
     $bundle = $display->getTargetBundle();
@@ -159,31 +166,4 @@ function layout_builder_add_layout_section_field($entity_type_id, $bundle, $fiel
     $field->save();
   }
   return $field;
-}
-
-/**
- * Implements hook_entity_view_alter().
- */
-function layout_builder_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
-  if ($display->getThirdPartySetting('layout_builder', 'allow_custom', FALSE) && !$entity->layout_builder__layout->isEmpty()) {
-    $sections = $entity->layout_builder__layout->getSections();
-    foreach ($sections as $delta => $section) {
-      $build['_layout_builder'][$delta] = $section->toRenderArray();
-    }
-
-    // If field layout is active, that is all that needs to be removed.
-    if (\Drupal::moduleHandler()->moduleExists('field_layout') && isset($build['_field_layout'])) {
-      unset($build['_field_layout']);
-      return;
-    }
-
-    /** @var \Drupal\Core\Field\FieldDefinitionInterface[] $field_definitions */
-    $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions($display->getTargetEntityTypeId(), $display->getTargetBundle());
-    // Remove all display-configurable fields.
-    foreach (array_keys($display->getComponents()) as $name) {
-      if ($name !== 'layout_builder__layout' && isset($field_definitions[$name]) && $field_definitions[$name]->isDisplayConfigurable('view')) {
-        unset($build[$name]);
-      }
-    }
-  }
 }

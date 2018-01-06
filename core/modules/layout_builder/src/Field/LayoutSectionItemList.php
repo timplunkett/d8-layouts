@@ -2,8 +2,8 @@
 
 namespace Drupal\layout_builder\Field;
 
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\FieldItemList;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -123,7 +123,7 @@ class LayoutSectionItemList extends FieldItemList implements SectionStorageInter
    * {@inheritdoc}
    */
   public function getDefaultSectionStorage() {
-    return EntityViewDisplay::collectRenderDisplay($this->getEntity(), 'default');
+    return LayoutBuilderEntityViewDisplay::collectRenderDisplay($this->getEntity(), 'default');
   }
 
   /**

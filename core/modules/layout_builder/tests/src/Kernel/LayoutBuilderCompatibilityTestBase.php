@@ -92,7 +92,7 @@ abstract class LayoutBuilderCompatibilityTestBase extends EntityKernelTestBase {
     $this->refreshServices();
 
     $this->display = $this->reloadEntity($this->display);
-    $this->display->setThirdPartySetting('layout_builder', 'allow_custom', TRUE)->save();
+    $this->display->setOverridable()->save();
     $this->entity = $this->reloadEntity($this->entity);
   }
 
