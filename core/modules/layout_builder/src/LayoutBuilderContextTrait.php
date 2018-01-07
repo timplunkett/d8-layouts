@@ -44,6 +44,14 @@ trait LayoutBuilderContextTrait {
     // module, but Layout Builder expects that available contexts will always be
     // available during runtime.
     unset($contexts['@node.node_route_context:node']);
+    // We should only rely on the context repository for contexts with globally
+    // available values. Any conditionally available value isn't usable within
+    // the layout builder.
+    foreach ($contexts as $context_id => $context) {
+      if (!$context->hasContextValue()) {
+        unset($contexts[$context_id]);
+      }
+    }
 
     // Add in the per-section_storage contexts.
     $contexts += $section_storage->getAvailableContexts();
