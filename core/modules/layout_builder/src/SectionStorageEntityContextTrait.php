@@ -23,6 +23,7 @@ trait SectionStorageEntityContextTrait {
    */
   protected function getEntityContexts(EntityInterface $entity) {
     $contexts = [];
+    // @todo change to EntityContextDefinition after #2932462 lands.
     // Create a new context for the entity we're currently dealing with.
     $definition = new ContextDefinition("entity:{$entity->getEntityTypeId()}", new TranslatableMarkup('Current @entity', [
       '@entity' => $entity->getEntityType()->getSingularLabel(),
