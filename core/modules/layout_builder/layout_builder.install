@@ -36,21 +36,86 @@ function layout_builder_install() {
   }
 
   if (\Drupal::moduleHandler()->moduleExists('block')) {
+    $theme_region_map['bartik'] = [
+      'sidebar_first' => [
+        'layout_id' => 'layout_threecol_25_50_25',
+        'component_region' => 'first',
+        'section_region' => 'content',
+      ],
+      'content' => [
+        'layout_id' => 'layout_threecol_25_50_25',
+        'component_region' => 'second',
+        'section_region' => 'content',
+      ],
+      'sidebar_second' => [
+        'layout_id' => 'layout_threecol_25_50_25',
+        'component_region' => 'third',
+        'section_region' => 'content',
+      ],
+      'featured_bottom_first' => [
+        'layout_id' => 'layout_threecol_33_34_33',
+        'component_region' => 'first',
+        'section_region' => 'featured_bottom',
+      ],
+      'featured_bottom_second' => [
+        'layout_id' => 'layout_threecol_33_34_33',
+        'component_region' => 'second',
+        'section_region' => 'featured_bottom',
+      ],
+      'featured_bottom_third' => [
+        'layout_id' => 'layout_threecol_33_34_33',
+        'component_region' => 'third',
+        'section_region' => 'featured_bottom',
+      ],
+      'footer_first' => [
+        'layout_id' => 'layout_fourcol',
+        'component_region' => 'first',
+        'section_region' => 'footer',
+      ],
+      'footer_second' => [
+        'layout_id' => 'layout_fourcol',
+        'component_region' => 'second',
+        'section_region' => 'footer',
+      ],
+      'footer_third' => [
+        'layout_id' => 'layout_fourcol',
+        'component_region' => 'third',
+        'section_region' => 'footer',
+      ],
+      'footer_fourth' => [
+        'layout_id' => 'layout_fourcol',
+        'component_region' => 'fourth',
+        'section_region' => 'footer',
+      ],
+    ];
     $uuid = \Drupal::service('uuid');
 
     /** @var \Drupal\block\BlockInterface[] $blocks */
     $blocks = Block::loadMultiple();
     $themes = [];
     foreach ($blocks as $block_id => $block) {
-      $themes[$block->getTheme()][$block->getRegion()][] = (new SectionComponent($uuid->generate(), 'content', $block->get('settings')))->setWeight($block->getWeight());
+      $theme = $block->getTheme();
+      $old_region = $block->getRegion();
+      if (isset($theme_region_map[$theme][$old_region])) {
+        $layout_id = $theme_region_map[$theme][$old_region]['layout_id'];
+        $component_region = $theme_region_map[$theme][$old_region]['component_region'];
+        $section_region = $theme_region_map[$theme][$old_region]['section_region'];
+      }
+      else {
+        $layout_id = 'layout_onecol';
+        $component_region = 'content';
+        $section_region = $old_region;
+      }
+      $themes[$theme][$section_region]['layout_id'] = $layout_id;
+      $themes[$theme][$section_region]['components'][] = (new SectionComponent($uuid->generate(), $component_region, $block->get('settings')))->setWeight($block->getWeight());
     }
     foreach ($themes as $theme => $regions) {
-      foreach ($regions as $region => $components) {
-        $themes[$theme][$region] = new Section('layout_onecol', [], $components);
+      foreach ($regions as $region => $info) {
+        $themes[$theme][$region] = new Section($info['layout_id'], [], $info['components']);
       }
     }
     foreach ($themes as $theme => $regions) {
-      // Ensure the sections are sorted.
+      // Ensure the sections are sorted, and numerically indexed.
       $sections = array_values(array_intersect_key(array_replace(system_region_list($theme), $regions), $regions));
       (new SectionPageStorage($theme, $sections))->save();
     }
