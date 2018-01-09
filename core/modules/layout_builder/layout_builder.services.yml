@@ -31,3 +31,7 @@ services:
   layout_builder.sample_entity_generator:
     class: Drupal\layout_builder\Entity\LayoutBuilderSampleEntityGenerator
     arguments: ['@tempstore.shared', '@entity_type.manager']
+  layout_builder.page_display_variant_subscriber:
+    class: Drupal\layout_builder\EventSubscriber\SectionDisplayVariantSubscriber
+    tags:
+      - { name: event_subscriber }
