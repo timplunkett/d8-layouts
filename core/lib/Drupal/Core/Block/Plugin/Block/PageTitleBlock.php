@@ -14,6 +14,9 @@ use Drupal\Core\Block\TitleBlockPluginInterface;
  *   forms = {
  *     "settings_tray" = FALSE,
  *   },
+ *   context = {
+ *     "title" = @ContextDefinition("string", required = FALSE)
+ *   },
  * )
  */
 class PageTitleBlock extends BlockBase implements TitleBlockPluginInterface {
@@ -46,7 +49,7 @@ class PageTitleBlock extends BlockBase implements TitleBlockPluginInterface {
   public function build() {
     return [
       '#type' => 'page_title',
-      '#title' => $this->title,
+      '#title' => $this->getContextValue('title') ?: $this->title,
     ];
   }
 

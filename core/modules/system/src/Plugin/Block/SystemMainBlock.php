@@ -14,6 +14,9 @@ use Drupal\Core\Block\MainContentBlockPluginInterface;
  *   forms = {
  *     "settings_tray" = FALSE,
  *   },
+ *   context = {
+ *     "main_content" = @ContextDefinition("string", required = FALSE)
+ *   },
  * )
  */
 class SystemMainBlock extends BlockBase implements MainContentBlockPluginInterface {
@@ -36,7 +39,7 @@ class SystemMainBlock extends BlockBase implements MainContentBlockPluginInterfa
    * {@inheritdoc}
    */
   public function build() {
-    return $this->mainContent;
+    return $this->getContextValue('main_content') ?: $this->mainContent;
   }
 
 }

@@ -6,6 +6,8 @@ use Drupal\Core\Display\ContextAwareVariantInterface;
 use Drupal\Core\Display\PageVariantInterface;
 use Drupal\Core\Display\VariantBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\Context;
+use Drupal\Core\Plugin\Context\ContextDefinition;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\layout_builder\Section;
@@ -108,6 +110,7 @@ class SectionDisplayVariant extends VariantBase implements PageVariantInterface,
    */
   public function setMainContent(array $main_content) {
     $this->mainContent = $main_content;
+    $this->contexts['main_content'] = new Context(new ContextDefinition('string', 'Main Content'), $main_content);
     return $this;
   }
 
@@ -116,6 +119,7 @@ class SectionDisplayVariant extends VariantBase implements PageVariantInterface,
    */
   public function setTitle($title) {
     $this->title = $title;
+    $this->contexts['title'] = new Context(new ContextDefinition('string', 'Title'), $title);
     return $this;
   }
 
