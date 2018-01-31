@@ -44,3 +44,12 @@ layout_builder.component:
     additional:
       type: ignore
       label: 'Additional data'
+
+layout_builder.theme.*:
+  type: config_object
+  label: 'Per-theme Layout Builder settings'
+  mapping:
+    sections:
+      type: sequence
+      sequence:
+        type: layout_builder.section

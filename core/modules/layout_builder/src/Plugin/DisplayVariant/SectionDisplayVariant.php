@@ -129,27 +129,29 @@ class SectionDisplayVariant extends VariantBase implements PageVariantInterface,
   public function build() {
     if ($this->routeMatch->getRouteName() !== 'layout_builder.theme.theme.view') {
       $section_storage = $this->sectionStorageManager->loadFromRoute('theme', $this->themeManager->getActiveTheme()->getName(), [], '', []);
-      $build['content']['sections'] = array_map(function (Section $section) {
-        return $section->toRenderArray($this->getContexts());
-      }, $section_storage->getSections());
+      if ($sections = $section_storage->getSections()) {
+        $contexts = $this->getContexts();
+        $build['content']['sections'] = array_map(function (Section $section) use ($contexts) {
+          return $section->toRenderArray($contexts);
+        }, $sections);
+        return $build;
+      }
     }
-    else {
-      $build = [
-        'content' => [
-          'messages' => [
-            '#type' => 'status_messages',
-            '#weight' => -1000,
-          ],
-          'page_title' => [
-            '#type' => 'page_title',
-            '#title' => $this->title,
-            '#weight' => -900,
-          ],
-          'main_content' => ['#weight' => -800] + $this->mainContent,
+
+    return [
+      'content' => [
+        'messages' => [
+          '#type' => 'status_messages',
+          '#weight' => -1000,
         ],
-      ];
-    }
-    return $build;
+        'page_title' => [
+          '#type' => 'page_title',
+          '#title' => $this->title,
+          '#weight' => -900,
+        ],
+        'main_content' => ['#weight' => -800] + $this->mainContent,
+      ],
+    ];
   }
 
   /**

@@ -129,7 +129,7 @@ class SectionPageStorage extends PluginBase implements SectionStorageInterface, 
       return $section->toArray();
     }, $this->getSections());
 
-    $this->configFactory->getEditable($this->themeName . '.layout_builder')
+    $this->configFactory->getEditable("layout_builder.theme.{$this->themeName}")
       ->set('sections', $sections)
       ->save();
   }
@@ -172,7 +172,7 @@ class SectionPageStorage extends PluginBase implements SectionStorageInterface, 
     }
 
     if ($value) {
-      $sections = $this->configFactory->get("$value.layout_builder")->get('sections') ?: [];
+      $sections = $this->configFactory->get("layout_builder.theme.$value")->get('sections') ?: [];
       foreach ($sections as $section_delta => $section) {
         $sections[$section_delta] = new Section(
           $section['layout_id'],

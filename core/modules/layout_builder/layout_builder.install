@@ -8,7 +8,6 @@
 use Drupal\block\Entity\Block;
 use Drupal\Core\Cache\Cache;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
-use Drupal\layout_builder\Plugin\SectionStorage\SectionPageStorage;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
 
@@ -88,13 +87,22 @@ function layout_builder_install() {
         'section_region' => 'footer',
       ],
     ];
-    $uuid = \Drupal::service('uuid');
+    $uuid_generator = \Drupal::service('uuid');
 
     /** @var \Drupal\block\BlockInterface[] $blocks */
     $blocks = Block::loadMultiple();
     $themes = [];
-    foreach ($blocks as $block_id => $block) {
+    foreach ($blocks as $block) {
       $theme = $block->getTheme();
+
+      // Populate the list of regions to ensure the correct order.
+      if (!isset($themes[$theme])) {
+        $region_list = system_region_list($theme);
+        $themes[$theme] = array_fill_keys(array_keys($region_list), []);
+      }
+
+      // If the block's region is in the theme's region map, use the specified
+      // values. Otherwise use default value.
       $old_region = $block->getRegion();
       if (isset($theme_region_map[$theme][$old_region])) {
         $layout_id = $theme_region_map[$theme][$old_region]['layout_id'];
@@ -106,18 +114,26 @@ function layout_builder_install() {
         $component_region = 'content';
         $section_region = $old_region;
       }
+
       $themes[$theme][$section_region]['layout_id'] = $layout_id;
-      $themes[$theme][$section_region]['components'][] = (new SectionComponent($uuid->generate(), $component_region, $block->get('settings')))->setWeight($block->getWeight());
+      $themes[$theme][$section_region]['layout_settings'] = [];
+      $themes[$theme][$section_region]['components'][] = [
+        'uuid' => $uuid_generator->generate(),
+        'region' => $component_region,
+        'configuration' => $block->get('settings'),
+        'additional' => [],
+        'weight' => $block->getWeight(),
+      ];
     }
+
+    // Save each theme's sections in a simple config file.
+    $config_factory = \Drupal::configFactory();
     foreach ($themes as $theme => $regions) {
-      foreach ($regions as $region => $info) {
-        $themes[$theme][$region] = new Section($info['layout_id'], [], $info['components']);
-      }
-    }
-    foreach ($themes as $theme => $regions) {
-      // Ensure the sections are sorted, and numerically indexed.
-      $sections = array_values(array_intersect_key(array_replace(system_region_list($theme), $regions), $regions));
-      (new SectionPageStorage($theme, $sections))->save();
+      // Only save populated regions and ensure the list is numerically indexed.
+      $sections = array_values(array_filter($regions));
+      $config_factory->getEditable("layout_builder.theme.$theme")
+        ->set('sections', $sections)
+        ->save();
     }
   }
 
