@@ -102,21 +102,21 @@ class LayoutBuilderLocalTaskDeriver extends DeriverBase implements ContainerDeri
         'weight' => 5,
         'parent_id' => "layout_builder_ui:layout_builder.defaults.$entity_type_id.view",
       ];
-      $this->derivatives["theme.layout_builder"] = $base_plugin_definition + [
-        'route_name' => "theme.layout_builder",
-        'base_route' => "theme.layout_builder",
+      $this->derivatives["layout_builder.theme.view"] = $base_plugin_definition + [
+        'route_name' => "layout_builder.theme.view",
+        'base_route' => "layout_builder.theme.view",
         'title' => $this->t('Manage layout'),
       ];
-      $this->derivatives["theme.layout_builder_save"] = $base_plugin_definition + [
-        'route_name' => "theme.layout_builder_save",
+      $this->derivatives["layout_builder.theme.save"] = $base_plugin_definition + [
+        'route_name' => "layout_builder.theme.save",
         'title' => $this->t('Save Layout'),
-        'parent_id' => "layout_builder_ui:theme.layout_builder",
+        'parent_id' => "layout_builder_ui:layout_builder.theme.view",
       ];
-      $this->derivatives["theme.layout_builder_cancel"] = $base_plugin_definition + [
-        'route_name' => "theme.layout_builder_cancel",
+      $this->derivatives["layout_builder.theme.cancel"] = $base_plugin_definition + [
+        'route_name' => "layout_builder.theme.cancel",
         'title' => $this->t('Cancel Layout'),
         'weight' => 5,
-        'parent_id' => "layout_builder_ui:theme.layout_builder",
+        'parent_id' => "layout_builder_ui:layout_builder.theme.view",
       ];
     }
 

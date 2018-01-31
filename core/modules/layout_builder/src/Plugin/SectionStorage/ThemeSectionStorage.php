@@ -23,7 +23,7 @@ use Symfony\Component\Routing\RouteCollection;
  *   id = "theme",
  * )
  */
-class SectionPageStorage extends PluginBase implements SectionStorageInterface, ContainerFactoryPluginInterface {
+class ThemeSectionStorage extends PluginBase implements SectionStorageInterface, ContainerFactoryPluginInterface {
 
   use LayoutBuilderRoutesTrait;
   use SectionStorageTrait;
@@ -146,7 +146,7 @@ class SectionPageStorage extends PluginBase implements SectionStorageInterface, 
    * {@inheritdoc}
    */
   public function getLayoutBuilderUrl() {
-    return Url::fromRoute('theme.layout_builder', ['theme_name' => $this->themeName]);
+    return Url::fromRoute('layout_builder.theme.view', ['theme_name' => $this->themeName]);
   }
 
   /**
