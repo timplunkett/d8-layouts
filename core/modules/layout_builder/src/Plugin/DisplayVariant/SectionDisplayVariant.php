@@ -127,7 +127,7 @@ class SectionDisplayVariant extends VariantBase implements PageVariantInterface,
    * {@inheritdoc}
    */
   public function build() {
-    if ($this->routeMatch->getRouteName() !== 'layout_builder.theme.theme.view') {
+    if ($this->routeMatch->getRouteName() !== 'layout_builder.theme.view') {
       $section_storage = $this->sectionStorageManager->loadFromRoute('theme', $this->themeManager->getActiveTheme()->getName(), [], '', []);
       if ($sections = $section_storage->getSections()) {
         $contexts = $this->getContexts();

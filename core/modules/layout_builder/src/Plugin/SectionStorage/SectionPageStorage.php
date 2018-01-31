@@ -160,7 +160,7 @@ class SectionPageStorage extends PluginBase implements SectionStorageInterface, 
    * {@inheritdoc}
    */
   public function alterRoutes(RouteCollection $collection) {
-    $this->buildRoute($collection, $this->getPluginDefinition(), 'theme', '/page-layout/{theme_name}', [], [], []);
+    $this->buildRoute($collection, $this->getPluginDefinition(), '/page-layout/{theme_name}');
   }
 
   /**
