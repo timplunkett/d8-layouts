@@ -23,9 +23,8 @@ use Symfony\Component\Routing\RouteCollection;
  *   id = "theme",
  * )
  */
-class ThemeSectionStorage extends PluginBase implements SectionStorageInterface, ContainerFactoryPluginInterface {
+class ThemeSectionStorage extends SectionStorageBase implements ContainerFactoryPluginInterface {
 
-  use LayoutBuilderRoutesTrait;
   use SectionStorageTrait;
 
   /**
@@ -110,13 +109,6 @@ class ThemeSectionStorage extends PluginBase implements SectionStorageInterface,
   /**
    * {@inheritdoc}
    */
-  public function getStorageType() {
-    return 'theme';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function label() {
     return $this->themeHandler->getName($this->themeName);
   }
@@ -137,8 +129,7 @@ class ThemeSectionStorage extends PluginBase implements SectionStorageInterface,
   /**
    * {@inheritdoc}
    */
-  public function getCanonicalUrl() {
-    // Themes do not have a canonical URL, go to the Layout Builder UI.
+  public function getRedirectUrl() {
     return $this->getLayoutBuilderUrl();
   }
 
@@ -159,34 +150,38 @@ class ThemeSectionStorage extends PluginBase implements SectionStorageInterface,
   /**
    * {@inheritdoc}
    */
-  public function alterRoutes(RouteCollection $collection) {
-    $this->buildRoute($collection, $this->getPluginDefinition(), '/page-layout/{theme_name}');
+  public function extractIdFromRoute($value, $definition, $name, array $defaults) {
+    if (!$value && isset($defaults['theme_name'])) {
+      $value = $defaults['theme_name'];
+    }
+    return $value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function convert($value, $definition, $name, array $defaults) {
-    if (!$value && isset($defaults['theme_name'])) {
-      $value = $defaults['theme_name'];
+  public function getSectionListFromId($id) {
+    $sections = $this->configFactory->get("layout_builder.theme.$id")->get('sections') ?: [];
+    foreach ($sections as $section_delta => $section) {
+      $sections[$section_delta] = new Section(
+        $section['layout_id'],
+        $section['layout_settings'],
+        array_map(function (array $component) {
+          return (new SectionComponent($component['uuid'], $component['region'], $component['configuration'], $component['additional']))->setWeight($component['weight']);
+        }, $section['components'])
+      );
     }
 
-    if ($value) {
-      $sections = $this->configFactory->get("layout_builder.theme.$value")->get('sections') ?: [];
-      foreach ($sections as $section_delta => $section) {
-        $sections[$section_delta] = new Section(
-          $section['layout_id'],
-          $section['layout_settings'],
-          array_map(function (array $component) {
-            return (new SectionComponent($component['uuid'], $component['region'], $component['configuration'], $component['additional']))->setWeight($component['weight']);
-          }, $section['components'])
-        );
-      }
+    $this->themeName = $id;
+    $this->sections = $sections;
+    return $this;
+  }
 
-      $this->themeName = $value;
-      $this->sections = $sections;
-      return $this;
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function buildRoutes(RouteCollection $collection) {
+    $this->buildLayoutRoutes($collection, $this->getPluginDefinition(), '/page-layout/{theme_name}');
   }
 
 }
