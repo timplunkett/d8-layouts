@@ -5,6 +5,7 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
+use Drupal\Core\Plugin\PluginDefinitionRepository;
 use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -29,13 +30,23 @@ class ChooseSectionController implements ContainerInjectionInterface {
   protected $layoutManager;
 
   /**
+   * The plugin definition repository.
+   *
+   * @var \Drupal\Core\Plugin\PluginDefinitionRepository
+   */
+  protected $definitionRepository;
+
+  /**
    * ChooseSectionController constructor.
    *
    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_manager
    *   The layout manager.
+   * @param \Drupal\Core\Plugin\PluginDefinitionRepository $definition_repository
+   *   The plugin definition repository.
    */
-  public function __construct(LayoutPluginManagerInterface $layout_manager) {
+  public function __construct(LayoutPluginManagerInterface $layout_manager, PluginDefinitionRepository $definition_repository) {
     $this->layoutManager = $layout_manager;
+    $this->definitionRepository = $definition_repository;
   }
 
   /**
@@ -43,7 +54,8 @@ class ChooseSectionController implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.core.layout')
+      $container->get('plugin.manager.core.layout'),
+      $container->get('plugin.definition_repository')
     );
   }
 
@@ -62,7 +74,8 @@ class ChooseSectionController implements ContainerInjectionInterface {
     $output['#title'] = $this->t('Choose a layout');
 
     $items = [];
-    foreach ($this->layoutManager->getDefinitions() as $plugin_id => $definition) {
+    $definitions = $this->definitionRepository->get('layout', 'layout_builder', $this->layoutManager);
+    foreach ($definitions as $plugin_id => $definition) {
       $layout = $this->layoutManager->createInstance($plugin_id);
       $item = [
         '#type' => 'link',

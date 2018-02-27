@@ -5,6 +5,8 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Plugin\Context\ContextFilter;
+use Drupal\Core\Plugin\PluginDefinitionRepository;
 use Drupal\Core\Url;
 use Drupal\layout_builder\Context\LayoutBuilderContextTrait;
 use Drupal\layout_builder\SectionStorageInterface;
@@ -28,13 +30,23 @@ class ChooseBlockController implements ContainerInjectionInterface {
   protected $blockManager;
 
   /**
+   * The plugin definition repository.
+   *
+   * @var \Drupal\Core\Plugin\PluginDefinitionRepository
+   */
+  protected $definitionRepository;
+
+  /**
    * ChooseBlockController constructor.
    *
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
    *   The block manager.
+   * @param \Drupal\Core\Plugin\PluginDefinitionRepository $definition_repository
+   *   The plugin definition repository.
    */
-  public function __construct(BlockManagerInterface $block_manager) {
+  public function __construct(BlockManagerInterface $block_manager, PluginDefinitionRepository $definition_repository) {
     $this->blockManager = $block_manager;
+    $this->definitionRepository = $definition_repository;
   }
 
   /**
@@ -42,7 +54,8 @@ class ChooseBlockController implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('plugin.manager.block')
+      $container->get('plugin.manager.block'),
+      $container->get('plugin.definition_repository')
     );
   }
 
@@ -63,8 +76,9 @@ class ChooseBlockController implements ContainerInjectionInterface {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
-    $definitions = $this->blockManager->getDefinitionsForContexts($this->getAvailableContexts($section_storage));
-    foreach ($this->blockManager->getGroupedDefinitions($definitions) as $category => $blocks) {
+    $filters[] = ContextFilter::getFilter($this->getAvailableContexts($section_storage));
+    $definitions = $this->definitionRepository->get('block', 'layout_builder', $this->blockManager, $filters, [], TRUE);
+    foreach ($definitions as $category => $blocks) {
       $build[$category]['#type'] = 'details';
       $build[$category]['#open'] = TRUE;
       $build[$category]['#title'] = $category;
