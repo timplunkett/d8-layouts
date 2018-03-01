@@ -32,6 +32,8 @@ class PluginDefinitionRepository {
    *
    * @param string $type
    *   A string identifying the plugin type.
+   * @param string $consumer
+   *   A string identifying the consumer of these plugin definitions.
    * @param \Drupal\Component\Plugin\Discovery\DiscoveryInterface $discovery
    *   The plugin discovery, usually the plugin manager.
    * @param Callable[] $filters
@@ -43,8 +45,10 @@ class PluginDefinitionRepository {
    * @return \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[]|array[]
    *   An array of plugin definitions that are sorted and filtered.
    */
-  public function get($type, DiscoveryInterface $discovery, array $filters = [], array $context = []) {
-    $this->moduleHandler->alter("plugin_filter_$type", $filters, $context);
+  public function get($type, $consumer, DiscoveryInterface $discovery, array $filters = [], array $context = []) {
+    $hook[] = "plugin_filter_{$type}";
+    $hook[] = "plugin_filter_{$type}__{$consumer}";
+    $this->moduleHandler->alter($hook, $filters, $context);
 
     $definitions = $discovery->getDefinitions();
     foreach ($filters as $filter) {

@@ -11,9 +11,9 @@
  */
 
 /**
- * Alter the sorting and filtering of plugin definitions for a specific type.
+ * Alter the filtering of plugin definitions for a specific type.
  *
- * @param callable[] $filters
+ * @param Callable[] $filters
  *   An array of callables to filter the definitions.
  * @param mixed[] $context
  *   An associative array containing additional information provided by the code
@@ -23,38 +23,23 @@ function hook_plugin_filter_TYPE_alter(array &$filters, array $context) {
   $filters[] = function ($definitions) {
     // Explicitly remove the "Help" blocks from the list.
     unset($definitions['help_block']);
+    return $definitions;
+  };
+}
 
-    // Define which fields we want to remove from the list.
-    $disallowed_fields = [
-      'revision_timestamp',
-      'vid',
-      'revision_log',
-      'revision_uid',
-      'sticky',
-      'title',
-      'uid',
-      'created',
-      'changed',
-      'type',
-      'revision_default',
-      'default_langcode',
-      'langcode',
-      'nid',
-      'promote',
-      'status',
-      'vid',
-      'revision_translation_affected',
-    ];
-
-    foreach ($definitions as $plugin_id => $definition) {
-      // Field block IDs are in the form 'field_block:{entity}:{bundle}:{name}',
-      // for example 'field_block:node:article:revision_timestamp'.
-      preg_match('/field_block:.*:.*:(.*)/', $plugin_id, $parts);
-      if (isset($parts[1]) && in_array($parts[1], $disallowed_fields, TRUE)) {
-        // Unset any field blocks that match our predefined list.
-        unset($definitions[$plugin_id]);
-      }
-    }
+/**
+ * Alter the filtering of plugin definitions for a specific type and consumer.
+ *
+ * @param Callable[] $filters
+ *   An array of callables to filter the definitions.
+ * @param mixed[] $context
+ *   An associative array containing additional information provided by the code
+ *   requesting the filtered definitins.
+ */
+function hook_plugin_filter_TYPE__CONSUMER_alter(array &$filters, array $context) {
+  $filters[] = function ($definitions) {
+    // Explicitly remove the "Help" blocks from the list.
+    unset($definitions['help_block']);
     return $definitions;
   };
 }
