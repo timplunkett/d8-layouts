@@ -15,12 +15,11 @@
  *
  * @param callable[] $filters
  *   An array of callables to filter the definitions.
- * @param callable[] $sorts
- *   An array of callables to sort the definitions.
- * @param string $consumer
- *   A string identifying the consumer of these plugin definitions.
+ * @param mixed[] $context
+ *   An associative array containing additional information provided by the code
+ *   requesting the filtered definitins.
  */
-function hook_plugin_definition_PLUGIN_TYPE_alter(array &$filters, array &$sorts, $consumer) {
+function hook_plugin_filter_TYPE_alter(array &$filters, array $context) {
   $filters[] = function ($definitions) {
     // Explicitly remove the "Help" blocks from the list.
     unset($definitions['help_block']);
