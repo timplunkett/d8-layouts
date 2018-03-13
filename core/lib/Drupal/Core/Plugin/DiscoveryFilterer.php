@@ -6,9 +6,15 @@ use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 
 /**
- * @todo.
+ * Provides methods to retrieve filtered plugin definitions.
+ *
+ * This allows modules to alter plugin definitions, which is useful for tasks
+ * like hiding definitions from user interfaces based on available contexts.
+ *
+ * @see hook_plugin_filter_TYPE_alter()
+ * @see hook_plugin_filter_TYPE__CONSUMER_alter()
  */
-class PluginDefinitionRepository {
+class DiscoveryFilterer {
 
   /**
    * The module handler.

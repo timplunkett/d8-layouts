@@ -43,3 +43,7 @@ function hook_plugin_filter_TYPE__CONSUMER_alter(array &$filters, array $context
     return $definitions;
   };
 }
+
+/**
+ * @} End of "addtogroup hooks".
+ */

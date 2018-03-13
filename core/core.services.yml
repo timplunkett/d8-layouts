@@ -656,8 +656,8 @@ services:
   plugin.cache_clearer:
     class: Drupal\Core\Plugin\CachedDiscoveryClearer
     lazy: true
-  plugin.definition_repository:
-    class: Drupal\Core\Plugin\PluginDefinitionRepository
+  plugin.discovery_filterer:
+    class: Drupal\Core\Plugin\DiscoveryFilterer
     arguments: ['@module_handler']
   paramconverter.menu_link:
     class: Drupal\Core\ParamConverter\MenuLinkPluginConverter
