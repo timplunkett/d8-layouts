@@ -1,15 +1,22 @@
 <?php
 
-/**
- * @file
- * Provides hook implementations for Layout Builder tests.
- */
+namespace Drupal\layout_builder_test\Plugin;
+
+use Drupal\Core\Plugin\Discovery\DiscoveryFilterInterface;
 
 /**
- * Implements hook_plugin_filter_TYPE_alter().
+ * Provides a test discovery filter.
  */
-function layout_builder_test_plugin_filter_block__layout_builder_alter(array &$filters, array $context) {
-  $filters[] = function ($definitions) {
+class LayoutBuilderTestDiscoveryFilter implements DiscoveryFilterInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function filter($type, $consumer, array $definitions, array $context) {
+    if ($type !== 'block' || $consumer !== 'layout_builder') {
+      return $definitions;
+    }
+
     // Explicitly remove the "Help" blocks from the list.
     unset($definitions['help_block']);
 
@@ -28,5 +35,6 @@ function layout_builder_test_plugin_filter_block__layout_builder_alter(array &$f
       }
     }
     return $definitions;
-  };
+  }
+
 }

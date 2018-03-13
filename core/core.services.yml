@@ -659,6 +659,8 @@ services:
   plugin.discovery_filterer:
     class: Drupal\Core\Plugin\DiscoveryFilterer
     arguments: ['@module_handler']
+    tags:
+      - { name: service_collector, tag: discovery_filter, call: addFilter }
   paramconverter.menu_link:
     class: Drupal\Core\ParamConverter\MenuLinkPluginConverter
     tags:
