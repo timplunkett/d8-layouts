@@ -22,10 +22,18 @@
  *   A string identifying the consumer of these plugin definitions.
  */
 function hook_plugin_filter_TYPE_alter(array &$definitions, array $extra, $consumer) {
-  // Explicitly remove the "Help" block from the Block UI list.
+  // Remove the "Help" block from the Block UI list.
   if ($consumer == 'block_ui') {
     unset($definitions['help_block']);
   }
+
+  // If the theme is specified, remove the branding block from the Bartik theme.
+  if (isset($extra['theme']) && $extra['theme'] === 'bartik') {
+    unset($definitions['system_branding_block']);
+  }
+
+  // Remove the "Main page content" block from everywhere.
+  unset($definitions['system_main_block']);
 }
 
 /**
@@ -38,7 +46,7 @@ function hook_plugin_filter_TYPE_alter(array &$definitions, array $extra, $consu
  *   requesting the filtered definitions.
  */
 function hook_plugin_filter_TYPE__CONSUMER_alter(array &$definitions, array $extra) {
-  // Explicitly remove the "Help" block from the list.
+  // Explicitly remove the "Help" block for this consumer.
   unset($definitions['help_block']);
 }
 
