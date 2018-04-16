@@ -15,12 +15,12 @@
  *
  * @param Callable[] $filters
  *   An array of callables to filter the definitions.
- * @param mixed[] $context
+ * @param mixed[] $extra
  *   An associative array containing additional information provided by the code
  *   requesting the filtered definitions.
  */
-function hook_plugin_filter_TYPE_alter(array &$filters, array $context) {
-  $filters[] = function ($definitions) {
+function hook_plugin_filter_TYPE_alter(array &$filters, array $extra) {
+  $filters[] = function ($definitions, $contexts) {
     // Explicitly remove the "Help" blocks from the list.
     unset($definitions['help_block']);
     return $definitions;
@@ -32,12 +32,12 @@ function hook_plugin_filter_TYPE_alter(array &$filters, array $context) {
  *
  * @param Callable[] $filters
  *   An array of callables to filter the definitions.
- * @param mixed[] $context
+ * @param mixed[] $extra
  *   An associative array containing additional information provided by the code
  *   requesting the filtered definitions.
  */
-function hook_plugin_filter_TYPE__CONSUMER_alter(array &$filters, array $context) {
-  $filters[] = function ($definitions) {
+function hook_plugin_filter_TYPE__CONSUMER_alter(array &$filters, array $extra) {
+  $filters[] = function ($definitions, $contexts) {
     // Explicitly remove the "Help" blocks from the list.
     unset($definitions['help_block']);
     return $definitions;

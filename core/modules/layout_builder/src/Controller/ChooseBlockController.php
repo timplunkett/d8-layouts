@@ -5,7 +5,6 @@ namespace Drupal\layout_builder\Controller;
 use Drupal\Core\Ajax\AjaxHelperTrait;
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Plugin\Context\ContextFilter;
 use Drupal\Core\Plugin\DiscoveryFilterer;
 use Drupal\Core\Url;
 use Drupal\layout_builder\Context\LayoutBuilderContextTrait;
@@ -76,8 +75,7 @@ class ChooseBlockController implements ContainerInjectionInterface {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
-    $filters[] = ContextFilter::getFilter($this->getAvailableContexts($section_storage));
-    $definitions = $this->discoveryFilterer->get('block', 'layout_builder', $this->blockManager, $filters, ['section_storage' => $section_storage]);
+    $definitions = $this->discoveryFilterer->get('block', 'layout_builder', $this->blockManager, $this->getAvailableContexts($section_storage), ['section_storage' => $section_storage]);
     $definitions = $this->blockManager->getGroupedDefinitions($definitions);
     foreach ($definitions as $category => $blocks) {
       $build[$category]['#type'] = 'details';

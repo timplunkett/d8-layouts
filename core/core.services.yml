@@ -658,7 +658,7 @@ services:
     lazy: true
   plugin.discovery_filterer:
     class: Drupal\Core\Plugin\DiscoveryFilterer
-    arguments: ['@module_handler']
+    arguments: ['@module_handler', '@context.handler']
   paramconverter.menu_link:
     class: Drupal\Core\ParamConverter\MenuLinkPluginConverter
     tags:
