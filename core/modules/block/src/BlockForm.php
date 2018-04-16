@@ -3,6 +3,7 @@
 namespace Drupal\block;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Plugin\DiscoveryFilterer;
 use Drupal\Core\Plugin\PluginFormFactoryInterface;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Entity\EntityForm;
@@ -81,6 +82,13 @@ class BlockForm extends EntityForm {
   protected $pluginFormFactory;
 
   /**
+   * The discovery filterer.
+   *
+   * @var \Drupal\Core\Plugin\DiscoveryFilterer
+   */
+  protected $discoveryFilterer;
+
+  /**
    * Constructs a BlockForm object.
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
@@ -95,14 +103,17 @@ class BlockForm extends EntityForm {
    *   The theme handler.
    * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_manager
    *   The plugin form manager.
+   * @param \Drupal\Core\Plugin\DiscoveryFilterer $discovery_filterer
+   *   The discovery filterer.
    */
-  public function __construct(EntityManagerInterface $entity_manager, ExecutableManagerInterface $manager, ContextRepositoryInterface $context_repository, LanguageManagerInterface $language, ThemeHandlerInterface $theme_handler, PluginFormFactoryInterface $plugin_form_manager) {
+  public function __construct(EntityManagerInterface $entity_manager, ExecutableManagerInterface $manager, ContextRepositoryInterface $context_repository, LanguageManagerInterface $language, ThemeHandlerInterface $theme_handler, PluginFormFactoryInterface $plugin_form_manager, DiscoveryFilterer $discovery_filterer) {
     $this->storage = $entity_manager->getStorage('block');
     $this->manager = $manager;
     $this->contextRepository = $context_repository;
     $this->language = $language;
     $this->themeHandler = $theme_handler;
     $this->pluginFormFactory = $plugin_form_manager;
+    $this->discoveryFilterer = $discovery_filterer;
   }
 
   /**
@@ -115,7 +126,8 @@ class BlockForm extends EntityForm {
       $container->get('context.repository'),
       $container->get('language_manager'),
       $container->get('theme_handler'),
-      $container->get('plugin_form.factory')
+      $container->get('plugin_form.factory'),
+      $container->get('plugin.discovery_filterer')
     );
   }
 
@@ -239,7 +251,8 @@ class BlockForm extends EntityForm {
     // @todo Allow list of conditions to be configured in
     //   https://www.drupal.org/node/2284687.
     $visibility = $this->entity->getVisibility();
-    foreach ($this->manager->getDefinitionsForContexts($form_state->getTemporaryValue('gathered_contexts')) as $condition_id => $definition) {
+    $definitions = $this->discoveryFilterer->get('condition', 'block_ui', $this->manager, $form_state->getTemporaryValue('gathered_contexts'), ['block' => $this->entity]);
+    foreach ($definitions as $condition_id => $definition) {
       // Don't display the current theme condition.
       if ($condition_id == 'current_theme') {
         continue;

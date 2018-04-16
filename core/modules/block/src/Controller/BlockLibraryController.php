@@ -8,6 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Menu\LocalActionManagerInterface;
 use Drupal\Core\Plugin\Context\LazyContextRepository;
+use Drupal\Core\Plugin\DiscoveryFilterer;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -47,6 +48,13 @@ class BlockLibraryController extends ControllerBase {
   protected $localActionManager;
 
   /**
+   * The discovery filterer.
+   *
+   * @var \Drupal\Core\Plugin\DiscoveryFilterer
+   */
+  protected $discoveryFilterer;
+
+  /**
    * Constructs a BlockLibraryController object.
    *
    * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
@@ -57,12 +65,15 @@ class BlockLibraryController extends ControllerBase {
    *   The current route match.
    * @param \Drupal\Core\Menu\LocalActionManagerInterface $local_action_manager
    *   The local action manager.
+   * @param \Drupal\Core\Plugin\DiscoveryFilterer $discovery_filterer
+   *   The discovery filterer.
    */
-  public function __construct(BlockManagerInterface $block_manager, LazyContextRepository $context_repository, RouteMatchInterface $route_match, LocalActionManagerInterface $local_action_manager) {
+  public function __construct(BlockManagerInterface $block_manager, LazyContextRepository $context_repository, RouteMatchInterface $route_match, LocalActionManagerInterface $local_action_manager, DiscoveryFilterer $discovery_filterer) {
     $this->blockManager = $block_manager;
     $this->routeMatch = $route_match;
     $this->localActionManager = $local_action_manager;
     $this->contextRepository = $context_repository;
+    $this->discoveryFilterer = $discovery_filterer;
   }
 
   /**
@@ -73,7 +84,8 @@ class BlockLibraryController extends ControllerBase {
       $container->get('plugin.manager.block'),
       $container->get('context.repository'),
       $container->get('current_route_match'),
-      $container->get('plugin.manager.menu.local_action')
+      $container->get('plugin.manager.menu.local_action'),
+      $container->get('plugin.discovery_filterer')
     );
   }
 
@@ -102,7 +114,7 @@ class BlockLibraryController extends ControllerBase {
     ];
 
     // Only add blocks which work without any available context.
-    $definitions = $this->blockManager->getDefinitionsForContexts($this->contextRepository->getAvailableContexts());
+    $definitions = $this->discoveryFilterer->get('block', 'block_ui', $this->blockManager, $this->contextRepository->getAvailableContexts(), ['theme' => $theme]);
     // Order by category, and then by admin label.
     $definitions = $this->blockManager->getSortedDefinitions($definitions);
     // Filter out definitions that are not intended to be placed by the UI.
