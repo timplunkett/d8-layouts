@@ -2,12 +2,10 @@
 
 namespace Drupal\Core\Plugin\Context;
 
-use Drupal\Core\Plugin\Discovery\DiscoveryFilterInterface;
-
 /**
  * Provides methods to filter plugins with satisfied context requirements.
  */
-class ContextFilter implements DiscoveryFilterInterface {
+class ContextFilter {
 
   /**
    * An array of contexts.
@@ -27,9 +25,28 @@ class ContextFilter implements DiscoveryFilterInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Returns a callable which can be used to filter plugin definitions.
+   *
+   * @param array $contexts
+   *   An array of contexts to use in the filter.
+   *
+   * @return array
+   *   A callable for filtering plugin definitions.
    */
-  public function filter($type, $consumer, array $definitions, array $context) {
+  public static function getFilter(array $contexts) {
+    return [new static($contexts), 'filter'];
+  }
+
+  /**
+   * Determines plugins whose constraints are satisfied by our contexts.
+   *
+   * @param array $definitions
+   *   An array of plugin definitions.
+   *
+   * @return array
+   *   An array of plugin definitions.
+   */
+  public function filter(array $definitions) {
     return \Drupal::service('context.handler')->filterPluginDefinitionsByContexts($this->contexts, $definitions);
   }
 

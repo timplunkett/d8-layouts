@@ -1,5 +1,0 @@
-services:
-  layout_builder_test.discovery_filter:
-    class: Drupal\layout_builder_test\Plugin\LayoutBuilderTestDiscoveryFilter
-    tags:
-      - { name: discovery_filter }
