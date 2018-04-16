@@ -63,20 +63,15 @@ class DiscoveryFilterer {
    *   An array of plugin definitions that are sorted and filtered.
    */
   public function get($type, $consumer, DiscoveryInterface $discovery, array $contexts = [], array $extra = []) {
-    $filters = [];
+    $definitions = $discovery->getDefinitions();
     if ($contexts) {
-      $filters[] = [$this, 'filterByContexts'];
+      $definitions = $this->contextHandler->filterPluginDefinitionsByContexts($contexts, $definitions);
     }
 
     $hooks = [];
     $hooks[] = "plugin_filter_{$type}";
     $hooks[] = "plugin_filter_{$type}__{$consumer}";
-    $this->moduleHandler->alter($hooks, $filters, $extra);
-
-    $definitions = $discovery->getDefinitions();
-    foreach ($filters as $filter) {
-      $definitions = call_user_func($filter, $definitions, $contexts);
-    }
+    $this->moduleHandler->alter($hooks, $definitions, $extra, $consumer);
     return $definitions;
   }
 
