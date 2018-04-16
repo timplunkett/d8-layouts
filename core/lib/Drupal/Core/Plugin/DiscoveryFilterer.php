@@ -46,15 +46,16 @@ class DiscoveryFilterer {
    *   (optional) An array of callables to filter the definitions.
    * @param mixed[] $context
    *   (optional) An associative array containing additional information
-   *   provided by the code requesting the filtered definitins.
+   *   provided by the code requesting the filtered definitions.
    *
    * @return \Drupal\Component\Plugin\Definition\PluginDefinitionInterface[]|array[]
    *   An array of plugin definitions that are sorted and filtered.
    */
   public function get($type, $consumer, DiscoveryInterface $discovery, array $filters = [], array $context = []) {
-    $hook[] = "plugin_filter_{$type}";
-    $hook[] = "plugin_filter_{$type}__{$consumer}";
-    $this->moduleHandler->alter($hook, $filters, $context);
+    $hooks = [];
+    $hooks[] = "plugin_filter_{$type}";
+    $hooks[] = "plugin_filter_{$type}__{$consumer}";
+    $this->moduleHandler->alter($hooks, $filters, $context);
 
     $definitions = $discovery->getDefinitions();
     foreach ($filters as $filter) {

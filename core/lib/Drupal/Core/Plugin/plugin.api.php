@@ -17,7 +17,7 @@
  *   An array of callables to filter the definitions.
  * @param mixed[] $context
  *   An associative array containing additional information provided by the code
- *   requesting the filtered definitins.
+ *   requesting the filtered definitions.
  */
 function hook_plugin_filter_TYPE_alter(array &$filters, array $context) {
   $filters[] = function ($definitions) {
@@ -34,7 +34,7 @@ function hook_plugin_filter_TYPE_alter(array &$filters, array $context) {
  *   An array of callables to filter the definitions.
  * @param mixed[] $context
  *   An associative array containing additional information provided by the code
- *   requesting the filtered definitins.
+ *   requesting the filtered definitions.
  */
 function hook_plugin_filter_TYPE__CONSUMER_alter(array &$filters, array $context) {
   $filters[] = function ($definitions) {
