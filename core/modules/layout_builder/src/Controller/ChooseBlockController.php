@@ -75,7 +75,10 @@ class ChooseBlockController implements ContainerInjectionInterface {
     $build['#type'] = 'container';
     $build['#attributes']['class'][] = 'block-categories';
 
-    $definitions = $this->discoveryFilterer->get('block', 'layout_builder', $this->blockManager, $this->getAvailableContexts($section_storage), ['section_storage' => $section_storage]);
+    $definitions = $this->discoveryFilterer->get('block', 'layout_builder', $this->blockManager, $this->getAvailableContexts($section_storage), [
+      'section_storage' => $section_storage,
+      'region' => $region,
+    ]);
     $definitions = $this->blockManager->getGroupedDefinitions($definitions);
     foreach ($definitions as $category => $blocks) {
       $build[$category]['#type'] = 'details';
