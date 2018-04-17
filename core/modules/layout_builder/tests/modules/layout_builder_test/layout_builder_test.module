@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_plugin_filter_TYPE_alter().
+ * Implements hook_plugin_filter_TYPE__CONSUMER_alter().
  */
 function layout_builder_test_plugin_filter_block__layout_builder_alter(array &$definitions) {
   // Explicitly remove the "Help" blocks from the list.
